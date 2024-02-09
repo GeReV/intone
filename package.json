@@ -11,9 +11,9 @@
     "dev": "yarn run clear && cross-env NODE_ENV=development run-p dev:*",
     "dev-firefox": "yarn run clear && cross-env NODE_ENV=development EXTENSION=firefox run-p dev:*",
     "dev:prepare": "tsx scripts/prepare.ts",
-    "dev:background": "yarn run build:background -- --mode development",
-    "dev:web": "vite",
-    "dev:js": "yarn run build:js -- --mode development",
+    "dev:background": "yarn run build:background --mode development",
+    "dev:web": "yarn run build:web --mode development --watch",
+    "dev:js": "yarn run build:js --mode development",
     "build": "cross-env NODE_ENV=production run-s clear build:web build:prepare build:background build:js",
     "build:prepare": "tsx scripts/prepare.ts",
     "build:background": "vite build --config vite.config.background.ts",
@@ -24,7 +24,7 @@
     "pack:crx": "crx pack extension -o ./extension.crx",
     "pack:xpi": "cross-env WEB_EXT_ARTIFACTS_DIR=./ web-ext build --source-dir ./extension --filename extension.xpi --overwrite-dest",
     "start:chromium": "web-ext run --source-dir ./extension --target=chromium",
-    "start:firefox": "web-ext run --source-dir ./extension --target=firefox-desktop",
+    "start:firefox": "web-ext run --source-dir ./extension --firefox=deved",
     "clear": "rimraf --glob extension/dist extension/manifest.json extension.*",
     "lint": "eslint --cache .",
     "test": "vitest test",
@@ -37,6 +37,7 @@
     "@ffflorian/jszip-cli": "^3.6.2",
     "@iconify/json": "^2.2.171",
     "@playwright/test": "^1.41.1",
+    "@total-typescript/ts-reset": "^0.5.1",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.11.5",
     "@types/webextension-polyfill": "^0.10.7",
@@ -54,8 +55,10 @@
     "rimraf": "^5.0.5",
     "simple-git-hooks": "^2.8.1",
     "tsx": "^4.7.0",
+    "type-fest": "^4.10.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
+    "vite-plugin-mkcert": "^1.17.3",
     "vitest": "^1.2.1",
     "web-ext": "^7.10.0",
     "webext-bridge": "^6.0.1",
@@ -68,6 +71,7 @@
     "*.{ts,js}": "eslint --fix"
   },
   "resolutions": {
-    "strip-ansi": "6.0.1"
+    "strip-ansi": "6.0.1",
+    "string-width": "^4"
   }
 }

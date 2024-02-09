@@ -15,13 +15,14 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "noUnusedLocals": true,
+    "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true,
     "types": [
       "vite/client"
     ],
     "paths": {
       "~/*": [
-        "src/*"
+        "src/extension/*"
       ]
     }
   },

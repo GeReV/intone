@@ -7,9 +7,11 @@ module.exports = {
   },
   plugins: ["@typescript-eslint"],
   rules: {
+    "eqeqeq": ["error", "always"],
     "@typescript-eslint/no-misused-promises": ["error", {
       checksVoidReturn: false
     }],
+    "@typescript-eslint/consistent-type-definitions": "off"
   },
   root: true,
   overrides: [{

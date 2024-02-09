@@ -12,22 +12,24 @@ export default defineConfig({
     // https://github.com/vitejs/vite/issues/9186
     "process.env.NODE_ENV": JSON.stringify(isDev ? "development" : "production"),
   },
+  // assetsInclude: ["**/*.css"],
   build: {
     watch: isDev
       ? {}
       : undefined,
-    outDir: r("extension/dist/background"),
+    outDir: r("extension/dist"),
     cssCodeSplit: false,
     emptyOutDir: false,
     sourcemap: isDev ? "inline" : false,
-    lib: {
-      entry: r("src/extension/background/main.ts"),
-      name: packageJson.name,
-      formats: ["iife"],
-    },
     rollupOptions: {
+      input: {
+        popup: r("src/extension/popup/main.ts"),
+        player: r("src/extension/player/main.ts"),
+      },
       output: {
-        entryFileNames: "index.mjs",
+        // format: "iife",
+        entryFileNames: "[name]/main.mjs",
+        inlineDynamicImports: false,
         extend: true,
       },
     },
