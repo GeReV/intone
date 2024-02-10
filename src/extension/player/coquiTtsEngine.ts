@@ -10,6 +10,7 @@ type CoquiVoice = {
   model_name: string;
 };
 
+// TODO: Consider voice p241, p251 as default.
 export class CoquiTtsEngine implements TtsEngine {
   private audio: AudioHelper | null = null;
   private prefetchAudio: [string, TtsOptions, string] | null = null;

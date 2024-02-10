@@ -12,7 +12,7 @@ export type PlaybackState = {
 };
 
 function closePlayer() {
-  if (top == self) {
+  if (top === self) {
     window.close();
   } else {
     location.href = "about:blank";
@@ -36,7 +36,7 @@ export class Player {
 
       await this.closeDoc();
 
-      if (typeof onEnd == "function") {
+      if (typeof onEnd === "function") {
         onEnd(err);
       }
     });

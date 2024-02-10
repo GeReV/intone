@@ -1,11 +1,12 @@
 import { $ } from "~/utils/dom";
 import * as browser from "webextension-polyfill";
 import { DEFAULTS, getSettings, Settings, updateSettings } from "~/logic/settings";
-import type { DataTypeKey, GetDataType } from "webext-bridge";
+import type { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
 import assert from "~/utils/assert";
 import { escapeHtml, getQueryString, nextId } from "~/utils";
 import { PermissionsError } from "~/logic";
 import { formatError, getActiveTab } from "~/utils/webext";
+import { sendMessage } from "webext-bridge/popup";
 
 const queryString = getQueryString();
 
@@ -19,13 +20,8 @@ const queryString = getQueryString();
 //   }
 // };
 
-const sendMessageBackground = async <K extends DataTypeKey>(messageId: K, data: GetDataType<K, never>): Promise<unknown> => {
-  return await browser.runtime.sendMessage({
-    type: messageId,
-    data,
-    dest: "background",
-  });
-};
+const sendMessageBackground = async <K extends DataTypeKey>(messageId: K, data: GetDataType<K, never>): Promise<GetReturnType<K, never>> =>
+  sendMessage(messageId, data, "background");
 
 export class Popup {
   private readonly status: HTMLElement;
@@ -139,12 +135,12 @@ export class Popup {
       this.btnPause.hidden = state !== "PLAYING";
       this.btnStop.hidden = state !== "PAUSED" && state !== "PLAYING" && state !== "LOADING";
       this.btnForward.hidden = this.btnRewind.hidden = state !== "PLAYING" && state !== "PAUSED";
-      this.highlight.hidden = this.toolbar.hidden = !(typeof settings.showHighlighting !== "undefined" ? settings.showHighlighting : DEFAULTS.showHighlighting) && (state == "LOADING" || state == "PAUSED" || state == "PLAYING");
+      this.highlight.hidden = this.toolbar.hidden = !(typeof settings.showHighlighting !== "undefined" ? settings.showHighlighting : DEFAULTS.showHighlighting) && (state === "LOADING" || state === "PAUSED" || state === "PLAYING");
 
       if ((typeof settings.showHighlighting !== "undefined" ? settings.showHighlighting : DEFAULTS.showHighlighting) && speechPosition) {
         const pos = speechPosition;
         const elem = this.highlight;
-        if (this.texts.length != pos.texts.length || this.texts.some((text, i) => text != pos.texts[i])) {
+        if (this.texts.length !== pos.texts.length || this.texts.some((text, i) => text !== pos.texts[i])) {
           this.texts = pos.texts;
           this.currentIndex = -1;
 
@@ -166,7 +162,7 @@ export class Popup {
           }
         }
 
-        if (this.currentIndex != pos.index) {
+        if (this.currentIndex !== pos.index) {
           this.currentIndex = pos.index;
 
           elem.querySelectorAll(".active").forEach(el => {
@@ -195,8 +191,6 @@ export class Popup {
   }
 
   private async onPlay() {
-    console.log("onPlay");
-
     this.status.hidden = true;
 
     const requestId = this.currentPlayRequestId = nextId();

@@ -1,11 +1,13 @@
 // only on dev mode
 import browser from "webextension-polyfill";
+import { onMessage, sendMessage } from "webext-bridge/background";
 import { TaskSingleton } from "~/background/task";
 import { detectTabLanguage, getActiveTab } from "~/utils/webext";
 import { updateSettings } from "~/logic/settings";
 import { CONTENT_HANDLERS } from "~/background/contentHandlers";
 import assert from "~/utils/assert";
 import AwaitableSet from "~/utils/awaitableSet";
+import { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
 
 if (import.meta.hot) {
   // @ts-expect-error for background HMR
@@ -88,63 +90,35 @@ browser.commands.onCommand.addListener(async (command) => {
   }
 });
 
-let sendToPlayer: (message: unknown) => Promise<unknown>;
+let sendToPlayer: <K extends DataTypeKey>(messageId: K, data: GetDataType<K, null>) => Promise<GetReturnType<K, never>>;
 
 const currentTask = new TaskSingleton();
 
 const tabRegistry = new AwaitableSet<number>();
 
 async function readyContentScript(tabId: number) {
-  console.log("before");
   await tabRegistry.waitFor(tabId);
-  console.log("after");
 }
 
 browser.tabs.onRemoved.addListener((tabId) => {
   tabRegistry.delete(tabId);
 });
 
-
-browser.runtime.onMessage.addListener(function (message, sender) {
-  console.log("bg", message);
-
-  if (message.dest !== "background") {
-    return;
-  }
-
-  switch (message.type) {
-    case "register": {
-      assert(sender.tab?.id);
-
-      tabRegistry.add(sender.tab.id);
-
-      break;
-    }
-    case "play-text":
-      return playText(message.data.text, message.data.opts);
-    case "play-tab":
-      return playTab(message.data.tabId);
-    case "reload-and-play-tab":
-      return reloadAndPlayTab(message.data.tabId);
-    case "stop":
-      return stop();
-    case "pause":
-      return pause();
-    case "resume":
-      return resume();
-    case "forward":
-      return forward();
-    case "rewind":
-      return rewind();
-    case "seek":
-      return seek(message.data);
-    case "get-playback-state": {
-      return await getPlaybackState();
-    }
-  }
-});
-
 // see shim.d.ts for type declaration
+onMessage("register", (message) => {
+  tabRegistry.add(message.sender.tabId);
+});
+onMessage("play-text", (message) => playText(message.data.text, message.data.opts));
+onMessage("play-tab", message => playTab(message.data.tabId));
+onMessage("reload-and-play-tab", message => reloadAndPlayTab(message.data.tabId));
+onMessage("stop", stop);
+onMessage("pause", pause);
+onMessage("resume", resume);
+onMessage("forward", forward);
+onMessage("rewind", rewind);
+onMessage("seek", (message) => seek(message.data));
+onMessage("get-playback-state", getPlaybackState);
+
 
 async function playText(text: string | undefined, opts: { lang: string | undefined }) {
   const hasPlayer = await stop();
@@ -155,16 +129,16 @@ async function playText(text: string | undefined, opts: { lang: string | undefin
 
     await readyContentScript(tab.id);
 
-    sendToPlayer = async (message) => {
+    sendToPlayer = async <K extends DataTypeKey>(messageId: K, data: GetDataType<K, null>): Promise<GetReturnType<K, never>> => {
       assert(tab.id);
 
-      console.log("sending cs", message);
+      console.log("sending cs", messageId, data);
 
-      return await browser.tabs.sendMessage(tab.id, message);
+      return await sendMessage(messageId, data, `content-script@${tab.id}`);
     };
   }
 
-  await sendToPlayer({ type: "play-text", data: { text, opts } });
+  await sendToPlayer("play-text", { text, opts });
 }
 
 async function playTab(tabId?: number) {
@@ -177,12 +151,10 @@ async function playTab(tabId?: number) {
 
   await readyContentScript(tab.id);
 
-  sendToPlayer = async (message) => {
+  sendToPlayer = async <K extends DataTypeKey>(messageId: K, data: GetDataType<K, null>): Promise<GetReturnType<K, never>> => {
     assert(tab.id);
 
-    console.log("sending cs", message);
-
-    return await browser.tabs.sendMessage(tab.id, message);
+    return await sendMessage(messageId, data, `content-script@${tab.id}`);
   };
 
   const task = currentTask.begin();
@@ -196,16 +168,16 @@ async function playTab(tabId?: number) {
     if (handler?.getSourceUri) {
       await updateSettings({ sourceUri: handler.getSourceUri(tab) });
     } else {
-      let frameId;
-      if (handler?.getFrameId && typeof tab.id !== "undefined") {
-        const frames = await browser.webNavigation.getAllFrames({ tabId: tab.id });
-
-        frameId = handler.getFrameId(frames);
-      }
-
-      if (!await contentScriptAlreadyInjected(tab, frameId)) {
-        await injectContentScript(tab, frameId, handler?.extraScripts);
-      }
+      // let frameId;
+      // if (handler?.getFrameId && typeof tab.id !== "undefined") {
+      //   const frames = await browser.webNavigation.getAllFrames({ tabId: tab.id });
+      //
+      //   frameId = handler.getFrameId(frames);
+      // }
+      //
+      // if (!await contentScriptAlreadyInjected(tab, frameId)) {
+      //   await injectContentScript(tab, frameId, handler?.extraScripts);
+      // }
 
       await updateSettings({ sourceUri: `contentscript:${tab.id}` });
     }
@@ -215,7 +187,7 @@ async function playTab(tabId?: number) {
     task.end();
   }
 
-  await sendToPlayer({ type: "play-tab" });
+  await sendToPlayer("play-tab", {});
 }
 
 async function reloadAndPlayTab(tabId?: number) {
@@ -248,27 +220,27 @@ async function reloadAndPlayTab(tabId?: number) {
 
 async function stop() {
   currentTask.cancel();
-  return sendToPlayer({ type: "stop" });
+  return sendToPlayer("stop", null);
 }
 
 async function pause() {
-  return sendToPlayer({ type: "pause" });
+  return sendToPlayer("pause", null);
 }
 
 async function resume() {
-  return sendToPlayer({ type: "resume" });
+  return sendToPlayer("resume", null);
 }
 
 async function forward() {
-  return sendToPlayer({ type: "forward" });
+  return sendToPlayer("forward", null);
 }
 
 async function rewind() {
-  return sendToPlayer({ type: "rewind" });
+  return sendToPlayer("rewind", null);
 }
 
 async function seek(data: { n: number }) {
-  return sendToPlayer({ type: "seek", data });
+  return sendToPlayer("seek", data);
 }
 
 async function getPlaybackState(): Promise<GetReturnType<"get-playback-state">> {
@@ -277,7 +249,7 @@ async function getPlaybackState(): Promise<GetReturnType<"get-playback-state">> 
   }
 
   try {
-    return await sendToPlayer({ type: "get-playback-state" });
+    return await sendToPlayer("get-playback-state", null);
   } catch (err) {
     return { state: "STOPPED" };
   }
@@ -288,52 +260,36 @@ function handleHeadlessError(err: unknown) {
   console.error(err);
 }
 
-async function contentScriptAlreadyInjected(tab: browser.Tabs.Tab, frameId: number | undefined) {
-  if (typeof tab.id === "undefined") {
-    throw new Error("Expected tab ID");
-  }
-
-  const items = await browser.scripting.executeScript({
-    target: {
-      tabId: tab.id,
-      frameIds: frameId ? [frameId] : undefined,
-    },
-    func: function () {
-      return document.getElementById(__NAME__) !== null;
-    }
-  });
-
-  return items[0]?.result === true;
-}
-
-async function injectContentScript(tab: browser.Tabs.Tab, frameId: number | undefined, extraScripts: string[] | undefined) {
-  assert(tab.id, "Expected tab ID");
-
-  // await browser.scripting.executeScript({
-  //   target: {
-  //     tabId: tab.id,
-  //     frameIds: frameId ? [frameId] : undefined,
-  //   },
-  //   files: [
-  //     "js/jquery-3.1.1.min.js",
-  //     "js/defaults.js",
-  //     "js/messaging.js",
-  //     "js/content.js",
-  //   ]
-  // });
-
-  const files = extraScripts ?? await sendToPlayer({
-    type: "get-required-js",
-    dest: "content-script"
-  });
-
-  await browser.scripting.executeScript({
-    target: {
-      tabId: tab.id,
-      frameIds: frameId ? [frameId] : undefined,
-    },
-    files,
-  });
-
-  console.info("Content handler", files);
-}
+// async function contentScriptAlreadyInjected(tab: browser.Tabs.Tab, frameId: number | undefined) {
+//   if (typeof tab.id === "undefined") {
+//     throw new Error("Expected tab ID");
+//   }
+//
+//   const items = await browser.scripting.executeScript({
+//     target: {
+//       tabId: tab.id,
+//       frameIds: frameId ? [frameId] : undefined,
+//     },
+//     func: function () {
+//       return document.getElementById(__NAME__) !== null;
+//     }
+//   });
+//
+//   return items[0]?.result === true;
+// }
+//
+// async function injectContentScript(tab: browser.Tabs.Tab, frameId: number | undefined, extraScripts: string[] | undefined) {
+//   assert(tab.id, "Expected tab ID");
+//
+//   const files = extraScripts ?? await sendMessage("get-required-js", null, `content-script@${tab.id}`);
+//
+//   await browser.scripting.executeScript({
+//     target: {
+//       tabId: tab.id,
+//       frameIds: frameId ? [frameId] : undefined,
+//     },
+//     files,
+//   });
+//
+//   console.info("Content handler", files);
+// }

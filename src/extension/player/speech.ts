@@ -556,12 +556,6 @@ function createPlayerFrame() {
   frame.style.height = "0";
   frame.style.borderWidth = "0";
 
-  // TODO: Remove
-  frame.style.height = "200px";
-  frame.style.width = "200px";
-  frame.style.top = "0";
-  frame.style.zIndex = "999999";
-
   document.body.appendChild(frame);
 
   return new Promise<MessagePort>(resolve => {

@@ -170,7 +170,7 @@ export class TabSource implements Source {
 
     try {
       if (index < 0) {
-        if (index == -100) {
+        if (index === -100) {
           return (await this.getSelectedText()).split(PARAGRAPH_SPLITTER);
         }
 

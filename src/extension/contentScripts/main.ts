@@ -1,10 +1,9 @@
 /* eslint-disable no-console */
+import { onMessage, sendMessage } from "webext-bridge/content-script";
 import browser from "webextension-polyfill";
 import { getSettings } from "~/logic/settings";
 import { getSilenceTrack } from "~/utils/audio";
 import { lazy } from "~/utils/lazy";
-
-// import "./style.css";
 
 const player = lazy(async () => {
   const { Player } = await import("../player/player");
@@ -16,48 +15,21 @@ const player = lazy(async () => {
 (() => {
   console.log("cs register");
 
-  browser.runtime.onMessage.addListener(listener);
-  void browser.runtime.sendMessage({ type: "register", dest: "background" });
+  void sendMessage("register", null);
 
-  async function listener(message) {
-    console.log("cs message", message);
-
-    // if (message.dest !==="content-script") {
-    //   return;
-    // }
-
-    switch (message.type) {
-      case "get-required-js":
-        return getRequireJs();
-      case "play-text":
-        return (await player()).playText(message.data.text, message.data.opts);
-      case "play-tab":
-        return (await player()).playTab();
-      case "stop":
-        await (await player()).stop();
-        break;
-      case "pause":
-        await (await player()).pause();
-        break;
-      case "resume":
-        await (await player()).resume();
-        break;
-      case "forward":
-        await (await player()).forward();
-        break;
-      case "rewind":
-        await (await player()).rewind();
-        break;
-      case "seek":
-        await (await player()).seek(message.data.n);
-        break;
-      case "close":
-        close();
-        break;
-      case "get-playback-state":
-        return (await player()).getPlaybackState();
-    }
-  }
+  onMessage("get-required-js", () => getRequireJs());
+  onMessage("play-text", async (message) => (await player()).playText(message.data.text, message.data.opts));
+  onMessage("play-tab", async () => (await player()).playTab());
+  onMessage("stop", async () => (await player()).stop());
+  onMessage("pause", async () => (await player()).pause());
+  onMessage("resume", async () => (await player()).resume());
+  onMessage("forward", async () => (await player()).forward());
+  onMessage("rewind", async () => (await player()).rewind());
+  onMessage("seek", async (message) => (await player()).seek(message.data.n));
+  onMessage("get-playback-state", async () => (await player()).getPlaybackState());
+  onMessage("close", () => {
+    close();
+  });
 
   function getRequireJs() {
     if (location.hostname === "docs.google.com") {
