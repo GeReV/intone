@@ -12,39 +12,23 @@ let port: MessagePort | undefined;
 function initPort(evt: MessageEvent) {
   port = evt.ports[0];
 
-  console.log("register");
-
   assert(port);
+
   port.onmessage = onMessage;
 }
 
-const engine = new CoquiTtsEngine();
+const engineInit = getSettings(["serverUrl"])
+  .then(settings => new CoquiTtsEngine(new URL(settings.serverUrl ?? CoquiTtsEngine.DEFAULT_URL)));
 
-async function getSpeechVoice(engine: TtsEngine, voiceName: string | undefined, lang: string) {
-  const [voices, settings] = await Promise.all([engine.getVoices(), getSettings(["preferredVoices"])]);
+async function getSpeechVoice(engine: TtsEngine, lang = "en") {
+  const [voices, settings] = await Promise.all([
+    engine.getVoices(),
+    getSettings(["preferredVoices"])
+  ]);
 
-  return voices.find(v => v.language === "en");
+  const preferredVoice = settings.preferredVoices?.[lang] ?? engine.preferredVoices()[lang];
 
-  // const preferredVoiceByLang: Record<string, string> = settings.preferredVoices ?? {};
-  // let voice;
-  // //if a specific voice is indicated
-  // if (voiceName) {
-  //   voice = voices.find(v => v.key === voiceName);
-  // }
-  //
-  // //if no specific voice indicated, but a preferred voice was configured for the language
-  // if (!voice && lang) {
-  //   const voiceName = preferredVoiceByLang[lang.split("-")[0] ?? ""];
-  //   if (voiceName) {
-  //     voice = voices.find(v => v.key === voiceName);
-  //   }
-  // }
-  // //otherwise, auto-select
-  // if (!voice && lang) {
-  //   voice = findVoiceByLang(voices, lang);
-  // }
-  //
-  // return voice;
+  return voices.find(v => v.key === preferredVoice) ?? voices.find(v => v.language === lang) ?? voices[0];
 }
 
 // Handle messages received on port2
@@ -52,12 +36,14 @@ async function getSpeechVoice(engine: TtsEngine, voiceName: string | undefined, 
 async function onMessage(evt: MessageEvent<Messages>) {
   const message = evt.data;
 
+  const engine = await engineInit;
+
   switch (message.type) {
     case "is-speaking":
       port?.postMessage({ ...message, data: engine.isSpeaking() });
       return;
     case "speak": {
-      const voice = await getSpeechVoice(engine, undefined, "en");
+      const voice = await getSpeechVoice(engine, "en");
 
       assert(voice);
 
@@ -78,7 +64,7 @@ async function onMessage(evt: MessageEvent<Messages>) {
       return;
     }
     case "prefetch": {
-      const voice = await getSpeechVoice(engine, undefined, "en");
+      const voice = await getSpeechVoice(engine, "en");
 
       assert(voice);
 

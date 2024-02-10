@@ -38,6 +38,8 @@ export interface TtsEngine {
 
   prefetch?: (utterance: string, options: TtsOptions) => void;
 
+  preferredVoices(): Record<string, string>;
+
   getVoices(): Promise<TtsVoice[]>;
 }
 

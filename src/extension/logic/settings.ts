@@ -5,7 +5,7 @@ import browser from "webextension-polyfill";
 export type Settings = {
   voiceName: string | undefined;
   preferredVoices: Record<string, string>;
-
+  serverUrl: string | undefined;
   rate: number;
   pitch: number;
   volume: number;
@@ -31,15 +31,14 @@ export const DEFAULTS = {
   useEmbeddedPlayer: true,
 } as const;
 
-export async function getSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "useEmbeddedPlayer", "fixBtSilenceGap"]): Promise<Partial<Settings>> {
+export async function getSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer", "fixBtSilenceGap"]): Promise<Partial<Settings>> {
   return browser.storage.local.get(settings);
 }
 
 export async function updateSettings(settings: Partial<Settings>): Promise<void> {
-  console.log("settings", settings);
   return browser.storage.local.set(settings);
 }
 
-export async function clearSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "useEmbeddedPlayer", "fixBtSilenceGap"]): Promise<void> {
+export async function clearSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer", "fixBtSilenceGap"]): Promise<void> {
   return browser.storage.local.remove(settings);
 }

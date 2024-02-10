@@ -245,7 +245,7 @@ export class Popup {
   }
 
   private onSettings() {
-    location.href = "options.html?referer=" + encodeURIComponent(location.pathname + location.search);
+    location.href = browser.runtime.getURL("dist/options/index.html");
   }
 
   private async onForward() {

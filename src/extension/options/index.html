@@ -6,7 +6,25 @@
   <title>Options</title>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <form>
+      <fieldset>
+        <legend>Coqui AI Server</legend>
+        <div class="field">
+          <label for="server-url">Server URL</label>
+          <input type="url" id="server-url" name="server_url"/>
+          <button id="server-test">Test</button>
+        </div>
+        <div class="field">
+          <label for="preferred-voice">Preferred voice</label>
+          <select id="preferred-voice" name="preferred_voice"></select>
+        </div>
+      </fieldset>
+      <fieldset>
+        <input type="submit" id="save" value="Save">
+      </fieldset>
+    </form>
+  </div>
   <script type="module" src="./main.ts"></script>
 </body>
 </html>

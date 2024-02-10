@@ -18,6 +18,11 @@ export class CoquiTtsEngine implements TtsEngine {
 
   private port: MessagePort | undefined;
 
+  public static readonly DEFAULT_URL = "http://localhost:5002";
+
+  constructor(private readonly url: URL) {
+  }
+
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
     if (!this.port) {
       this.port = createPlayerFrame();
@@ -75,8 +80,17 @@ export class CoquiTtsEngine implements TtsEngine {
     }
   }
 
+  preferredVoices(): Record<string, string> {
+    return {
+      en: "p251",
+    };
+  }
+
   async getVoices(): Promise<TtsVoice[]> {
-    const response = await fetch("http://localhost:5002/api/voices");
+    const url = new URL("/api/voices", this.url);
+
+
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(await response.text());
@@ -88,7 +102,7 @@ export class CoquiTtsEngine implements TtsEngine {
   async getAudioUrl(text: string, voice: string, pitch?: number): Promise<string> {
     assert(text && voice);
 
-    const url = new URL("http://localhost:5002/api/tts");
+    const url = new URL("/api/tts", this.url);
     url.searchParams.set("speaker_id", voice);
     url.searchParams.set("text", text);
 
