@@ -2,6 +2,7 @@ import type { ProtocolWithReturn } from "webext-bridge";
 import { DocumentInfo } from "~/player/sources";
 
 import { PlaybackState } from "~/player/player";
+import { TtsOptions } from "~/player/ttsEngines";
 
 declare module "webext-bridge" {
   export interface ProtocolMap {
@@ -20,6 +21,14 @@ declare module "webext-bridge" {
     },
     "play-tab": { tabId?: number },
     "reload-and-play-tab": { tabId?: number },
+    "prefetch": {
+      prefetchText: string,
+      options: Exclude<TtsOptions, "voice">,
+    },
+    "speak": {
+      text: string,
+      options: Exclude<TtsOptions, "voice">,
+    }
     "resume": null,
     "pause": null,
     "stop": ProtocolWithReturn<null, boolean>,
