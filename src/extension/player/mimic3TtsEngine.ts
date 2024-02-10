@@ -1,6 +1,5 @@
 import { AudioHelper, TtsEngine, TtsEngineEventHandler, TtsOptions, TtsVoice } from "~/player/ttsEngines";
 import assert from "~/utils/assert";
-import browser from "webextension-polyfill";
 import { playAudio } from "~/player/audio";
 
 type Mimic3Voice = {
@@ -23,13 +22,7 @@ export class Mimic3TtsEngine implements TtsEngine {
   private prefetchAudio: [string, TtsOptions, string] | null = null;
   private speaking = false;
 
-  private port: MessagePort | undefined;
-
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
-    if (!this.port) {
-      this.port = createPlayerFrame();
-    }
-
     const url = (this.prefetchAudio && this.prefetchAudio[0] === utterance && this.prefetchAudio[1] === options) ?
       this.prefetchAudio[2] :
       await this.getAudioUrl(utterance, options.voice, options.pitch);
@@ -121,29 +114,4 @@ export class Mimic3TtsEngine implements TtsEngine {
 
     return URL.createObjectURL(await res.blob());
   }
-}
-
-function createPlayerFrame() {
-  const channel = new MessageChannel();
-
-  const frame = document.createElement("iframe");
-  frame.src = browser.runtime.getURL("dist/player/player.html");
-  frame.style.position = "absolute";
-  frame.style.height = "0";
-  frame.style.borderWidth = "0";
-
-  // TODO: Remove
-  frame.style.height = "200px";
-  frame.style.width = "200px";
-  frame.style.top = "0";
-  frame.style.zIndex = "999999";
-
-  document.body.appendChild(frame);
-
-  frame.addEventListener("load", () => {
-    assert(frame.contentWindow);
-    frame.contentWindow.postMessage("init", "*", [channel.port2]);
-  });
-
-  return channel.port1;
 }
