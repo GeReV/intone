@@ -2,6 +2,7 @@ import { getSettings } from "~/logic/settings";
 import assert from "~/utils/assert";
 import { TtsEngine } from "~/player/ttsEngines";
 import { CoquiTtsEngine } from "~/player/coquiTtsEngine";
+import { Messages } from "~/player/types";
 
 window.addEventListener("message", initPort);
 
@@ -47,7 +48,8 @@ async function getSpeechVoice(engine: TtsEngine, voiceName: string | undefined, 
 }
 
 // Handle messages received on port2
-async function onMessage(evt: MessageEvent) {
+
+async function onMessage(evt: MessageEvent<Messages>) {
   const message = evt.data;
 
   switch (message.type) {
@@ -57,9 +59,11 @@ async function onMessage(evt: MessageEvent) {
     case "speak": {
       const voice = await getSpeechVoice(engine, undefined, "en");
 
+      assert(voice);
+
       const options = {
         ...message.data.options,
-        voice: voice?.key,
+        voice: voice.key,
       };
 
       const messageId = message.id;
@@ -76,9 +80,11 @@ async function onMessage(evt: MessageEvent) {
     case "prefetch": {
       const voice = await getSpeechVoice(engine, undefined, "en");
 
+      assert(voice);
+
       const options = {
         ...message.data.options,
-        voice: voice?.key,
+        voice: voice.key,
       };
 
       await engine.prefetch(message.data.prefetchText, options);
@@ -96,8 +102,10 @@ async function onMessage(evt: MessageEvent) {
   }
 
   // Ack with the same message.
-  delete message.data;
-  port?.postMessage(message);
+  port?.postMessage({
+    type: message.type,
+    id: message.id,
+  });
 }
 
 document.addEventListener("DOMContentLoaded", initialize);

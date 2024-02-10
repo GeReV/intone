@@ -2,6 +2,8 @@ import assert from "~/utils/assert";
 import { TtsOptions } from "~/player/ttsEngines";
 import browser from "webextension-polyfill";
 import { nextId } from "~/utils";
+import { PortMessage } from "~/player/types";
+import { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
 
 export type SpeechPosition = {
   index: number;
@@ -9,14 +11,23 @@ export type SpeechPosition = {
   isRTL: boolean;
 };
 
-async function sendMessageWithResponse<T>(port: MessagePort, message: unknown): Promise<T> {
-  return new Promise(resolve => {
+type SpeechEvent =
+  { type: "start" | "end" } |
+  {
+    type: "error",
+    error: {
+      message: string,
+    }
+  };
+
+async function sendMessageWithResponse<K extends DataTypeKey>(port: MessagePort, messageId: K, data: GetDataType<K, null>): Promise<GetReturnType<K>> {
+  return new Promise<GetReturnType<K>>(resolve => {
     const id = nextId();
 
-    const listener = (evt: MessageEvent) => {
+    const listener = (evt: MessageEvent<PortMessage<GetReturnType<K>>>) => {
       const response = evt.data;
 
-      if (response.type === message.type && response.id === id) {
+      if (response.type === messageId && response.id === id) {
         port.removeEventListener("message", listener, false);
 
         resolve(response.data);
@@ -26,8 +37,8 @@ async function sendMessageWithResponse<T>(port: MessagePort, message: unknown): 
     port.start();
 
     port.postMessage({
-      type: message.type,
-      data: message.data,
+      type: messageId,
+      data,
       id
     });
   });
@@ -43,7 +54,7 @@ export class Speech {
 
   private readonly port: Promise<MessagePort>;
 
-  constructor(private readonly texts: string[], private readonly options: Exclude<TtsOptions, "voice">, public onEnd?: (err?: unknown) => void) {
+  constructor(private readonly texts: string[], private readonly options: Omit<TtsOptions, "voice">, public onEnd?: (err?: unknown) => void) {
     options.rate = (options.rate || 1); // * (isGoogleNative(options.voice) ? 0.9 : 1);
 
     this.pauseDuration = 650 / options.rate;
@@ -71,7 +82,7 @@ export class Speech {
   }
 
   async getState(): Promise<"PLAYING" | "PAUSED" | "LOADING"> {
-    const isSpeaking = await sendMessageWithResponse(await this.port, { type: "is-speaking" });
+    const isSpeaking = await sendMessageWithResponse(await this.port, "is-speaking", null);
 
     if (this.state === "PLAYING") {
       return isSpeaking ? "PLAYING" : "LOADING";
@@ -98,7 +109,7 @@ export class Speech {
       this.state = "PLAYING";
 
       try {
-        await sendMessageWithResponse(await this.port, { type: "resume" });
+        await sendMessageWithResponse(await this.port, "resume", null);
       } catch (err) {
         console.error("Couldn't resume", err);
 
@@ -117,10 +128,7 @@ export class Speech {
           this.state = "IDLE";
 
           // if (this.engine.setNextStartTime) {
-          await sendMessageWithResponse(await this.port, {
-            type: "set-next-start-time",
-            data: Date.now() + this.pauseDuration
-          });
+          await sendMessageWithResponse(await this.port, "set-next-start-time", Date.now() + this.pauseDuration);
           // this.engine.setNextStartTime(Date.now() + this.pauseDuration);
           // }
 
@@ -143,10 +151,7 @@ export class Speech {
 
       const prefetchText = this.texts[this.index + 1];
       if (prefetchText /*&& this.engine.prefetch*/) {
-        await sendMessageWithResponse(await this.port, {
-          type: "prefetch",
-          data: { prefetchText, options: this.options }
-        });
+        await sendMessageWithResponse(await this.port, "prefetch", { prefetchText, options: this.options });
       }
     }
   }
@@ -173,7 +178,7 @@ export class Speech {
     if (this.canPause()) {
       clearTimeout(this.delayedPlayTimer);
 
-      await sendMessageWithResponse(await this.port, { type: "pause" });
+      await sendMessageWithResponse(await this.port, "pause", null);
       // this.engine.pause();
 
       this.state = "PAUSED";
@@ -187,7 +192,7 @@ export class Speech {
 
     clearTimeout(this.delayedPlayTimer);
 
-    await sendMessageWithResponse(await this.port, { type: "stop" });
+    await sendMessageWithResponse(await this.port, "stop", null);
 
     this.state = "IDLE";
   }
@@ -245,7 +250,7 @@ export class Speech {
 
     const id = nextId();
 
-    const listener = (evt: MessageEvent) => {
+    const listener = (evt: MessageEvent<PortMessage<SpeechEvent>>) => {
       const response = evt.data;
       if (response.id === id) {
         console.log("received speak with id", id, evt.data);
@@ -278,7 +283,7 @@ export class Speech {
             } else if (this.state === "IDLE") {
               this.state = "ERROR";
 
-              throw inner.error;
+              throw new Error(inner.error.message);
             } else if (this.state === "PLAYING") {
               onError(inner.error);
               this.state = "ERROR";
