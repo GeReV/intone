@@ -1,7 +1,7 @@
 import { getSettings } from "~/logic/settings";
 import assert from "~/utils/assert";
 import { TtsEngine } from "~/player/ttsEngines";
-import { CoquiTtsEngine } from "~/player/coquiTtsEngine";
+import Engine from "~/player/engines/piperTtsEngine";
 import { Messages } from "~/player/types";
 
 window.addEventListener("message", initPort);
@@ -18,7 +18,7 @@ function initPort(evt: MessageEvent) {
 }
 
 const engineInit = getSettings(["serverUrl"])
-  .then(settings => new CoquiTtsEngine(new URL(settings.serverUrl ?? CoquiTtsEngine.DEFAULT_URL)));
+  .then(settings => new Engine(new URL(settings.serverUrl ?? Engine.DEFAULT_URL)));
 
 async function getSpeechVoice(engine: TtsEngine, lang = "en") {
   const [voices, settings] = await Promise.all([

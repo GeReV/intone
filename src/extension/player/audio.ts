@@ -41,7 +41,7 @@ function playAudioHere(urlPromise: Promise<string>, options: TtsOptions, startTi
   const audio = getSingletonAudio();
   audio.pause();
   // if (!isIOS()) {
-  audio.defaultPlaybackRate = (options.rate || 1) * (options.rateAdjust ?? 1);
+  // audio.defaultPlaybackRate = (options.rate || 1) * (options.rateAdjust ?? 1);
   audio.volume = options.volume || 1;
   // }
   const silenceTrack = getSilenceTrack();

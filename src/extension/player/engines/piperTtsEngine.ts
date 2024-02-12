@@ -2,30 +2,20 @@ import { AudioHelper, TtsEngine, TtsEngineEventHandler, TtsOptions, TtsVoice } f
 import assert from "~/utils/assert";
 import { playAudio } from "~/player/audio";
 
-type Mimic3Voice = {
-  aliases: string[] | null;
-  description: string;
-  key: string;
-  language: string;
-  language_english: string;
-  language_native: string;
-  location: string;
-  name: string;
-  properties: Record<string, unknown>;
-  sample_text: string;
-  speakers: string[] | null;
-  version: string | null;
-};
-
-export class Mimic3TtsEngine implements TtsEngine {
+export default class PiperTtsEngine implements TtsEngine {
   private audio: AudioHelper | null = null;
   private prefetchAudio: [string, TtsOptions, string] | null = null;
   private speaking = false;
 
+  public static readonly DEFAULT_URL = "http://localhost:5000";
+
+  constructor(private readonly url: URL) {
+  }
+
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
     const url = (this.prefetchAudio && this.prefetchAudio[0] === utterance && this.prefetchAudio[1] === options) ?
       this.prefetchAudio[2] :
-      await this.getAudioUrl(utterance, options.voice, options.pitch);
+      await this.getAudioUrl(utterance, options.voice, options.rate);
 
     this.audio = playAudio(url, options);
     this.audio.startPromise
@@ -75,39 +65,36 @@ export class Mimic3TtsEngine implements TtsEngine {
     }
   }
 
-  async getVoices(): Promise<TtsVoice[]> {
-    const response = await fetch("http://localhost:59125/api/voices");
-
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-
-    const result = await response.json() as Mimic3Voice[];
-
-    return result.flatMap(voice => {
-      if (voice.speakers?.length) {
-        return voice.speakers.map(speaker => ({
-          key: `${voice.key}#${speaker}`,
-          language: voice.language_english,
-          name: `${voice.name} - ${speaker}`,
-        }));
-      }
-
-      return {
-        key: voice.key,
-        language: voice.language_english,
-        name: voice.name,
-      };
-    });
+  preferredVoices(): Record<string, string> {
+    return {
+      en: "default",
+    };
   }
 
-  async getAudioUrl(text: string, voice: string, pitch?: number): Promise<string> {
+  getVoices(): Promise<TtsVoice[]> {
+    return Promise.resolve([
+      {
+        key: "default",
+        language: "en",
+        name: "ryan"
+      },
+    ]);
+  }
+
+  private async getAudioUrl(text: string, voice: string, rate?: number): Promise<string> {
     assert(text && voice);
 
-    const res = await fetch(`http://localhost:59125/api/tts?voice=${voice}`, {
-      method: "POST",
-      body: text
+    const url = new URL(this.url);
+    url.searchParams.set("text", text);
+
+    if (typeof rate !== "undefined" && rate > 0) {
+      url.searchParams.set("rate", String(rate));
+    }
+
+    const res = await fetch(url, {
+      method: "GET",
     });
+
     if (!res.ok) {
       throw await res.text();
     }

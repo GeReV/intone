@@ -1,0 +1,22 @@
+services:
+  piper:
+    build:
+      context: .
+    environment:
+      - PIPER_VOICE=en_US-ryan-high
+    #      - PIPER_LENGTH=1.0 #optional
+    #      - PIPER_NOISE=0.667 #optional
+    #      - PIPER_NOISEW=0.333 #optional
+    #      - PIPER_SPEAKER=0 #optional
+    #      - PIPER_PROCS=1 #optional
+    volumes:
+      - .cache/config:/config
+    ports:
+      - 5000:5000
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]

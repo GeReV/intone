@@ -13,3 +13,5 @@ dist-ssr
 extension/manifest.json
 node_modules
 .eslintcache
+
+**/.cache

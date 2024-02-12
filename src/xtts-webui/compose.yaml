@@ -1,8 +1,11 @@
 services:
-  tts:
-    build: .
+  server:
+    build:
+      context: .
     ports:
-      - 5002:5002
+      - 8010:8010
+    volumes:
+      - ./.cache/models:/app/models
     deploy:
       resources:
         reservations:

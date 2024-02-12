@@ -1,11 +1,11 @@
 import { $ } from "~/utils/dom";
 import { getSettings, updateSettings } from "~/logic/settings";
-import { CoquiTtsEngine } from "~/player/coquiTtsEngine";
 import { TtsEngine } from "~/player/ttsEngines";
+import Engine from "~/player/engines/piperTtsEngine";
 
 void (async () => {
   console.log("hi");
-  let engine: CoquiTtsEngine;
+  let engine: TtsEngine;
   const form = $<HTMLFormElement>("#app form");
 
   const fieldsets = form.querySelectorAll("fieldset");
@@ -25,7 +25,7 @@ void (async () => {
     evt.preventDefault();
 
     try {
-      engine = new CoquiTtsEngine(new URL(serverUrl.value));
+      engine = new Engine(new URL(serverUrl.value));
 
       await engine.getVoices();
 
@@ -48,9 +48,9 @@ void (async () => {
 
   const settings = await getSettings(["serverUrl", "preferredVoices"]);
 
-  const baseUrl = settings.serverUrl ?? CoquiTtsEngine.DEFAULT_URL;
+  const baseUrl = settings.serverUrl ?? Engine.DEFAULT_URL;
 
-  engine = new CoquiTtsEngine(new URL(baseUrl));
+  engine = new Engine(new URL(baseUrl));
 
   const preferredVoice = settings.preferredVoices?.en ?? engine.preferredVoices().en;
 
