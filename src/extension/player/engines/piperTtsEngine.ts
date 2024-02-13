@@ -7,7 +7,9 @@ export default class PiperTtsEngine implements TtsEngine {
   private prefetchAudio: [string, TtsOptions, string] | null = null;
   private speaking = false;
 
-  public static readonly DEFAULT_URL = "http://localhost:5000";
+  static readonly DEFAULT_URL = "http://localhost:5000";
+
+  readonly name = "Piper TTS Engine";
 
   constructor(private readonly url: URL) {
   }

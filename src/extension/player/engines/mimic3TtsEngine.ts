@@ -22,6 +22,8 @@ export default class Mimic3TtsEngine implements TtsEngine {
   private prefetchAudio: [string, TtsOptions, string] | null = null;
   private speaking = false;
 
+  readonly name = "Mimic 3 Engine";
+
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
     const url = (this.prefetchAudio && this.prefetchAudio[0] === utterance && this.prefetchAudio[1] === options) ?
       this.prefetchAudio[2] :

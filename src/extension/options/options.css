@@ -1,0 +1,12 @@
+#app {
+    min-width: 400px;
+}
+
+#status {
+    font-size: 0.875rem;
+}
+
+#rate-value {
+    width: 2rem;
+    text-align: right;
+}

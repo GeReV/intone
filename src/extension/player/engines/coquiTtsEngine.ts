@@ -20,6 +20,8 @@ export default class CoquiTtsEngine implements TtsEngine {
   constructor(private readonly url: URL) {
   }
 
+  readonly name = "Coqui AI Engine";
+
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
     const url = (this.prefetchAudio && this.prefetchAudio[0] === utterance && this.prefetchAudio[1] === options) ?
       this.prefetchAudio[2] :

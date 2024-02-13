@@ -24,6 +24,8 @@ export type TtsVoice = {
 };
 
 export interface TtsEngine {
+  readonly name: string;
+
   speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler): void;
 
   isSpeaking(): boolean;
