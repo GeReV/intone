@@ -1,9 +1,9 @@
 {
-  "name": "vitesse-webext",
-  "displayName": "Vitesse WebExt",
+  "name": "read-out",
+  "displayName": "Read Out",
   "version": "0.0.1",
   "private": true,
-  "description": "[description]",
+  "description": "Read out the current web-page article with one click, using text to speech (TTS).",
   "engines": {
     "node": ">=18.12.0"
   },
