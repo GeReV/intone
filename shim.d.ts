@@ -24,7 +24,7 @@ declare module "webext-bridge" {
     "seek": { n: number },
     "get-playback-state": ProtocolWithReturn<null, PlaybackState>,
 
-    "get-required-js": ProtocolWithReturn<null, string[]>,
+    // "get-required-js": ProtocolWithReturn<null, string[]>,
 
     "is-speaking": ProtocolWithReturn<null, boolean>,
     "prefetch": {

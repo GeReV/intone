@@ -7,7 +7,7 @@ export const getMath = (function () {
   };
 })();
 
-async function makeMath() {
+function makeMath() {
 //   const getXmlFromMathEl = function (mathEl) {
 //     const clone = mathEl.cloneNode(true);
 //     $("annotation, annotation-xml", clone).remove();

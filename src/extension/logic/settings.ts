@@ -14,7 +14,6 @@ export type Settings = {
   highlightFontSize: number;
   highlightWindowSize: number;
   useEmbeddedPlayer: boolean;
-  fixBtSilenceGap: boolean;
   readOutTab: number | undefined;
   sourceUri: string | undefined;
 };
@@ -31,7 +30,7 @@ export const DEFAULT_SETTINGS = {
   useEmbeddedPlayer: true,
 } as const;
 
-export async function getSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer", "fixBtSilenceGap"]): Promise<Partial<Settings>> {
+export async function getSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer"]): Promise<Partial<Settings>> {
   return browser.storage.local.get(settings);
 }
 
@@ -39,6 +38,6 @@ export async function updateSettings(settings: Partial<Settings>): Promise<void>
   return browser.storage.local.set(settings);
 }
 
-export async function clearSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer", "fixBtSilenceGap"]): Promise<void> {
+export async function clearSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer"]): Promise<void> {
   return browser.storage.local.remove(settings);
 }
