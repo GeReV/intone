@@ -1,5 +1,5 @@
 import browser from "webextension-polyfill";
-import { HtmlDoc } from "~/contentScripts/readAloudDoc";
+import { HtmlDoc } from "~/contentScripts/htmlDoc";
 
 export type DocumentInfo = {
   url: string,
@@ -87,12 +87,12 @@ export class TabSource implements Source {
 
   ready: Promise<DocumentInfo>;
 
-  private readAloudDoc: HtmlDoc;
+  private htmlDoc: HtmlDoc;
 
   constructor() {
     this.ready = Promise.resolve(getDocumentInfo());
 
-    this.readAloudDoc = new HtmlDoc();
+    this.htmlDoc = new HtmlDoc();
 
     void this.initialize();
   }
@@ -103,7 +103,7 @@ export class TabSource implements Source {
       const uri = String(obj.sourceUri);
 
       if (uri.startsWith("contentscript:")) {
-        const tabId = Number(uri.substring(14));
+        // const tabId = Number(uri.substring(14));
 
 
       } else if (uri.startsWith("epubreader:")) {
@@ -144,11 +144,7 @@ export class TabSource implements Source {
   }
 
   private getSelectedText() {
-    /*if (readAloudDoc.getSelectedText)*/
-    {
-      return this.readAloudDoc.getSelectedText();
-    }
-    // return (window.getSelection() ?? "").toString().trim();
+    return this.htmlDoc.getSelectedText();
   }
 
   async getCurrentIndex(): Promise<number> {
@@ -159,13 +155,13 @@ export class TabSource implements Source {
         return -100;
       }
 
-      return this.readAloudDoc.getCurrentIndex();
+      return this.htmlDoc.getCurrentIndex();
     } finally {
       this.waiting = false;
     }
   }
 
-  async getTexts(index: number, quietly: boolean = true): Promise<string[] | null> {
+  async getTexts(index: number, quietly = true): Promise<string[] | null> {
     this.waiting = true;
 
     try {
@@ -176,7 +172,7 @@ export class TabSource implements Source {
 
         return null;
       } else {
-        const texts = await this.readAloudDoc.getTexts(index, quietly);
+        const texts = await this.htmlDoc.getTexts(index);
 
         if (Array.isArray(texts)) {
           if (!quietly) {

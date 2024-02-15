@@ -76,14 +76,14 @@ export class Popup {
     try {
       await this.updateButtons();
 
-      const settings = await getSettings(["showHighlighting", "readAloudTab"]);
+      const settings = await getSettings(["showHighlighting", "readOutTab"]);
 
       if (settings.showHighlighting === 2 && queryString.has("isPopup")) {
         const activeTab = await getActiveTab();
         const url = browser.runtime.getURL(`popup.html?tab=${activeTab?.id}`);
 
-        if (settings.readAloudTab) {
-          const tab = await browser.tabs.update(settings.readAloudTab, { url: url, active: true });
+        if (settings.readOutTab) {
+          const tab = await browser.tabs.update(settings.readOutTab, { url: url, active: true });
 
           if (tab.windowId) {
             await browser.windows.update(tab.windowId, { focused: true });

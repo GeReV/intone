@@ -2,7 +2,6 @@ import { DocumentInfo, Source } from "./sources";
 import browser from "webextension-polyfill";
 import { DEFAULT_SETTINGS, getSettings } from "~/logic/settings";
 import { Speech } from "~/player/speech";
-import { TtsVoice } from "~/player/ttsEngines";
 import { LANG_MAP } from "~/utils";
 
 function truncateRepeatedChars(text: string, max: number): string {
@@ -35,20 +34,6 @@ function preprocess(text: string) {
   text = truncateRepeatedChars(text, 3);
   return text.replace(/https?:\/\/\S+/g, "HTTP URL.");
 }
-
-// function serverDetectLanguage(text) {
-//   return ajaxPost(config.serviceUrl + "/read-aloud/detect-language", { text: text }, "json")
-//     .then(JSON.parse)
-//     .then(function (res) {
-//       var result = Array.isArray(res) ? res[0] : res;
-//       if (result && result.language && result.language != "und") return result.language;
-//       else return null;
-//     })
-//     .catch(function (err) {
-//       console.error(err);
-//       return null;
-//     });
-// }
 
 async function browserDetectLanguage(text: string) {
   const result = await browser.i18n.detectLanguage(text);
@@ -89,36 +74,36 @@ async function detectLanguageOf(text: string) {
 //   };
 // }
 
-function findVoiceByLang(voices: TtsVoice[], lang: string) {
-  // const speechLang = parseLang(lang);
-  // const match = {};
-  // voices.forEach(function (voice) {
-  //   if (voice.lang) {
-  //     var voiceLang = parseLang(voice.lang);
-  //     if (voiceLang.lang == speechLang.lang) {
-  //       //language matches
-  //       if (voiceLang.rest == speechLang.rest) {
-  //         //dialect matches, prefer female
-  //         if (voice.gender == "female") match.first = match.first || voice;
-  //         else match.second = match.second || voice;
-  //       } else if (!voiceLang.rest) {
-  //         //voice specifies no dialect
-  //         match.third = match.third || voice;
-  //       } else {
-  //         //dialect mismatch, prefer en-US (if english)
-  //         if (voiceLang.lang == "en" && voiceLang.rest == "us") match.fourth = match.fourth || voice;
-  //         else match.sixth = match.sixth || voice;
-  //       }
-  //     }
-  //   } else {
-  //     //voice specifies no language, assume can handle any lang
-  //     match.fifth = match.fifth || voice;
-  //   }
-  // });
-  // return match.first || match.second || match.third || match.fourth || match.fifth || match.sixth;
-
-  return voices[0];
-}
+// function findVoiceByLang(voices: TtsVoice[], lang: string) {
+//   const speechLang = parseLang(lang);
+//   const match = {};
+//   voices.forEach(function (voice) {
+//     if (voice.lang) {
+//       var voiceLang = parseLang(voice.lang);
+//       if (voiceLang.lang == speechLang.lang) {
+//         //language matches
+//         if (voiceLang.rest == speechLang.rest) {
+//           //dialect matches, prefer female
+//           if (voice.gender == "female") match.first = match.first || voice;
+//           else match.second = match.second || voice;
+//         } else if (!voiceLang.rest) {
+//           //voice specifies no dialect
+//           match.third = match.third || voice;
+//         } else {
+//           //dialect mismatch, prefer en-US (if english)
+//           if (voiceLang.lang == "en" && voiceLang.rest == "us") match.fourth = match.fourth || voice;
+//           else match.sixth = match.sixth || voice;
+//         }
+//       }
+//     } else {
+//       //voice specifies no language, assume can handle any lang
+//       match.fifth = match.fifth || voice;
+//     }
+//   });
+//   return match.first || match.second || match.third || match.fourth || match.fifth || match.sixth;
+//
+//   return voices[0];
+// }
 
 export class Doc {
   private info: DocumentInfo | undefined;

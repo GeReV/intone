@@ -15,7 +15,7 @@ export type Settings = {
   highlightWindowSize: number;
   useEmbeddedPlayer: boolean;
   fixBtSilenceGap: boolean;
-  readAloudTab: number | undefined;
+  readOutTab: number | undefined;
   sourceUri: string | undefined;
 };
 

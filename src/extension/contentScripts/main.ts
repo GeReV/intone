@@ -66,7 +66,7 @@ const player = lazy(async () => {
       return ["js/content/webnovel.js"];
     } else if (location.hostname === "archiveofourown.org") {
       return ["js/content/archiveofourown.js"];
-    } else if (location.pathname.endsWith("readaloud.html") || location.pathname.endsWith(".pdf") || !!document.querySelector("embed[type='application/pdf']") || !!document.querySelector("iframe[src*='.pdf']")) {
+    } else if (location.pathname.endsWith("readout.html") || location.pathname.endsWith(".pdf") || !!document.querySelector("embed[type='application/pdf']") || !!document.querySelector("iframe[src*='.pdf']")) {
       return ["js/content/pdf-doc.js"];
     } else if (/^\d+\.\d+\.\d+\.\d+$/.test(location.hostname)
       && location.port === "1122"

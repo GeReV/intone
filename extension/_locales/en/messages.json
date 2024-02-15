@@ -1,12 +1,12 @@
 {
   "extension_name": {
-    "message": "Read Aloud: A Text to Speech Voice Reader"
+    "message": "Read Out: A Text to Speech Voice Reader"
   },
   "extension_short_name": {
-    "message": "Read Aloud"
+    "message": "Read Out"
   },
   "extension_description": {
-    "message": "Read aloud the current web-page article with one click, using text to speech (TTS). Supports 40+ languages."
+    "message": "Read out the current web-page article with one click, using text to speech (TTS)."
   },
   "options_heading": {
     "message": "Options"
@@ -81,7 +81,7 @@
     "message": "Logout"
   },
   "player_tab_explanation": {
-    "message": "Read Aloud uses this tab for audio playback. This tab will automatically close after 5 minutes of no activity."
+    "message": "Read Out uses this tab for audio playback. This tab will automatically close after 5 minutes of no activity."
   },
   "player_hidethistab_link": {
     "message": "Hide this tab"
@@ -90,7 +90,7 @@
     "message": "Hide this tab?"
   },
   "player_hidethistab_dialog_body": {
-    "message": "If you hide this tab, Read Aloud will play audio inside the current webpage. This means navigating away from the page will cause the speech to stop.\n\n(This setting can be reverted from the extension Options page)"
+    "message": "If you hide this tab, Read Out will play audio inside the current webpage. This means navigating away from the page will cause the speech to stop.\n\n(This setting can be reverted from the extension Options page)"
   },
   "player_hidethistab_dialog_ok_button": {
     "message": "Hide"
@@ -102,13 +102,13 @@
     "message": "Permission Requested"
   },
   "player_permission_dialog_body": {
-    "message": "Allow Read Aloud to play audio?"
+    "message": "Allow Read Out to play audio?"
   },
   "player_permission_dialog_ok_button": {
     "message": "Allow"
   },
   "context_read_selection": {
-    "message": "Read aloud selected text"
+    "message": "Read out selected text"
   },
   "error_no_text": {
     "message": "Didn't find any text to read, try selecting the text you want to read first"
@@ -117,19 +117,19 @@
     "message": "Language not supported '{lang}'"
   },
   "error_upload_pdf": {
-    "message": "Please use the form to upload your PDF file to read aloud"
+    "message": "Please use the form to upload your PDF file to read out"
   },
   "error_ajax_pdf": {
-    "message": "Please save this PDF file to your computer and open it inside this [PDF viewer](open-pdf-viewer) to read aloud"
+    "message": "Please save this PDF file to your computer and open it inside this [PDF viewer](open-pdf-viewer) to read out"
   },
   "error_page_unreadable": {
-    "message": "Cannot read aloud this website"
+    "message": "Cannot read out this website"
   },
   "error_file_access": {
-    "message": "You need to grant Read Aloud access to file URLs in extension [settings](open-extension-settings)"
+    "message": "You need to grant Read Out access to file URLs in extension [settings](open-extension-settings)"
   },
   "error_add_permissions": {
-    "message": "You need to grant Read Aloud additional [permissions](request-permissions) for this website"
+    "message": "You need to grant Read Out additional [permissions](request-permissions) for this website"
   },
   "error_login_required": {
     "message": "Please [sign in](sign-in) to use the Premium Voices"
@@ -156,12 +156,12 @@
     "message": "Back to Options"
   },
   "google_translate_request_permission": {
-    "message": "Read Aloud would like to use Google Translate for text-to-speech."
+    "message": "Read Out would like to use Google Translate for text-to-speech."
   },
   "google_translate_allow_button": {
     "message": "Allow"
   },
   "google_translate_keep_page_open": {
-    "message": "Read Aloud is using Google Translate for text-to-speech.  Please keep this tab open."
+    "message": "Read Out is using Google Translate for text-to-speech.  Please keep this tab open."
   }
 }

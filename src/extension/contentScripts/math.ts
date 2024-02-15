@@ -37,8 +37,8 @@ async function makeMath() {
 //   //create speech surrogates
 //   try {
 //     const xmls = elems.map(math.getXML);
-//     const texts = await ajaxPost(config.serviceUrl + "/read-aloud/mathml", xmls, "json").then(JSON.parse);
-//     elems.forEach((el, i) => $("<span>").addClass("readaloud-mathml").text(texts[i] || "math expression").insertBefore(el));
+//     const texts = await ajaxPost(config.serviceUrl + "/read-out/mathml", xmls, "json").then(JSON.parse);
+//     elems.forEach((el, i) => $("<span>").addClass("readout-mathml").text(texts[i] || "math expression").insertBefore(el));
 //   } catch (err) {
 //     console.error(err);
 //     return {
@@ -53,11 +53,11 @@ async function makeMath() {
   return {
     show() {
       // for (const el of elems) el.style.setProperty("display", "none", "important");
-      // $(".readaloud-mathml").show();
+      // $(".readout-mathml").show();
     },
     hide() {
       // $(elems).css("display", "");
-      // $(".readaloud-mathml").hide();
+      // $(".readout-mathml").hide();
     }
   };
 }

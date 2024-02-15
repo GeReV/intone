@@ -1,6 +1,6 @@
 import { getMath } from "~/contentScripts/math";
 
-const IGNORE_TAGS = "select, textarea, button, label, audio, video, dialog, embed, menu, nav, noframes, noscript, object, script, style, svg, aside, footer, #footer, .no-read-aloud";
+const IGNORE_TAGS = "select, textarea, button, label, audio, video, dialog, embed, menu, nav, noframes, noscript, object, script, style, svg, aside, footer, #footer, .no-read-out";
 
 const PARAGRAPH_SPLITTER = /(?:\s*\r?\n\s*){2,}/;
 
@@ -80,7 +80,7 @@ function addNumbering(el: Element) {
   if (text && !text.match(/^[(]?(\d|[a-zA-Z][).])/))
     for (let i = 0; i < children.length; i++) {
       const span = document.createElement("span");
-      span.classList.add("read-aloud-numbering");
+      span.classList.add("read-out-numbering");
       span.textContent = `${i + 1}. `;
 
       children[i]?.prepend(span);
@@ -198,7 +198,7 @@ export class HtmlDoc {
 
     //for debugging only
     for (const el of toRead) {
-      el.classList.add("read-aloud");
+      el.classList.add("read-out");
     }
 
     function getTexts(elem: Element) {
@@ -210,11 +210,11 @@ export class HtmlDoc {
 
       elem.querySelectorAll("ol, ul").forEach(addNumbering);
 
-      const texts = elem.hasAttribute("data-read-aloud-multi-block")
+      const texts = elem.hasAttribute("data-read-out-multi-block")
         ? Array.from(elem.children).filter(el => el.checkVisibility()).map(getText)
         : getText(elem).split(PARAGRAPH_SPLITTER);
 
-      elem.querySelectorAll(".read-aloud-numbering").forEach(el => {
+      elem.querySelectorAll(".read-out-numbering").forEach(el => {
         el.remove();
       });
 
@@ -249,7 +249,7 @@ export class HtmlDoc {
 
     const addBlock = function (elem: Element, multi = false) {
       if (multi) {
-        elem.setAttribute("data-read-aloud-multi-block", "true");
+        elem.setAttribute("data-read-out-multi-block", "true");
       }
       textBlocks.push(elem);
     };
