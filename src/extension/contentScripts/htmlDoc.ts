@@ -112,7 +112,7 @@ export class HtmlDoc {
     return 0;
   }
 
-  async getTexts(index: number, _quietly: boolean) {
+  async getTexts(index: number) {
     if (index === 0) {
       const math = await getMath();
       try {

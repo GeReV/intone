@@ -1,6 +1,6 @@
 import { DocumentInfo, Source } from "./sources";
 import browser from "webextension-polyfill";
-import { DEFAULTS, getSettings } from "~/logic/settings";
+import { DEFAULT_SETTINGS, getSettings } from "~/logic/settings";
 import { Speech } from "~/player/speech";
 import { TtsVoice } from "~/player/ttsEngines";
 import { LANG_MAP } from "~/utils";
@@ -289,9 +289,9 @@ export class Doc {
     console.log("Declared", this.info?.lang, "- Detected", this.info?.detectedLang, "- Chosen", lang);
 
     const options = {
-      rate: settings.rate ?? DEFAULTS.rate,
-      pitch: settings.pitch ?? DEFAULTS.pitch,
-      volume: settings.volume ?? DEFAULTS.volume,
+      rate: settings.rate ?? DEFAULT_SETTINGS.rate,
+      pitch: settings.pitch ?? DEFAULT_SETTINGS.pitch,
+      volume: settings.volume ?? DEFAULT_SETTINGS.volume,
       lang,
     };
 

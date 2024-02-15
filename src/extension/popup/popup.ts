@@ -1,6 +1,6 @@
 import { $ } from "~/utils/dom";
 import * as browser from "webextension-polyfill";
-import { DEFAULTS, getSettings, Settings, updateSettings } from "~/logic/settings";
+import { DEFAULT_SETTINGS, getSettings, Settings, updateSettings } from "~/logic/settings";
 import type { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
 import assert from "~/utils/assert";
 import { escapeHtml, getQueryString, nextId } from "~/utils";
@@ -135,9 +135,9 @@ export class Popup {
       this.btnPause.hidden = state !== "PLAYING";
       this.btnStop.hidden = state !== "PAUSED" && state !== "PLAYING" && state !== "LOADING";
       this.btnForward.hidden = this.btnRewind.hidden = state !== "PLAYING" && state !== "PAUSED";
-      this.highlight.hidden = this.toolbar.hidden = !(typeof settings.showHighlighting !== "undefined" ? settings.showHighlighting : DEFAULTS.showHighlighting) && (state === "LOADING" || state === "PAUSED" || state === "PLAYING");
+      this.highlight.hidden = this.toolbar.hidden = !(typeof settings.showHighlighting !== "undefined" ? settings.showHighlighting : DEFAULT_SETTINGS.showHighlighting) && (state === "LOADING" || state === "PAUSED" || state === "PLAYING");
 
-      if ((typeof settings.showHighlighting !== "undefined" ? settings.showHighlighting : DEFAULTS.showHighlighting) && speechPosition) {
+      if ((typeof settings.showHighlighting !== "undefined" ? settings.showHighlighting : DEFAULT_SETTINGS.showHighlighting) && speechPosition) {
         const pos = speechPosition;
         const elem = this.highlight;
         if (this.texts.length !== pos.texts.length || this.texts.some((text, i) => text !== pos.texts[i])) {
@@ -278,7 +278,7 @@ export class Popup {
     try {
       const settings = await getSettings(["highlightFontSize"]);
 
-      const newSize = (settings.highlightFontSize ?? DEFAULTS.highlightFontSize) + delta;
+      const newSize = (settings.highlightFontSize ?? DEFAULT_SETTINGS.highlightFontSize) + delta;
       if (newSize >= 1 && newSize <= 8) {
         await updateSettings({ highlightFontSize: newSize });
         await this.refreshSize();
@@ -292,7 +292,7 @@ export class Popup {
     try {
       const settings = await getSettings(["highlightWindowSize"]);
 
-      const newSize = (settings.highlightWindowSize ?? DEFAULTS.highlightWindowSize) + delta;
+      const newSize = (settings.highlightWindowSize ?? DEFAULT_SETTINGS.highlightWindowSize) + delta;
 
       if (newSize >= 1 && newSize <= 3) {
         await updateSettings({ highlightWindowSize: newSize });
@@ -318,7 +318,7 @@ export class Popup {
     }
 
     function getFontSize(settings: Partial<Settings>) {
-      switch (settings.highlightFontSize ?? DEFAULTS.highlightFontSize) {
+      switch (settings.highlightFontSize ?? DEFAULT_SETTINGS.highlightFontSize) {
         case 1:
           return ".9em";
         case 2:
@@ -339,7 +339,7 @@ export class Popup {
     }
 
     function getWindowSize(settings: Partial<Settings>): [number, number] {
-      switch (settings.highlightWindowSize ?? DEFAULTS.highlightWindowSize) {
+      switch (settings.highlightWindowSize ?? DEFAULT_SETTINGS.highlightWindowSize) {
         case 1:
           return [430, 330];
         case 2:

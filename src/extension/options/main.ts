@@ -1,5 +1,5 @@
 import { $, $$ } from "~/utils/dom";
-import { getSettings, updateSettings } from "~/logic/settings";
+import { DEFAULT_SETTINGS, getSettings, updateSettings } from "~/logic/settings";
 import { TtsEngine } from "~/player/ttsEngines";
 import Engine from "~/player/engines/piperTtsEngine";
 import assert from "~/utils/assert";
@@ -81,7 +81,7 @@ void (async () => {
     const preferredVoice = settings.preferredVoices?.en ?? engine.preferredVoices().en;
 
     serverUrl.defaultValue = baseUrl;
-    rateSlider.defaultValue = settings.rate?.toString() ?? "1";
+    rateSlider.defaultValue = (settings.rate ?? DEFAULT_SETTINGS.rate).toString();
 
     rateValue.textContent = formatRate(rateSlider.valueAsNumber);
 

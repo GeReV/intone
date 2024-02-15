@@ -21,7 +21,7 @@ export type Settings = {
 
 export type SettingsKey = keyof Settings;
 
-export const DEFAULTS = {
+export const DEFAULT_SETTINGS = {
   rate: 1.0,
   pitch: 1.0,
   volume: 1.0,
