@@ -140,8 +140,8 @@ async function populateVoices(select: HTMLSelectElement, engine: TtsEngine, pref
 
   for (const voice of voices) {
     select.options.add(new Option(
-      voice.key,
       voice.name,
+      voice.key,
       voice.key === preferredVoice
     ));
   }
