@@ -1,5 +1,5 @@
 import { $, $$ } from "~/utils/dom";
-import { DEFAULT_SETTINGS, getSettings, updateSettings } from "~/logic/settings";
+import { DEFAULT_SETTINGS, getSettings, updateSettings } from "~/utils/settings";
 import { TtsEngine } from "~/player/ttsEngines";
 import Engine from "~/player/engines/piperTtsEngine";
 import assert from "~/utils/assert";

@@ -1,10 +1,10 @@
 import { $ } from "~/utils/dom";
 import * as browser from "webextension-polyfill";
-import { DEFAULT_SETTINGS, getSettings, Settings, updateSettings } from "~/logic/settings";
+import { DEFAULT_SETTINGS, getSettings, Settings, updateSettings } from "~/utils/settings";
 import type { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
 import assert from "~/utils/assert";
 import { escapeHtml, getQueryString, nextId } from "~/utils";
-import { PermissionsError } from "~/logic";
+import { PermissionsError } from "~/utils/errors";
 import { formatError, getActiveTab } from "~/utils/webext";
 import { sendMessage } from "webext-bridge/popup";
 

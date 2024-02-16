@@ -1,6 +1,6 @@
 import type { Tabs } from "webextension-polyfill";
 import * as browser from "webextension-polyfill";
-import { PermissionsError } from "~/logic";
+import { PermissionsError } from "~/utils/errors";
 
 export async function getActiveTab(): Promise<Tabs.Tab | undefined> {
   const [tab,] = await browser.tabs.query({ active: true, lastFocusedWindow: true });

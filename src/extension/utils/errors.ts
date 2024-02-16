@@ -1,7 +1,5 @@
 import * as browser from "webextension-polyfill";
 
-export * from "./storage";
-
 export class PermissionsError extends Error {
   readonly code = "error_add_permissions";
 

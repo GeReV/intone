@@ -1,6 +1,6 @@
 import { DocumentInfo, Source } from "./sources";
 import browser from "webextension-polyfill";
-import { DEFAULT_SETTINGS, getSettings } from "~/logic/settings";
+import { DEFAULT_SETTINGS, getSettings } from "~/utils/settings";
 import { Speech } from "~/player/speech";
 import { LANG_MAP } from "~/utils";
 

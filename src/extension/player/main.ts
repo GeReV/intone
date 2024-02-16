@@ -1,4 +1,4 @@
-import { getSettings } from "~/logic/settings";
+import { getSettings } from "~/utils/settings";
 import assert from "~/utils/assert";
 import { TtsEngine } from "~/player/ttsEngines";
 import Engine from "~/player/engines/piperTtsEngine";

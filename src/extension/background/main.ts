@@ -2,7 +2,7 @@ import browser from "webextension-polyfill";
 import { onMessage, sendMessage } from "webext-bridge/background";
 import { TaskSingleton } from "~/background/task";
 import { detectTabLanguage, getActiveTab } from "~/utils/webext";
-import { updateSettings } from "~/logic/settings";
+import { updateSettings } from "~/utils/settings";
 import { CONTENT_HANDLERS } from "~/background/contentHandlers";
 import assert from "~/utils/assert";
 import AwaitableSet from "~/utils/awaitableSet";

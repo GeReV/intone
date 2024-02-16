@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { onMessage, sendMessage } from "webext-bridge/content-script";
-import { getSettings } from "~/logic/settings";
+import { getSettings } from "~/utils/settings";
 import { lazy } from "~/utils/lazy";
 
 const player = lazy(async () => {
