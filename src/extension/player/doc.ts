@@ -117,20 +117,8 @@ export class Doc {
   }
 
   constructor(private readonly source: Source, private readonly onEnd?: (err?: unknown) => void) {
-    void this.initialize();
   }
 
-  private async initialize() {
-    // const uri = await this.source.getUri();
-    //
-    // await browser.storage.local.set({
-    //   lastUrl: uri
-    // });
-    //
-    // this.info = await this.ready;
-  }
-
-  //method close
   async close() {
     try {
       await this.ready;
@@ -146,7 +134,6 @@ export class Doc {
     await this.source.close();
   }
 
-  //method play
   async play() {
     if (this.activeSpeech) {
       await this.activeSpeech.play();
@@ -160,7 +147,70 @@ export class Doc {
     await this.readCurrent();
   }
 
-  async readCurrent(rewinded = false) {
+  async stop() {
+    await this.ready;
+
+    if (this.activeSpeech) {
+      await this.activeSpeech.stop();
+      this.activeSpeech = null;
+    }
+  }
+
+  async pause() {
+    await this.ready;
+
+    if (this.activeSpeech) {
+      await this.activeSpeech.pause();
+    }
+  }
+
+  async getState(): Promise<"PLAYING" | "PAUSED" | "LOADING" | "STOPPED"> {
+    if (this.activeSpeech) {
+      const state = await this.activeSpeech.getState();
+
+      console.log("state", state);
+
+      return state;
+    }
+
+    return this.source.isWaiting() ? "LOADING" : "STOPPED";
+  }
+
+  getActiveSpeech() {
+    return this.activeSpeech;
+  }
+
+  async forward() {
+    if (this.activeSpeech) {
+      try {
+        return this.activeSpeech.forward();
+      } catch (e) {
+        await this.forwardPage();
+      }
+    } else return Promise.reject(new Error("Can't forward, not active"));
+  }
+
+  async rewind() {
+    if (this.activeSpeech) {
+      try {
+        return this.activeSpeech.rewind();
+      } catch (e) {
+        await this.rewindPage();
+      }
+    } else {
+      throw new Error("Can't rewind, not active");
+    }
+  }
+
+  seek(n: number) {
+    if (this.activeSpeech) {
+      return this.activeSpeech.seek(n);
+    }
+
+    throw new Error("Can't seek, not active");
+  }
+
+  private async readCurrent(rewinded = false) {
     const texts = await this.source.getTexts(this.currentIndex);
 
     if (texts) {
@@ -184,7 +234,7 @@ export class Doc {
     }
   }
 
-  async read(texts: string[], rewinded: boolean) {
+  private async read(texts: string[], rewinded: boolean) {
     texts = texts.map(preprocess);
 
     if (this.info && !this.info.detectedLang) {
@@ -223,7 +273,7 @@ export class Doc {
     return this.activeSpeech.play();
   }
 
-  async detectLanguage(texts: string[]) {
+  private async detectLanguage(texts: string[]) {
     const minChars = 240;
     const maxPages = 10;
     const output = combineTexts("", texts);
@@ -262,7 +312,7 @@ export class Doc {
     }
   }
 
-  async getSpeech(texts: string[]) {
+  private async getSpeech(texts: string[]) {
     const settings = await getSettings();
 
     let lang = (!this.info?.detectedLang || this.info.lang?.startsWith(this.info.detectedLang)) ? this.info?.lang : this.info.detectedLang;
@@ -282,55 +332,7 @@ export class Doc {
     return new Speech(texts, options);
   }
 
-  //method stop
-  async stop() {
-    await this.ready;
-
-    if (this.activeSpeech) {
-      await this.activeSpeech.stop();
-      this.activeSpeech = null;
-    }
-  }
-
-  //method pause
-  async pause() {
-    await this.ready;
-
-    if (this.activeSpeech) {
-      await this.activeSpeech.pause();
-    }
-  }
-
-  //method getState
-  async getState(): Promise<"PLAYING" | "PAUSED" | "LOADING" | "STOPPED"> {
-    if (this.activeSpeech) {
-      const state = await this.activeSpeech.getState();
-
-      console.log("state", state);
-
-      return state;
-    }
-
-    return this.source.isWaiting() ? "LOADING" : "STOPPED";
-  }
-
-  //method getActiveSpeech
-  getActiveSpeech() {
-    return this.activeSpeech;
-  }
-
-  //method forward
-  async forward() {
-    if (this.activeSpeech) {
-      try {
-        return this.activeSpeech.forward();
-      } catch (e) {
-        await this.forwardPage();
-      }
-    } else return Promise.reject(new Error("Can't forward, not active"));
-  }
-
-  async forwardPage() {
+  private async forwardPage() {
     await this.stop();
 
     this.currentIndex++;
@@ -338,32 +340,11 @@ export class Doc {
     await this.readCurrent();
   }
 
-  //method rewind
-  async rewind() {
-    if (this.activeSpeech) {
-      try {
-        return this.activeSpeech.rewind();
-      } catch (e) {
-        await this.rewindPage();
-      }
-    } else {
-      throw new Error("Can't rewind, not active");
-    }
-  }
-
-  async rewindPage() {
+  private async rewindPage() {
     await this.stop();
 
     this.currentIndex--;
 
     await this.readCurrent(true);
-  }
-
-  seek(n: number) {
-    if (this.activeSpeech) {
-      return this.activeSpeech.seek(n);
-    }
-
-    throw new Error("Can't seek, not active");
   }
 }

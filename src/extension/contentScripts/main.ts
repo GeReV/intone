@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import { onMessage, sendMessage } from "webext-bridge/content-script";
-import { getSettings } from "~/utils/settings";
 import { lazy } from "~/utils/lazy";
 
 const player = lazy(async () => {
@@ -11,10 +10,6 @@ const player = lazy(async () => {
 
 // Firefox `browser.tabs.executeScript()` requires scripts return a primitive value
 (() => {
-  console.log("cs register");
-
-  void sendMessage("register", null);
-
   // onMessage("get-required-js", () => getRequireJs());
   onMessage("play-text", async (message) => (await player()).playText(message.data.text, message.data.opts));
   onMessage("play-tab", async () => (await player()).playTab());
@@ -28,6 +23,8 @@ const player = lazy(async () => {
   onMessage("close", () => {
     close();
   });
+
+  void sendMessage("register", null);
 
   // function getRequireJs() {
   //   if (location.hostname === "docs.google.com") {
@@ -75,7 +72,5 @@ const player = lazy(async () => {
   //     return ["js/content/html-doc.js"];
   //   }
   // }
-
-  void getSettings();
 })();
 

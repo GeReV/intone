@@ -201,7 +201,7 @@ export class Popup {
       if (stateInfo.state === "PAUSED") {
         await sendMessageBackground("resume", null);
       } else {
-        await sendMessageBackground("play-tab", queryString.has("tab") ? { tabId: Number(queryString.get("tab")) } : {});
+        await sendMessageBackground("play-tab", { tabId: queryString.has("tab") ? Number(queryString.get("tab")) : undefined });
       }
 
       await this.updateButtons();
@@ -218,7 +218,7 @@ export class Popup {
     this.status.hidden = true;
 
     try {
-      await sendMessageBackground("reload-and-play-tab", queryString.has("tab") ? { tabId: Number(queryString.get("tab")) } : {});
+      await sendMessageBackground("reload-and-play-tab", { tabId: queryString.has("tab") ? Number(queryString.get("tab")) : undefined });
 
       await this.updateButtons();
     } catch (err) {

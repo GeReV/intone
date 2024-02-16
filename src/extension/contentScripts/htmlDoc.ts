@@ -104,7 +104,7 @@ function getGaussian(texts: string[], start = 0, end: number = texts.length) {
     variance += (len - mean) * (len - mean);
   }
 
-  return { mean: mean, stdev: Math.sqrt(variance) };
+  return { mean, stdev: Math.sqrt(variance) };
 }
 
 export class HtmlDoc {

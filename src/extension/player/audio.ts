@@ -1,9 +1,11 @@
 import { getSilenceTrack, getSingletonAudio } from "~/utils/audio";
 import { AudioHelper, TtsOptions } from "~/player/ttsEngines";
 import { lazy } from "~/utils/lazy";
+import { promisifyAbortSignal } from "~/utils";
 
 const requestAudioPlaybackPermission = lazy(async () => {
   try {
+    await Promise.resolve();
     // const thisTab = await browser.tabs.getCurrent();
     // const prevTab = await browser.tabs.query({ windowId: thisTab.windowId, active: true }).then(tabs => tabs[0]);
     // await browser.tabs.update(thisTab.id, { active: true });
@@ -32,17 +34,13 @@ export function playAudio(url: string, options: TtsOptions, startTime?: number) 
   // }
 }
 
-const promisifyAbortSignal = (signal: AbortSignal) => new Promise<never>((_, reject) => {
-  signal.onabort = reject;
-});
-
 
 function playAudioHere(urlPromise: Promise<string>, options: TtsOptions, startTime?: number): AudioHelper {
   const audio = getSingletonAudio();
   audio.pause();
   // if (!isIOS()) {
   // audio.defaultPlaybackRate = (options.rate || 1) * (options.rateAdjust ?? 1);
-  audio.volume = options.volume || 1;
+  audio.volume = options.volume;
   // }
   const silenceTrack = getSilenceTrack();
 

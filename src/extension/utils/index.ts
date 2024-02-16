@@ -32,3 +32,7 @@ export const nextId = (() => {
 
   return () => ++id;
 })();
+
+export const promisifyAbortSignal = (signal: AbortSignal) => new Promise<never>((_, reject) => {
+  signal.onabort = reject;
+});
