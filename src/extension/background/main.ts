@@ -1,4 +1,3 @@
-// only on dev mode
 import browser from "webextension-polyfill";
 import { onMessage, sendMessage } from "webext-bridge/background";
 import { TaskSingleton } from "~/background/task";
@@ -9,6 +8,7 @@ import assert from "~/utils/assert";
 import AwaitableSet from "~/utils/awaitableSet";
 import { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
 
+// only on dev mode
 if (import.meta.hot) {
   // @ts-expect-error for background HMR
   import("/@vite/client");
