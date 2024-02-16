@@ -1,7 +1,6 @@
 export type TtsOptions = {
   rate: number;
   rateAdjust?: number;
-  pitch: number;
   volume: number;
   lang: string;
   voice: string;

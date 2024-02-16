@@ -12,6 +12,14 @@
     <form class="form">
       <div id="status" hidden></div>
       <fieldset>
+        <h4>General options</h4>
+        <div class="field">
+          <label for="volume">Volume</label>
+          <input type="range" id="volume" name="volume" min="0" max="100" step="1"/>
+          <span id="volume-value">100</span>
+        </div>
+      </fieldset>
+      <fieldset>
         <h4 id="engine-name">Engine</h4>
         <div class="field">
           <label for="server-url">Server URL</label>

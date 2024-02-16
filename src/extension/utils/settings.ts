@@ -7,7 +7,6 @@ export type Settings = {
   preferredVoices: Record<string, string>;
   serverUrl: string | undefined;
   rate: number;
-  pitch: number;
   volume: number;
   showHighlighting: number;
   languages: string[];
@@ -22,7 +21,6 @@ export type SettingsKey = keyof Settings;
 
 export const DEFAULT_SETTINGS = {
   rate: 1.0,
-  pitch: 1.0,
   volume: 1.0,
   showHighlighting: 1,
   highlightFontSize: 3,
@@ -30,7 +28,7 @@ export const DEFAULT_SETTINGS = {
   useEmbeddedPlayer: true,
 } as const;
 
-export async function getSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer"]): Promise<Partial<Settings>> {
+export async function getSettings(settings: SettingsKey[] = ["voiceName", "rate", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer"]): Promise<Partial<Settings>> {
   return browser.storage.local.get(settings);
 }
 
@@ -38,6 +36,6 @@ export async function updateSettings(settings: Partial<Settings>): Promise<void>
   return browser.storage.local.set(settings);
 }
 
-export async function clearSettings(settings: SettingsKey[] = ["voiceName", "rate", "pitch", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer"]): Promise<void> {
+export async function clearSettings(settings: SettingsKey[] = ["voiceName", "rate", "volume", "showHighlighting", "languages", "highlightFontSize", "highlightWindowSize", "preferredVoices", "serverUrl", "useEmbeddedPlayer"]): Promise<void> {
   return browser.storage.local.remove(settings);
 }

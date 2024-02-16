@@ -16,6 +16,9 @@ void (async () => {
     f.disabled = true;
   });
 
+  const volumeSlider = $<HTMLInputElement>("#volume", form);
+  const volumeValue = $("#volume-value", form);
+
   const engineName = $<HTMLLegendElement>("#engine-name", form);
   const serverUrl = $<HTMLInputElement>("#server-url", form);
   const serverTestBtn = $<HTMLButtonElement>("#server-test", form);
@@ -59,7 +62,12 @@ void (async () => {
     }
   }, false);
 
+
   const formatRate = (rate: number) => `\u00D7${rate.toFixed(1)}`;
+
+  volumeSlider.addEventListener("input", () => {
+    volumeValue.textContent = volumeSlider.value;
+  }, false);
 
   rateSlider.addEventListener("input", () => {
     rateValue.textContent = formatRate(rateSlider.valueAsNumber);
@@ -68,6 +76,7 @@ void (async () => {
   form.addEventListener("input", () => {
     checkFormDirty(form);
   }, false);
+
 
   try {
     const settings = await getSettings(["serverUrl", "preferredVoices", "rate"]);
@@ -81,8 +90,11 @@ void (async () => {
     const preferredVoice = settings.preferredVoices?.en ?? engine.preferredVoices().en;
 
     serverUrl.defaultValue = baseUrl;
-    rateSlider.defaultValue = (settings.rate ?? DEFAULT_SETTINGS.rate).toString();
 
+    volumeSlider.defaultValue = ((settings.volume ?? DEFAULT_SETTINGS.volume) * 100).toString();
+    volumeValue.textContent = volumeSlider.value;
+
+    rateSlider.defaultValue = (settings.rate ?? DEFAULT_SETTINGS.rate).toString();
     rateValue.textContent = formatRate(rateSlider.valueAsNumber);
 
     await populateVoices(preferredVoiceSelect, engine, preferredVoice);
@@ -100,6 +112,7 @@ void (async () => {
       preferredVoices: {
         en: preferredVoiceSelect.value
       },
+      volume: volumeSlider.valueAsNumber / 100,
       rate: rateSlider.valueAsNumber,
     });
 

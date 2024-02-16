@@ -60,7 +60,7 @@ export default class PiperTtsEngine implements TtsEngine {
 
   async prefetch(utterance: string, options: TtsOptions) {
     try {
-      const url = await this.getAudioUrl(utterance, options.voice, options.pitch);
+      const url = await this.getAudioUrl(utterance, options.voice);
       this.prefetchAudio = [utterance, options, url];
     } catch (err) {
       console.error(err);

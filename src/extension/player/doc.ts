@@ -275,7 +275,6 @@ export class Doc {
 
     const options = {
       rate: settings.rate ?? DEFAULT_SETTINGS.rate,
-      pitch: settings.pitch ?? DEFAULT_SETTINGS.pitch,
       volume: settings.volume ?? DEFAULT_SETTINGS.volume,
       lang,
     };

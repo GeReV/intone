@@ -27,7 +27,7 @@ export default class Mimic3TtsEngine implements TtsEngine {
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
     const url = (this.prefetchAudio && this.prefetchAudio[0] === utterance && this.prefetchAudio[1] === options) ?
       this.prefetchAudio[2] :
-      await this.getAudioUrl(utterance, options.voice, options.pitch);
+      await this.getAudioUrl(utterance, options.voice);
 
     this.audio = playAudio(url, options);
     this.audio.startPromise
@@ -70,7 +70,7 @@ export default class Mimic3TtsEngine implements TtsEngine {
 
   async prefetch(utterance: string, options: TtsOptions) {
     try {
-      const url = await this.getAudioUrl(utterance, options.voice, options.pitch);
+      const url = await this.getAudioUrl(utterance, options.voice);
       this.prefetchAudio = [utterance, options, url];
     } catch (err) {
       console.error(err);
@@ -110,7 +110,7 @@ export default class Mimic3TtsEngine implements TtsEngine {
     });
   }
 
-  private async getAudioUrl(text: string, voice: string, pitch?: number): Promise<string> {
+  private async getAudioUrl(text: string, voice: string): Promise<string> {
     assert(text && voice);
 
     const res = await fetch(`http://localhost:59125/api/tts?voice=${voice}`, {
