@@ -171,21 +171,16 @@ export class Popup {
 
           const child = elem.children.item(pos.index);
 
-          child?.classList.add("active");
-
           if (child) {
-            const rect = child.getBoundingClientRect();
+            child.classList.add("active");
 
-            if (rect.top < 0 || rect.bottom >= elem.offsetHeight) {
-              elem.scroll({
-                top: elem.scrollTop + rect.top - 10,
-                behavior: "smooth",
-              });
-            }
+            child.scrollIntoView({
+              behavior: "smooth"
+            });
           }
         }
       }
-    } catch (err) { /* empty */
+    } catch (err) {
       console.error(err);
     }
   }
@@ -229,6 +224,7 @@ export class Popup {
   private async onPause() {
     try {
       await sendMessageBackground("pause", null);
+
       await this.updateButtons();
     } catch (err) {
       this.handleError(err);
@@ -251,6 +247,7 @@ export class Popup {
   private async onForward() {
     try {
       await sendMessageBackground("forward", null);
+
       await this.updateButtons();
     } catch (err) {
       this.handleError(err);
