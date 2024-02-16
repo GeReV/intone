@@ -265,7 +265,7 @@ export class Doc {
   async getSpeech(texts: string[]) {
     const settings = await getSettings();
 
-    let lang = (!this.info?.detectedLang || this.info.lang && this.info.lang.startsWith(this.info.detectedLang)) ? this.info?.lang : this.info.detectedLang;
+    let lang = (!this.info?.detectedLang || this.info.lang?.startsWith(this.info.detectedLang)) ? this.info?.lang : this.info.detectedLang;
     if (lang) {
       lang = LANG_MAP[lang] ?? lang;
     }
