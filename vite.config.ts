@@ -74,7 +74,7 @@ export default defineConfig(({ command }) => ({
         popup: r("src/extension/popup/index.html"),
       },
       output: {
-        assetFileNames: "[name]/[name]-[hash][extname]",
+        assetFileNames: "assets/[name]-[hash][extname]",
         entryFileNames: "[name]/[name]-[hash].js",
       }
     },
