@@ -18,6 +18,12 @@ export async function getManifest() {
       default_icon: "./assets/icon-128.png",
       default_popup: "./dist/popup/index.html?isPopup=1",
     },
+    browser_specific_settings: {
+      gecko: {
+        id: "{acc6d7a2-f165-4019-9fba-0b72cfeed277}",
+        strict_min_version: "110.0", // This is a completely arbitrary version. Probably should choose one based on used and supported APIs and capabilities.
+      }
+    },
     options_ui: {
       page: "./dist/options/index.html",
       open_in_tab: true,
