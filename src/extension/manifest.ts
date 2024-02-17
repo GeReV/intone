@@ -62,9 +62,7 @@ export async function getManifest() {
     web_accessible_resources: [
       {
         resources: [
-          // "dist/contentScripts/popup.css",
           "dist/player/index.html",
-          "dist/assets/silence.mp3",
         ],
         matches: ["<all_urls>"],
       },
