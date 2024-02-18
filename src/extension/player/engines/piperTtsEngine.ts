@@ -15,6 +15,8 @@ export default class PiperTtsEngine implements TtsEngine {
   }
 
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
+    utterance = this.preprocess(utterance);
+
     const url = (this.prefetchAudio && this.prefetchAudio[0] === utterance && this.prefetchAudio[1] === options) ?
       this.prefetchAudio[2] :
       await this.getAudioUrl(utterance, options.voice, options.rate);
@@ -102,5 +104,10 @@ export default class PiperTtsEngine implements TtsEngine {
     }
 
     return URL.createObjectURL(await res.blob());
+  }
+
+  private preprocess(utterance: string) {
+    // Improve list numbering pronunciation.
+    return utterance.replace(/^(\d+)\. /gm, "$1: ");
   }
 }
