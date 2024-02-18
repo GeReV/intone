@@ -4,7 +4,7 @@ const IGNORE_TAGS = "select, textarea, button, label, audio, video, dialog, embe
 
 const PARAGRAPH_SPLITTER = /(?:\s*\r?\n\s*){2,}/;
 
-const getInnerText = (node: Element | undefined) => (node?.textContent ?? "").trim();
+const getInnerText = (node: Node | undefined) => (node?.textContent ?? "").trim();
 
 const addMissingPunctuation = (text: string) => text.replace(/(\w)\s*(\r?\n)/g, "$1.$2");
 
@@ -220,6 +220,13 @@ export class HtmlDoc {
 
       elem.querySelectorAll("ol, ul").forEach(addNumbering);
 
+      // br to nl
+      elem.querySelectorAll("br").forEach(br => {
+        if (br.previousSibling) {
+          br.previousSibling.textContent = br.previousSibling.textContent?.trimEnd() + "\n";
+        }
+      });
+
       const texts = elem.hasAttribute("data-read-out-multi-block")
         ? Array.from(elem.children).filter(el => el.checkVisibility()).map(getText)
         : getText(elem).split(PARAGRAPH_SPLITTER);
@@ -244,12 +251,12 @@ export class HtmlDoc {
 
     const isParagraph = (node: Node) => node instanceof Element && node.matches("p") && node.checkVisibility() && getInnerText(node).length >= threshold;
 
-    const hasTextNodes = (elem: Element) => someChildNodes(elem, isTextNode) && getInnerText(elem).length >= threshold;
+    const hasTextNodes = (node: ParentNode) => someChildNodes(node, isTextNode) && getInnerText(node).length >= threshold;
 
-    const hasParagraphs = (elem: Element) => someChildNodes(elem, isParagraph);
+    const hasParagraphs = (node: ParentNode) => someChildNodes(node, isParagraph);
 
-    const containsTextBlocks = (elem: Element) => {
-      const childElems = Array.from(elem.querySelectorAll(`:scope > :not(${skipTags})`));
+    const containsTextBlocks = (node: ParentNode) => {
+      const childElems = Array.from(node.querySelectorAll(`:scope > :not(${skipTags})`));
 
       return childElems.some(hasTextNodes) || childElems.some(hasParagraphs) || childElems.some(containsTextBlocks);
     };
@@ -293,17 +300,15 @@ export class HtmlDoc {
         } else {
           rows.forEach(walk);
         }
+      } else if (hasTextNodes(el)) {
+        addBlock(el);
+      } else if (hasParagraphs(el)) {
+        addBlock(el, true);
       } else {
-        if (hasTextNodes(el)) {
-          addBlock(el);
-        } else if (hasParagraphs(el)) {
-          addBlock(el, true);
-        } else {
-          [el, el.shadowRoot].forEach(e => {
-            e?.querySelectorAll(`:scope > :not(${skipTags})`)
-              .forEach(walk);
-          });
-        }
+        [el, el.shadowRoot].forEach(e => {
+          e?.querySelectorAll(`:scope > :not(${skipTags})`)
+            .forEach(walk);
+        });
       }
     };
 
