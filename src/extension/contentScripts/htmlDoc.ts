@@ -6,9 +6,9 @@ const PARAGRAPH_SPLITTER = /(?:\s*\r?\n\s*){2,}/;
 
 const getInnerText = (node: Element | undefined) => (node?.textContent ?? "").trim();
 
-const addMissingPunctuation = (text: string) => text.replace(/(\w)(\s*?\r?\n)/g, "$1.$2");
+const addMissingPunctuation = (text: string) => text.replace(/(\w)\s*(\r?\n)/g, "$1.$2");
 
-const getText = (elem: Element) => addMissingPunctuation(elem.textContent ?? "").trim();
+const getText = (elem: Element) => addMissingPunctuation(elem.textContent ?? "");
 
 function someChildNodes(node: ParentNode, test: (child: ChildNode) => boolean) {
   let child = node.firstChild;
@@ -77,13 +77,20 @@ function addNumbering(el: Element) {
   const children = el.children;
   const text = children.length ? getInnerText(children[0]) : null;
 
-  if (text && !text.match(/^[(]?(\d|[a-zA-Z][).])/))
+  if (text && !text.match(/^[(]?(\d+|[a-zA-Z][).])/))
     for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+
+      if (!child) {
+        continue;
+      }
+
       const span = document.createElement("span");
       span.classList.add("read-out-numbering");
       span.textContent = `${i + 1}. `;
 
-      children[i]?.prepend(span);
+      child.textContent = child.textContent?.trim() + "\n";
+      child.prepend(span);
     }
 }
 
@@ -201,6 +208,9 @@ export class HtmlDoc {
       el.classList.add("read-out");
     }
 
+    //extract texts
+    return toRead.flatMap(getTexts).filter(Boolean);
+
     function getTexts(elem: Element) {
       const toHide = Array.from(elem.children).filter(el => el.checkVisibility() && dontRead(el));
 
@@ -224,9 +234,6 @@ export class HtmlDoc {
 
       return texts;
     }
-
-    //extract texts
-    return toRead.flatMap(getTexts).filter(Boolean);
   }
 
   private findTextBlocks(threshold: number) {
