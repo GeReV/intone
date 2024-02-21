@@ -1,7 +1,7 @@
 {
   "name": "read-out",
   "displayName": "Read Out",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "description": "Read out the current web-page article with one click, using text to speech (TTS).",
   "engines": {

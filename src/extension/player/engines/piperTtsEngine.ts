@@ -1,6 +1,30 @@
 import { AudioHelper, TtsEngine, TtsEngineEventHandler, TtsOptions, TtsVoice } from "~/player/ttsEngines";
 import assert from "~/utils/assert";
 import { playAudio } from "~/player/audio";
+import * as console from "console";
+
+const MONTH_ABBREVS = {
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
+} as const;
+
+function unabbreviateMonths(text: string): string {
+  for (const [short, long] of Object.entries(MONTH_ABBREVS)) {
+    text = text.replaceAll(short + ".", long);
+  }
+
+  return text;
+}
 
 export default class PiperTtsEngine implements TtsEngine {
   private audio: AudioHelper | null = null;
@@ -108,6 +132,20 @@ export default class PiperTtsEngine implements TtsEngine {
 
   private preprocess(utterance: string) {
     // Improve list numbering pronunciation.
-    return utterance.replace(/^(\d+)\. /gm, "$1: ");
+    utterance = utterance.replace(/^(\d+)\. /gm, "$1: ");
+
+    // Correct pronunciation of dollars.
+    utterance = utterance.replace(/\$([\d,.]+\s+dollars?)/g, "$1"); // Remove dollar sign to prevent "dollar X dollar(s)".
+    utterance = utterance.replace(/\$([\d,.]+)/g, "$1 $"); // Move dollar sign to end to prevent "dollar X".
+
+    // Replace em and en dashes with commas.
+    utterance = utterance.replace(/[—–]/g, ", ");
+
+    // Add pauses around parentheses.
+    utterance = utterance.replace(/\s+(\([^)]+\))\b/g, ", $1,");
+
+    utterance = unabbreviateMonths(utterance);
+
+    return utterance;
   }
 }
