@@ -120,7 +120,7 @@ export class Popup {
     try {
       const [settings, stateInfo] = await Promise.all([
         getSettings(),
-        await sendMessageBackground("get-playback-state", null)
+        sendMessageBackground("get-playback-state", null)
       ]);
 
       const { state, speechPosition, playbackError } = stateInfo;
@@ -181,6 +181,11 @@ export class Popup {
         }
       }
     } catch (err) {
+      if (err instanceof Error) {
+        this.status.hidden = false;
+        this.status.textContent = err.message;
+      }
+
       console.error(err);
     }
   }
