@@ -39,7 +39,6 @@ export default class CoquiTtsEngine implements TtsEngine {
       });
     this.audio.endPromise
       .then(() => {
-          console.log("audio end event");
           onEvent({ type: "end", charIndex: utterance.length });
         },
         err => {

@@ -92,11 +92,14 @@ function playAudioHere(urlPromise: Promise<string>, options: TtsOptions, startTi
 
   const endPromise = new Promise<void>((fulfill, reject) => {
     audio.onended = () => {
-      console.log("audio ended");
       fulfill();
     };
-    audio.onerror = () => {
-      reject(new Error(audio.error?.message ?? audio.error?.code.toString()));
+    audio.onerror = (_event, _source, _lineno, _colno, error) => {
+      if (!error) {
+        error = new Error(audio.error?.message ?? audio.error?.code.toString());
+      }
+
+      reject(error);
     };
   })
     .finally(() => {
