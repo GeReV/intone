@@ -2,29 +2,7 @@ import { AudioHelper, TtsEngine, TtsEngineEventHandler, TtsOptions, TtsVoice } f
 import assert from "~/utils/assert";
 import { playAudio } from "~/player/audio";
 import * as console from "console";
-
-const MONTH_ABBREVS = {
-  Jan: "January",
-  Feb: "February",
-  Mar: "March",
-  Apr: "April",
-  May: "May",
-  Jun: "June",
-  Jul: "July",
-  Aug: "August",
-  Sep: "September",
-  Oct: "October",
-  Nov: "November",
-  Dec: "December",
-} as const;
-
-function unabbreviateMonths(text: string): string {
-  for (const [short, long] of Object.entries(MONTH_ABBREVS)) {
-    text = text.replaceAll(short + ".", long);
-  }
-
-  return text;
-}
+import { expandMonths, expandUnits } from "~/player/preprocessing";
 
 export default class PiperTtsEngine implements TtsEngine {
   private audio: AudioHelper | null = null;
@@ -143,7 +121,8 @@ export default class PiperTtsEngine implements TtsEngine {
     // Add pauses around parentheses.
     utterance = utterance.replace(/\s+(\([^)]+\))\b/g, ", $1,");
 
-    utterance = unabbreviateMonths(utterance);
+    utterance = expandMonths(utterance);
+    utterance = expandUnits(utterance);
 
     return utterance;
   }
