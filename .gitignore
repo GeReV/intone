@@ -15,3 +15,5 @@ node_modules
 .eslintcache
 
 **/.cache
+
+**/en_extra

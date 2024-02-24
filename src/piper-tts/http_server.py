@@ -8,8 +8,8 @@ from typing import Any, Dict
 
 from flask import Flask, request, send_file
 
-from piper import PiperVoice
-from piper.download import ensure_voice_exists, find_voice, get_voices
+from . import PiperVoice
+from .download import ensure_voice_exists, find_voice, get_voices
 
 _LOGGER = logging.getLogger()
 
@@ -55,6 +55,12 @@ def main() -> None:
         "--download_dir",
         help="Directory to download voices into (default: first data dir)",
     )
+    parser.add_argument(
+        "--espeak-data-dir",
+        "--espeak_data_dir",
+        default="/usr/lib/x86_64-linux-gnu/espeak-ng-data",
+        help="Directory containing eSpeak data",
+    )
     #
     parser.add_argument(
         "--update-voices",
@@ -90,7 +96,7 @@ def main() -> None:
         args.model, args.config = find_voice(args.model, args.data_dir)
 
     # Load voice
-    voice = PiperVoice.load(args.model, config_path=args.config, use_cuda=args.cuda)
+    voice = PiperVoice.load(args.model, config_path=args.config, espeak_data_path=args.espeak_data_dir, use_cuda=args.cuda)
     synthesize_args = {
         "speaker_id": args.speaker,
         "length_scale": args.length_scale,

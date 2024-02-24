@@ -5,7 +5,7 @@ FROM ${BASE}
 
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y --no-install-recommends \
-    build-essential git \
+    build-essential git espeak-ng \
     python3 python3-dev python3-pip python3-venv python3-wheel \
     && rm -rf /var/lib/apt/lists/*
 
@@ -31,9 +31,11 @@ RUN script/setup
 RUN .venv/bin/pip3 install -r requirements_http.txt && \
     .venv/bin/pip3 install -r requirements_gpu.txt
 
-COPY http_server.py .
+COPY . piper
 
-CMD .venv/bin/python3 http_server.py \
+RUN cd piper/dictsource && espeak-ng --compile=en
+
+CMD .venv/bin/python3 -m piper.http_server \
     --config /config \
     --update-voices \
     --model=${PIPER_VOICE} \
