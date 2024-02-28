@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { expandUnits } from "~/player/preprocessing";
+import { expandUnits } from "~/player/preprocessing/units";
 
 describe("expandUnits", () => {
   test.each([

@@ -2,7 +2,8 @@ import { AudioHelper, TtsEngine, TtsEngineEventHandler, TtsOptions, TtsVoice } f
 import assert from "~/utils/assert";
 import { playAudio } from "~/player/audio";
 import * as console from "console";
-import { expandMonths, expandUnits } from "~/player/preprocessing";
+import { expandMonths } from "~/player/preprocessing/months";
+import { expandUnits } from "~/player/preprocessing/units";
 
 export default class PiperTtsEngine implements TtsEngine {
   private audio: AudioHelper | null = null;

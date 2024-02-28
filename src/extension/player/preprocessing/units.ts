@@ -1,28 +1,8 @@
 type UnitDescription = string | Partial<Record<Intl.LDMLPluralRule, string>>;
 type UnitDictionary = ReadonlyMap<string | RegExp, UnitDescription>;
 
-const MONTH_ABBREVS = {
-  Jan: "January",
-  Feb: "February",
-  Mar: "March",
-  Apr: "April",
-  May: "May",
-  Jun: "June",
-  Jul: "July",
-  Aug: "August",
-  Sep: "September",
-  Oct: "October",
-  Nov: "November",
-  Dec: "December",
-} as const;
-
-export function expandMonths(text: string): string {
-  for (const [abbrev, expansion] of Object.entries(MONTH_ABBREVS)) {
-    text = text.replaceAll(abbrev + ".", expansion);
-  }
-
-  return text;
-}
+const enCardinalRules = new Intl.PluralRules("en-US", { type: "cardinal" });
+const enNumberFormat = new Intl.NumberFormat("en-US");
 
 const uncounted = (unit: string) => ({
   one: unit,
@@ -59,7 +39,7 @@ const UNIT_ABBREVS: UnitDictionary = new Map<string | RegExp, UnitDescription>([
   [/\b[tT]\b/, "ton"],
 
   ["ft", plural("foot", "feet")],
-  ["in", plural("inch", "inches")],
+  [/(?<=\S)in|in\./, plural("inch", "inches")],
   ["yd", "yard"],
   ["mi", "mile"],
 
@@ -134,8 +114,13 @@ const NUMBER_REGEX = /-?\d+(?:\.\d*)?(?:[Ee][+-]?\d+)?|\d*\.\d+|\d+/;
 const UNIT_REGEX = new RegExp([...UNIT_ABBREVS.keys()].map(abbrev => abbrev instanceof RegExp ? abbrev.source : abbrev).join("|"), "u");
 const QUANTITY_REGEX = new RegExp(`\\b(${NUMBER_REGEX.source})[\\s-]*(${UNIT_REGEX.source.replaceAll("\\b", "")})\\b`, "gu");
 
-const enCardinalRules = new Intl.PluralRules("en-US", { type: "cardinal" });
-const enNumberFormat = new Intl.NumberFormat("en-US");
+function find<T>(iter: Iterable<T>, fn: (value: T) => boolean): T | undefined {
+  for (const value of iter) {
+    if (fn(value)) {
+      return value;
+    }
+  }
+}
 
 export function expandUnits(text: string): string {
   return text.replace(QUANTITY_REGEX, (match, num: string, abbrev: string) => {
@@ -158,12 +143,4 @@ export function expandUnits(text: string): string {
 
     return `${num} ${abbrev}`;
   });
-}
-
-function find<T>(iter: Iterable<T>, fn: (value: T) => boolean): T | undefined {
-  for (const value of iter) {
-    if (fn(value)) {
-      return value;
-    }
-  }
 }
