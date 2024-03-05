@@ -13,6 +13,7 @@ services:
       - .cache/config:/config
     ports:
       - 5000:5000
+    restart: unless-stopped
     deploy:
       resources:
         reservations:
