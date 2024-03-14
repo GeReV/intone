@@ -4,6 +4,7 @@ import { playAudio } from "~/player/audio";
 import * as console from "console";
 import { expandMonths } from "~/player/preprocessing/months";
 import { expandUnits } from "~/player/preprocessing/units";
+import { expandAbbreviations } from "~/player/preprocessing/abbreviations";
 
 export default class PiperTtsEngine implements TtsEngine {
   private audio: AudioHelper | null = null;
@@ -127,7 +128,9 @@ export default class PiperTtsEngine implements TtsEngine {
 
     utterance = expandMonths(utterance);
     utterance = expandUnits(utterance);
+    utterance = expandAbbreviations(utterance);
 
     return utterance;
   }
 }
+
