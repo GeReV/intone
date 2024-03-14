@@ -12,6 +12,7 @@ const ABBREVS = {
   "jr": "junior",
   "lt": "lieutenant",
   "ltd": "limited",
+  "no": "number",
   "maj": "major",
   "mr": "mister",
   "mrs": "missus",
