@@ -129,7 +129,6 @@ export function expandUnits(text: string): string {
 
     const result = find(UNIT_ABBREVS, ([k,]) => typeof k === "string" ? k === abbrev : k.test(abbrev));
 
-    console.log(result);
     if (result) {
       const [, unit] = result;
       const rule = enCardinalRules.select(n);
