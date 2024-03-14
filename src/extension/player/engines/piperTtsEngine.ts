@@ -122,6 +122,9 @@ export default class PiperTtsEngine implements TtsEngine {
     // Add pauses around parentheses.
     utterance = utterance.replace(/\s+(\([^)]+\))\b/g, ", $1,");
 
+    // 10x10 -> 10 by 10
+    utterance = utterance.replace(/\b(\d+)\s?[x×]\s?(\d+)\b/, "$1 by $2");
+
     utterance = expandMonths(utterance);
     utterance = expandUnits(utterance);
 
