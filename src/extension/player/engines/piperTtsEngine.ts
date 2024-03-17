@@ -2,9 +2,6 @@ import { AudioHelper, TtsEngine, TtsEngineEventHandler, TtsOptions, TtsVoice } f
 import assert from "~/utils/assert";
 import { playAudio } from "~/player/audio";
 import * as console from "console";
-import { expandMonths } from "~/player/preprocessing/months";
-import { expandUnits } from "~/player/preprocessing/units";
-import { expandAbbreviations } from "~/player/preprocessing/abbreviations";
 
 export default class PiperTtsEngine implements TtsEngine {
   private audio: AudioHelper | null = null;
@@ -19,8 +16,6 @@ export default class PiperTtsEngine implements TtsEngine {
   }
 
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
-    utterance = this.preprocess(utterance);
-
     const url = (this.prefetchAudio && this.prefetchAudio[0] === utterance && this.prefetchAudio[1] === options) ?
       this.prefetchAudio[2] :
       await this.getAudioUrl(utterance, options.voice, options.rate);
@@ -107,30 +102,6 @@ export default class PiperTtsEngine implements TtsEngine {
     }
 
     return URL.createObjectURL(await res.blob());
-  }
-
-  private preprocess(utterance: string) {
-    // Improve list numbering pronunciation.
-    utterance = utterance.replace(/^(\d+)\. /gm, "$1: ");
-
-    // Correct pronunciation of dollars.
-    utterance = utterance.replace(/\$([\d,.]+\s+dollars?)/g, "$1"); // Remove dollar sign to prevent "dollar X dollar(s)".
-    utterance = utterance.replace(/\$([\d,.]+)/g, "$1 $"); // Move dollar sign to end to prevent "dollar X".
-
-    // Replace em and en dashes with commas.
-    utterance = utterance.replace(/[—–]/g, ", ");
-
-    // Add pauses around parentheses.
-    utterance = utterance.replace(/\s+(\([^)]+\))\b/g, ", $1,");
-
-    // 10x10 -> 10 by 10
-    utterance = utterance.replace(/\b(\d+)\s?[x×]\s?(\d+)\b/, "$1 by $2");
-
-    utterance = expandMonths(utterance);
-    utterance = expandUnits(utterance);
-    utterance = expandAbbreviations(utterance);
-
-    return utterance;
   }
 }
 

@@ -10,6 +10,7 @@ from flask import Flask, request, send_file
 
 from . import PiperVoice
 from .download import ensure_voice_exists, find_voice, get_voices
+from .cleaners import clean
 
 _LOGGER = logging.getLogger()
 
@@ -118,6 +119,8 @@ def main() -> None:
         text = text.strip()
         if not text:
             raise ValueError("No text provided")
+
+        text = clean(text)
 
         _LOGGER.debug("Synthesizing text: %s", text)
 
