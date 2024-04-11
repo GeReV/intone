@@ -1,6 +1,6 @@
 import re
 
-from .utils.ner import expand_named_entities
+from .utils.entities import expand_named_entities
 from .utils.abbreviations import abbreviations_en, months_en
 from .utils.units import expand_units
 

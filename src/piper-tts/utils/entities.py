@@ -1,8 +1,8 @@
 import re
-import nltk
 import inflect
 from num2words import num2words
-from nltk.tag import StanfordNERTagger
+
+from .ner.stanford import StanfordNERTagger
 
 # Regex to handle 4-digit years, centuries and decades (1200s, 1990s, 70s)
 year_regex = re.compile("^(?:[0-9]{4}s?|[0-9]{2}s)$")
@@ -28,7 +28,7 @@ def translate_years(s):
 
 
 def expand_named_entities(text):
-    result = st.tag(nltk.word_tokenize(text))
+    result = st.tag(text)
 
     words = []
     for word, kind in result:
@@ -39,3 +39,4 @@ def expand_named_entities(text):
         words.append(word)
 
     return " ".join(words)
+
