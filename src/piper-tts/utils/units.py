@@ -101,9 +101,9 @@ units = [
 
     ("cd", uncounted("candela")),
 
-    #("s", "second"), # TODO: Doesn't work on things like "90s" ("nineties")
+    # ("s", "second"), # TODO: Doesn't work on things like "90s" ("nineties")
     ("h", "hour"),
-    ("d", "day"),
+    # ("d", "day"), # TODO: Doesn't work with 2D/3D
     ("y", "year"),
 
     (re_compile(r"\b[kK][hH]z\b"), uncounted("kilo-Hertz")),
