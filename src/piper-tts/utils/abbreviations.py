@@ -29,20 +29,28 @@ abbreviations_en = [
     ]
 ]
 
+slang_en = [
+    (re.compile("\\b%s\\b" % x[0], re.IGNORECASE), x[1])
+    for x in [
+        ("imo", "in my opinion"),
+        ("imho", "in my humble opinion"),
+    ]
+]
+
 months_en = [
-  (re.compile("\\b%s\\." % x[0], re.IGNORECASE), x[1])
-  for x in [
-    ("jan", "january"),
-    ("feb", "february"),
-    ("mar", "march"),
-    ("apr", "april"),
-    ("may", "may"),
-    ("jun", "june"),
-    ("jul", "july"),
-    ("aug", "august"),
-    ("sep", "september"),
-    ("oct", "october"),
-    ("nov", "november"),
-    ("dec", "december"),
-  ]
+    (re.compile("\\b%s\\." % x[0], re.IGNORECASE), x[1])
+    for x in [
+        ("jan", "january"),
+        ("feb", "february"),
+        ("mar", "march"),
+        ("apr", "april"),
+        ("may", "may"),
+        ("jun", "june"),
+        ("jul", "july"),
+        ("aug", "august"),
+        ("sep", "september"),
+        ("oct", "october"),
+        ("nov", "november"),
+        ("dec", "december"),
+    ]
 ]

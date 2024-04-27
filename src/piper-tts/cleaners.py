@@ -1,12 +1,12 @@
 import re
 
 from .utils.entities import expand_named_entities
-from .utils.abbreviations import abbreviations_en, months_en
+from .utils.abbreviations import abbreviations_en, months_en, slang_en
 from .utils.units import expand_units
 
 
-def expand_abbreviations(text):
-    for regex, replacement in abbreviations_en:
+def expand_abbreviations(text, abbreviations):
+    for regex, replacement in abbreviations:
         text = re.sub(regex, replacement, text)
     return text
 
@@ -37,6 +37,7 @@ def clean(text):
     text = expand_named_entities(text)
     text = expand_months(text)
     text = expand_units(text)
-    text = expand_abbreviations(text)
+    text = expand_abbreviations(text, abbreviations_en)
+    text = expand_abbreviations(text, slang_en)
 
     return text
