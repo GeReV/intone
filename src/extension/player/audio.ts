@@ -39,7 +39,7 @@ function playAudioHere(urlPromise: Promise<string>, options: TtsOptions, startTi
   const audio = getSingletonAudio();
   audio.pause();
   // if (!isIOS()) {
-  // audio.defaultPlaybackRate = (options.rate || 1) * (options.rateAdjust ?? 1);
+  audio.defaultPlaybackRate = (options.rate || 1) * (options.rateAdjust ?? 1);
   audio.volume = options.volume;
   // }
   const silenceTrack = getSilenceTrack();
@@ -51,7 +51,6 @@ function playAudioHere(urlPromise: Promise<string>, options: TtsOptions, startTi
 
   const readyPromise = Promise.resolve(urlPromise)
     .then(async url => {
-      console.log(url);
       const canPlayPromise = new Promise<void>((fulfill, reject) => {
         audio.oncanplay = () => {
           fulfill();

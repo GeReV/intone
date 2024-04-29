@@ -18,7 +18,7 @@ export default class PiperTtsEngine implements TtsEngine {
   async speak(utterance: string, options: TtsOptions, onEvent: TtsEngineEventHandler) {
     const url = (this.prefetchAudio && this.prefetchAudio[0] === utterance && this.prefetchAudio[1] === options) ?
       this.prefetchAudio[2] :
-      await this.getAudioUrl(utterance, options.voice, options.rate);
+      await this.getAudioUrl(utterance, options.voice);
 
     this.audio = playAudio(url, options);
     this.audio.startPromise
