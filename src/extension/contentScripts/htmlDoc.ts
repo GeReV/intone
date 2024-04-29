@@ -1,4 +1,5 @@
 import { getMath } from "~/contentScripts/math";
+import { Doc } from "~/contentScripts/types";
 
 const IGNORE_TAGS = "select, textarea, button, label, audio, video, dialog, embed, menu, nav, noframes, noscript, object, script, style, svg, aside, footer, #footer, .no-read-out";
 
@@ -114,11 +115,7 @@ function getGaussian(texts: string[], start = 0, end: number = texts.length) {
   return { mean, stdev: Math.sqrt(variance) };
 }
 
-export class HtmlDoc {
-  getCurrentIndex() {
-    return 0;
-  }
-
+export class HtmlDoc implements Doc {
   async getTexts(index: number) {
     if (index === 0) {
       const math = await getMath();
@@ -136,21 +133,6 @@ export class HtmlDoc {
 
     return null;
   }
-
-  async getSelectedText() {
-    const math = await getMath();
-    try {
-      if (math) {
-        math.show();
-      }
-      return (window.getSelection()?.toString() ?? "").trim();
-    } finally {
-      if (math) {
-        math.hide();
-      }
-    }
-  }
-
 
   private parse() {
     let i;

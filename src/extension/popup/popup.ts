@@ -112,7 +112,9 @@ export class Popup {
       }, 500);
 
       await this.refreshSize();
-    } catch (err) { /* empty */
+    } catch (err) {
+      this.handleError(err);
+      console.error("Read Out popup error", err);
     }
   }
 

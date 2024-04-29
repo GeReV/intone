@@ -1,5 +1,7 @@
 import browser from "webextension-polyfill";
-import { HtmlDoc } from "~/contentScripts/htmlDoc";
+import { Doc } from "~/contentScripts/types";
+import { getMath } from "~/contentScripts/math";
+import { ReadabilityDoc } from "~/contentScripts/readabilityDoc";
 
 export type DocumentInfo = {
   url: string,
@@ -87,12 +89,13 @@ export class TabSource implements Source {
 
   ready: Promise<DocumentInfo>;
 
-  private htmlDoc: HtmlDoc;
+  private doc: Doc;
 
   constructor() {
     this.ready = Promise.resolve(getDocumentInfo());
 
-    this.htmlDoc = new HtmlDoc();
+    // this.doc = new HtmlDoc();
+    this.doc = new ReadabilityDoc();
 
     void this.initialize();
   }
@@ -143,8 +146,18 @@ export class TabSource implements Source {
     return this.waiting;
   }
 
-  private getSelectedText() {
-    return this.htmlDoc.getSelectedText();
+  private async getSelectedText() {
+    const math = await getMath();
+    try {
+      if (math) {
+        math.show();
+      }
+      return (window.getSelection()?.toString() ?? "").trim();
+    } finally {
+      if (math) {
+        math.hide();
+      }
+    }
   }
 
   async getCurrentIndex(): Promise<number> {
@@ -155,7 +168,7 @@ export class TabSource implements Source {
         return -100;
       }
 
-      return this.htmlDoc.getCurrentIndex();
+      return 0;
     } finally {
       this.waiting = false;
     }
@@ -172,7 +185,7 @@ export class TabSource implements Source {
 
         return null;
       } else {
-        const texts = await this.htmlDoc.getTexts(index);
+        const texts = await this.doc.getTexts(index);
 
         if (Array.isArray(texts)) {
           if (!quietly) {
