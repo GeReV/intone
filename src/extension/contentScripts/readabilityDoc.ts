@@ -13,11 +13,12 @@ export class ReadabilityDoc implements Doc {
       if (parsed) {
         const cleanedDoc = new DOMParser().parseFromString(parsed.content, "text/html");
 
-        // Prepend a newline before paragraphs, so they're never merged with other blocks of text.
+        // Prepend a newline before and after paragraphs, so they're never merged with other blocks of text.
         cleanedDoc
           .querySelectorAll("p")
           .forEach(p => {
             p.prepend(cleanedDoc.createTextNode("\n"));
+            p.append(cleanedDoc.createTextNode("\n"));
           });
 
         this.textLines = cleanedDoc.body.textContent?.split("\n").filter(s => s.trim()) ?? [];
