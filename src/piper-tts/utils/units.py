@@ -1,8 +1,8 @@
 import re
 
 
-def re_compile(pattern):
-    return re.compile(pattern, re.IGNORECASE)
+def re_compile(pattern, flags=re.IGNORECASE):
+    return re.compile(pattern, flags)
 
 
 def uncounted(unit):
@@ -66,21 +66,21 @@ units = [
     (re_compile(r"\bTB|tb\b"), "terabyte"),
     (re_compile(r"\bPB|pb\b"), "petabyte"),
 
-    (re_compile(r"\bm[wW]h\b"), "milliwatt-hours"),
+    (re_compile(r"\bm[wW]h\b", re.NOFLAG), "milliwatt-hours"),
     (re_compile(r"\b[wW]h\b"), "watt-hour"),
     (re_compile(r"\bk[wW]h\b"), "kilowatt-hour"),
-    (re_compile(r"\bM[wW]h\b"), "megawatt-hour"),
+    (re_compile(r"\bM[wW]h\b", re.NOFLAG), "megawatt-hour"),
     (re_compile(r"\bG[wW]h\b"), "gigawatt-hour"),
     (re_compile(r"\bT[wW]h\b"), "terawatt-hour"),
 
-    (re_compile(r"\bm[wW]\b"), "milliwatt"),
+    (re_compile(r"\bm[wW]\b", re.NOFLAG), "milliwatt"),
     (re_compile(r"\b[wW]\b"), "watt"),
     ("kW", "kilowatt"),
     ("MW", "megawatt"),
     ("GW", "gigawatt"),
     ("TW", "terawatt"),
 
-    (re_compile(r"\bm[aA]\b"), "milliamp"),
+    (re_compile(r"\bm[aA]\b", re.NOFLAG), "milliamp"),
     (re_compile(r"\b[aA]\b"), "amp"),
 
     (re_compile(r"\bm[vV]\b"), "millivolt"),
