@@ -1,0 +1,16 @@
+services:
+  kokoro:
+    build:
+      context: .
+    environment:
+      - KOKORO_SPEAKER=3
+    ports:
+      - 5000:5000
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
