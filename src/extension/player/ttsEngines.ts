@@ -44,4 +44,10 @@ export interface TtsEngine {
   getVoices(): Promise<TtsVoice[]>;
 }
 
-
+export function ttsOptionsEquals(a: TtsOptions, b: TtsOptions): boolean {
+  return a.lang === b.lang &&
+    a.rate === b.rate &&
+    a.rateAdjust === b.rateAdjust &&
+    a.voice === b.voice &&
+    a.volume === b.volume;
+}

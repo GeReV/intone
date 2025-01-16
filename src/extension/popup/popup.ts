@@ -1,14 +1,12 @@
-import { $ } from "~/utils/dom";
-import * as browser from "webextension-polyfill";
-import { DEFAULT_SETTINGS, getSettings, Settings, updateSettings } from "~/utils/settings";
 import type { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
-import assert from "~/utils/assert";
-import { escapeHtml, getQueryString, nextId } from "~/utils";
-import { PermissionsError } from "~/utils/errors";
-import { formatError, getActiveTab } from "~/utils/webext";
 import { sendMessage } from "webext-bridge/popup";
-
-const queryString = getQueryString();
+import * as browser from "webextension-polyfill";
+import { escapeHtml, getQueryString, nextId } from "~/utils";
+import assert from "~/utils/assert";
+import { $ } from "~/utils/dom";
+import { PermissionsError } from "~/utils/errors";
+import { DEFAULT_SETTINGS, getSettings, Settings, updateSettings } from "~/utils/settings";
+import { formatError, getActiveTab } from "~/utils/webext";
 
 // const playbackErrorProcessor = {
 //   lastError: {},
@@ -20,8 +18,15 @@ const queryString = getQueryString();
 //   }
 // };
 
-const sendMessageBackground = async <K extends DataTypeKey>(messageId: K, data: GetDataType<K, never>): Promise<GetReturnType<K, never>> =>
-  sendMessage(messageId, data, "background");
+const sendMessageBackground = async function <K extends DataTypeKey>(messageId: K, data: GetDataType<K, never>): Promise<GetReturnType<K, never>> {
+  console.debug("sendMessageBackground");
+
+  const response: GetReturnType<K, never> = await sendMessage(messageId, data, "background");
+
+  console.debug("sendMessageBackground: got response", response);
+
+  return response;
+};
 
 export class Popup {
   private readonly status: HTMLElement;
@@ -43,6 +48,7 @@ export class Popup {
 
   private texts: string[] = [];
   private currentIndex = -1;
+  private queryString: URLSearchParams;
 
   constructor() {
     this.status = $<HTMLElement>("#status");
@@ -70,15 +76,18 @@ export class Popup {
     this.btnIncreaseFontSize.addEventListener("click", this.changeFontSize.bind(null, +1), false);
     this.btnDecreaseWindowSize.addEventListener("click", this.changeWindowSize.bind(null, -1), false);
     this.btnIncreaseWindowSize.addEventListener("click", this.changeWindowSize.bind(null, +1), false);
+
+    this.queryString = getQueryString();
   }
 
   async init() {
+    console.log("init");
     try {
       await this.updateButtons();
 
       const settings = await getSettings(["showHighlighting", "readOutTab"]);
 
-      if (settings.showHighlighting === 2 && queryString.has("isPopup")) {
+      if (settings.showHighlighting === 2 && this.queryString.has("isPopup")) {
         const activeTab = await getActiveTab();
         const url = browser.runtime.getURL(`popup.html?tab=${activeTab?.id}`);
 
@@ -120,10 +129,14 @@ export class Popup {
 
   private async updateButtons() {
     try {
+      console.log("updateButtons");
+
       const [settings, stateInfo] = await Promise.all([
         getSettings(),
         sendMessageBackground("get-playback-state", null)
       ]);
+
+      console.log("updateButtons: got response");
 
       const { state, speechPosition, playbackError } = stateInfo;
 
@@ -203,7 +216,7 @@ export class Popup {
       if (stateInfo.state === "PAUSED") {
         await sendMessageBackground("resume", null);
       } else {
-        await sendMessageBackground("play-tab", { tabId: queryString.has("tab") ? Number(queryString.get("tab")) : undefined });
+        await sendMessageBackground("play-tab", { tabId: this.queryString.has("tab") ? Number(this.queryString.get("tab")) : undefined });
       }
 
       await this.updateButtons();
@@ -220,7 +233,7 @@ export class Popup {
     this.status.hidden = true;
 
     try {
-      await sendMessageBackground("reload-and-play-tab", { tabId: queryString.has("tab") ? Number(queryString.get("tab")) : undefined });
+      await sendMessageBackground("reload-and-play-tab", { tabId: this.queryString.has("tab") ? Number(this.queryString.get("tab")) : undefined });
 
       await this.updateButtons();
     } catch (err) {
@@ -316,7 +329,7 @@ export class Popup {
 
     this.highlight.style.fontSize = fontSize;
 
-    if (queryString.has("isPopup")) {
+    if (this.queryString.has("isPopup")) {
       this.highlight.style.width = `${windowSize[0]}px`;
       this.highlight.style.height = `${windowSize[1]}px`;
     }

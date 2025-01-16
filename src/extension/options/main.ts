@@ -1,8 +1,8 @@
+import Engine from "~/player/engines/localTtsEngine";
+import { TtsEngine } from "~/player/ttsEngines";
+import assert from "~/utils/assert";
 import { $, $$ } from "~/utils/dom";
 import { DEFAULT_SETTINGS, getSettings, updateSettings } from "~/utils/settings";
-import { TtsEngine } from "~/player/ttsEngines";
-import Engine from "~/player/engines/piperTtsEngine";
-import assert from "~/utils/assert";
 
 void (async () => {
   let engine: TtsEngine;

@@ -1,8 +1,8 @@
-import { getSettings } from "~/utils/settings";
-import assert from "~/utils/assert";
+import Engine from "~/player/engines/localTtsEngine";
 import { TtsEngine } from "~/player/ttsEngines";
-import Engine from "~/player/engines/piperTtsEngine";
 import { Messages } from "~/player/types";
+import assert from "~/utils/assert";
+import { getSettings } from "~/utils/settings";
 
 window.addEventListener("message", initPort);
 
@@ -37,6 +37,8 @@ async function onMessage(evt: MessageEvent<Messages>) {
   const message = evt.data;
 
   const engine = await engineInit;
+
+  console.debug(message.type, message.data);
 
   switch (message.type) {
     case "is-speaking":
