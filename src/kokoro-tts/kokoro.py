@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, Generator, List, Literal, Tuple
+from typing import Any, Dict, Generator, List, Literal, NewType, Tuple
 import phonemizer
 import numpy as np
 import torch
@@ -9,7 +9,7 @@ from models import Model
 
 SAMPLE_RATE = 24000
 
-type Lang = Literal["a", "b"]
+Lang = NewType("Lang", Literal["a", "b"])
 
 def clamp_speed(speed: int | float) -> float:
     if not isinstance(speed, float) and not isinstance(speed, int):
@@ -173,7 +173,7 @@ def resplit_strings(arr: List[str]) -> Tuple[str, str]:
     # Join the strings with the best split point
     return ' '.join(arr[:best_split]), ' '.join(arr[best_split:])
 
-def recursive_split(text: str, lang: Lang) -> List[(str, str, int)]:
+def recursive_split(text: str, lang: Lang) -> List[Tuple[str, str, int]]:
     if not text:
         return []
     tokens = phonemize(text, lang, norm=False)
@@ -192,7 +192,7 @@ def recursive_split(text: str, lang: Lang) -> List[(str, str, int)]:
     return recursive_split(a, lang) + recursive_split(b, lang)
 
 # def segment_and_tokenize(text, voice, lang, skip_square_brackets=True, newline_split=2):
-def segment_and_tokenize(text: str, lang: Lang, newline_split: int = 2) -> List[(int, str, str, int)]:
+def segment_and_tokenize(text: str, lang: Lang, newline_split: int = 2) -> List[Tuple[int, str, str, int]]:
     # if skip_square_brackets:
     #     text = re.sub(r'\[.*?\]', '', text)
     texts = [t.strip() for t in re.split('\n{'+str(newline_split)+',}', normalize_text(text))] if newline_split > 0 else [normalize_text(text)]
@@ -229,7 +229,7 @@ def forward(model: Model, token_lists: List[List[int]], voicepack: Any, speed: f
     return outs
 
 # def lf_generate(segments, voice, speed=1, trim=0, pad_between=0, use_gpu=True, sk=None):
-def lf_generate(model: Model, segments: List[(int, str, str, int)], voicepack: Any, speed: int | float = 1, trim: int | float = 0, pad_between: bool = True) -> Generator[np.ndarray]:
+def lf_generate(model: Model, segments: List[Tuple[int, str, str, int]], voicepack: Any, speed: int | float = 1, trim: int | float = 0, pad_between: bool = True) -> Generator[np.ndarray, None, None]:
     token_lists = list(map(tokenize, [s[2] for s in segments]))
     speed = clamp_speed(speed)
     trim = clamp_trim(trim)
