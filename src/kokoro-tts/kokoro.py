@@ -256,5 +256,8 @@ def lf_generate(model: Model, segments: List[(int, str, str, int)], voicepack: A
 
 def generate(model: Model, text: str, voicepack: Any, lang: Lang = 'a', speed: int = 1, newline_split: int = 2) -> np.ndarray:
     segments = segment_and_tokenize(text, lang, newline_split=newline_split)
+
+    # NOTE: For some reason, the padding causes Firefox to play audio silently.
     audio_segments = list(lf_generate(model, segments, voicepack, speed=speed, pad_between=False))
+
     return np.concatenate(audio_segments)
