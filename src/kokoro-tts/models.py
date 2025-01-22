@@ -1,16 +1,17 @@
 # https://github.com/yl4579/StyleTTS2/blob/main/models.py
+from typing import Literal, NewType
 from istftnet import AdaIN1d, Decoder
 from munch import Munch
 from pathlib import Path
 from plbert import load_plbert
-from torch.nn.utils import weight_norm, spectral_norm
+from torch.nn.utils import weight_norm
 import json
 import numpy as np
-import os
-import os.path as osp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+Model = NewType("Model", Munch)
 
 class LinearNorm(torch.nn.Module):
     def __init__(self, in_dim, out_dim, bias=True, w_init_gain='linear'):
@@ -326,7 +327,7 @@ class DurationEncoder(nn.Module):
         return mask
 
 # https://github.com/yl4579/StyleTTS2/blob/main/utils.py
-def recursive_munch(d):
+def recursive_munch(d: dict | list):
     if isinstance(d, dict):
         return Munch((k, recursive_munch(v)) for k, v in d.items())
     elif isinstance(d, list):
@@ -334,7 +335,7 @@ def recursive_munch(d):
     else:
         return d
 
-def build_model(path, device):
+def build_model(path: torch.serialization.FILE_LIKE, device: Literal["cpu", "cuda"]) -> Model:
     config = Path(__file__).parent / 'config.json'
     assert config.exists(), f'Config path incorrect: config.json not found at {config}'
     with open(config, 'r') as r:

@@ -3,15 +3,12 @@ import argparse
 import io
 import logging
 import torch
-from pathlib import Path
-from typing import Any, Dict
+
 from scipy.io import wavfile
-
-
 from flask import Flask, request, send_file
 
 from cleaners import clean
-from kokoro import generate
+from kokoro import SAMPLE_RATE, generate
 from models import build_model
 
 _LOGGER = logging.getLogger()
@@ -96,7 +93,7 @@ def main() -> None:
 
         audio_data = generate(MODEL, text=text, voicepack=VOICEPACK, lang=VOICE_NAME[0], speed=rate)
 
-        wavfile.write(wav_io, 24000, audio_data)
+        wavfile.write(wav_io, SAMPLE_RATE, audio_data)
 
         wav_io.seek(0)
 

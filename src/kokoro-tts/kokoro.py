@@ -1,13 +1,17 @@
-import os
 import re
+from typing import Any, Dict, Generator, List, Literal, Tuple
 import phonemizer
 import numpy as np
 import torch
 import librosa
 
+from models import Model
+
 SAMPLE_RATE = 24000
 
-def clamp_speed(speed):
+type Lang = Literal["a", "b"]
+
+def clamp_speed(speed: int | float) -> float:
     if not isinstance(speed, float) and not isinstance(speed, int):
         return 1
     elif speed < 0.5:
@@ -16,7 +20,7 @@ def clamp_speed(speed):
         return 2
     return speed
 
-def clamp_trim(trim):
+def clamp_trim(trim: int | float) -> float:
     if not isinstance(trim, float) and not isinstance(trim, int):
         return 0.5
     elif trim < 0:
@@ -25,7 +29,7 @@ def clamp_trim(trim):
         return 0.5
     return trim
 
-def trim_if_needed(out, trim):
+def trim_if_needed(out: np.ndarray, trim: float) -> np.ndarray:
     if not trim:
         return out
     a, b = librosa.effects.trim(out, top_db=30)[1]
@@ -33,7 +37,7 @@ def trim_if_needed(out, trim):
     b = int(len(out)-(len(out)-b)*trim)
     return out[a:b]
 
-def split_num(num):
+def split_num(num: re.Match) -> str:
     num = num.group()
     if '.' in num:
         return num
@@ -56,7 +60,7 @@ def split_num(num):
             return f'{left} oh {right}{s}'
     return f'{left} {right}{s}'
 
-def flip_money(m):
+def flip_money(m: re.Match) -> str:
     m = m.group()
     bill = 'dollar' if m[0] == '$' else 'pound'
     if m[-1].isalpha():
@@ -70,11 +74,11 @@ def flip_money(m):
     coins = f"cent{'' if c == 1 else 's'}" if m[0] == '$' else ('penny' if c == 1 else 'pence')
     return f'{b} {bill}{s} and {c} {coins}'
 
-def point_num(num):
+def point_num(num: re.Match) -> str:
     a, b = num.group().split('.')
     return ' point '.join([a, ' '.join(b)])
 
-def normalize_text(text):
+def normalize_text(text: str) -> str:
     text = text.replace(chr(8216), "'").replace(chr(8217), "'")
     text = text.replace('«', chr(8220)).replace('»', chr(8221))
     text = text.replace(chr(8220), '"').replace(chr(8221), '"')
@@ -102,7 +106,7 @@ def normalize_text(text):
     text = re.sub(r'(?i)(?<=[A-Z])\.(?=[A-Z])', '-', text)
     return text.strip()
 
-def get_vocab():
+def get_vocab() -> Dict[str, int]:
     _pad = "$"
     _punctuation = ';:,.!?¡¿—…"«»“” '
     _letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
@@ -114,7 +118,7 @@ def get_vocab():
     return dicts
 
 VOCAB = get_vocab()
-def tokenize(ps):
+def tokenize(ps: str) -> List[int]:
     return [i for i in map(VOCAB.get, ps) if i is not None]
 
 phonemizers = dict(
@@ -122,7 +126,7 @@ phonemizers = dict(
     b=phonemizer.backend.EspeakBackend(language='en-gb', preserve_punctuation=True, with_stress=True),
 )
 
-def phonemize(text, lang, norm=True):
+def phonemize(text: str, lang: Lang, norm=True) -> str:
     if norm:
         text = normalize_text(text, lang)
     ps = phonemizers[lang].phonemize([text])
@@ -137,12 +141,12 @@ def phonemize(text, lang, norm=True):
     ps = ''.join(filter(lambda p: p in VOCAB, ps))
     return ps.strip()
 
-def length_to_mask(lengths):
+def length_to_mask(lengths: torch.Tensor) -> torch.Tensor:
     mask = torch.arange(lengths.max()).unsqueeze(0).expand(lengths.shape[0], -1).type_as(lengths)
     mask = torch.gt(mask+1, lengths.unsqueeze(1))
     return mask
 
-def resplit_strings(arr):
+def resplit_strings(arr: List[str]) -> Tuple[str, str]:
     # Handle edge cases
     if not arr:
         return '', ''
@@ -169,7 +173,7 @@ def resplit_strings(arr):
     # Join the strings with the best split point
     return ' '.join(arr[:best_split]), ' '.join(arr[best_split:])
 
-def recursive_split(text, lang):
+def recursive_split(text: str, lang: Lang) -> List[(str, str, int)]:
     if not text:
         return []
     tokens = phonemize(text, lang, norm=False)
@@ -188,7 +192,7 @@ def recursive_split(text, lang):
     return recursive_split(a, lang) + recursive_split(b, lang)
 
 # def segment_and_tokenize(text, voice, lang, skip_square_brackets=True, newline_split=2):
-def segment_and_tokenize(text, lang, newline_split=2):
+def segment_and_tokenize(text: str, lang: Lang, newline_split: int = 2) -> List[(int, str, str, int)]:
     # if skip_square_brackets:
     #     text = re.sub(r'\[.*?\]', '', text)
     texts = [t.strip() for t in re.split('\n{'+str(newline_split)+',}', normalize_text(text))] if newline_split > 0 else [normalize_text(text)]
@@ -196,7 +200,7 @@ def segment_and_tokenize(text, lang, newline_split=2):
     return [(i, *row) for i, row in enumerate(segments)]
 
 @torch.no_grad()
-def forward(model, token_lists, voicepack, speed, device='cuda'):
+def forward(model: Model, token_lists: List[List[int]], voicepack: Any, speed: float, device: Literal["cpu", "cuda"] = 'cuda') -> List[np.ndarray]:
     outs = []
     for tokens in token_lists:
         ref_s = voicepack[len(tokens)]
@@ -225,7 +229,7 @@ def forward(model, token_lists, voicepack, speed, device='cuda'):
     return outs
 
 # def lf_generate(segments, voice, speed=1, trim=0, pad_between=0, use_gpu=True, sk=None):
-def lf_generate(model, segments, voicepack, speed=1, trim=0, pad_between=True):
+def lf_generate(model: Model, segments: List[(int, str, str, int)], voicepack: Any, speed: int | float = 1, trim: int | float = 0, pad_between: bool = True) -> Generator[np.ndarray]:
     token_lists = list(map(tokenize, [s[2] for s in segments]))
     speed = clamp_speed(speed)
     trim = clamp_trim(trim)
@@ -250,7 +254,7 @@ def lf_generate(model, segments, voicepack, speed=1, trim=0, pad_between=True):
             yield out
         i += bs
 
-def generate(model, text, voicepack, lang='a', speed=1, newline_split=2):
+def generate(model: Model, text: str, voicepack: Any, lang: Lang = 'a', speed: int = 1, newline_split: int = 2) -> np.ndarray:
     segments = segment_and_tokenize(text, lang, newline_split=newline_split)
     audio_segments = list(lf_generate(model, segments, voicepack, speed=speed, pad_between=False))
     return np.concatenate(audio_segments)

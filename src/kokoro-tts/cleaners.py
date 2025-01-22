@@ -1,23 +1,24 @@
 import re
+from typing import Dict
 
 from utils.entities import expand_named_entities
 from utils.abbreviations import abbreviations_en, months_en, slang_en
 from utils.units import expand_units
 
 
-def expand_abbreviations(text, abbreviations):
+def expand_abbreviations(text: str, abbreviations: Dict[re.Pattern, str]) -> str:
     for regex, replacement in abbreviations:
         text = re.sub(regex, replacement, text)
     return text
 
 
-def expand_months(text):
+def expand_months(text: str) -> str:
     for regex, replacement in months_en:
         text = re.sub(regex, replacement, text)
     return text
 
 
-def clean(text):
+def clean(text: str) -> str:
     # Improve list numbering pronunciation.
     text = re.sub(r"^(\d+)\. ", r"\1: ", text, flags=re.MULTILINE)
 
