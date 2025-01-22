@@ -27,9 +27,6 @@ COPY requirements.txt .
 
 RUN python3 -m venv .venv
 
-# Packages for Kokoro server
-RUN .venv/bin/pip3 install -r requirements.txt
-
 # Packages for NER cleaner
 RUN .venv/bin/pip3 install nltk inflect num2words &&  \
   .venv/bin/python3 -m nltk.downloader popular
@@ -45,6 +42,9 @@ RUN mkdir -p $STANFORD_DIR && \
 
 ENV CLASSPATH=$STANFORD_DIR
 ENV STANFORD_MODELS="$STANFORD_DIR/classifiers"
+
+# Packages for Kokoro server
+RUN .venv/bin/pip3 install -r requirements.txt
 
 COPY . .
 
