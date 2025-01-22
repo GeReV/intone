@@ -1,6 +1,37 @@
-import phonemizer
+import os
 import re
+import phonemizer
+import numpy as np
 import torch
+import librosa
+
+SAMPLE_RATE = 24000
+
+def clamp_speed(speed):
+    if not isinstance(speed, float) and not isinstance(speed, int):
+        return 1
+    elif speed < 0.5:
+        return 0.5
+    elif speed > 2:
+        return 2
+    return speed
+
+def clamp_trim(trim):
+    if not isinstance(trim, float) and not isinstance(trim, int):
+        return 0.5
+    elif trim < 0:
+        return 0
+    elif trim > 1:
+        return 0.5
+    return trim
+
+def trim_if_needed(out, trim):
+    if not trim:
+        return out
+    a, b = librosa.effects.trim(out, top_db=30)[1]
+    a = int(a*trim)
+    b = int(len(out)-(len(out)-b)*trim)
+    return out[a:b]
 
 def split_num(num):
     num = num.group()
@@ -90,9 +121,10 @@ phonemizers = dict(
     a=phonemizer.backend.EspeakBackend(language='en-us', preserve_punctuation=True, with_stress=True),
     b=phonemizer.backend.EspeakBackend(language='en-gb', preserve_punctuation=True, with_stress=True),
 )
+
 def phonemize(text, lang, norm=True):
     if norm:
-        text = normalize_text(text)
+        text = normalize_text(text, lang)
     ps = phonemizers[lang].phonemize([text])
     ps = ps[0] if ps else ''
     # https://en.wiktionary.org/wiki/kokoro#English
@@ -110,40 +142,115 @@ def length_to_mask(lengths):
     mask = torch.gt(mask+1, lengths.unsqueeze(1))
     return mask
 
-@torch.no_grad()
-def forward(model, tokens, ref_s, speed):
-    device = ref_s.device
-    tokens = torch.LongTensor([[0, *tokens, 0]]).to(device)
-    input_lengths = torch.LongTensor([tokens.shape[-1]]).to(device)
-    text_mask = length_to_mask(input_lengths).to(device)
-    bert_dur = model.bert(tokens, attention_mask=(~text_mask).int())
-    d_en = model.bert_encoder(bert_dur).transpose(-1, -2)
-    s = ref_s[:, 128:]
-    d = model.predictor.text_encoder(d_en, s, input_lengths, text_mask)
-    x, _ = model.predictor.lstm(d)
-    duration = model.predictor.duration_proj(x)
-    duration = torch.sigmoid(duration).sum(axis=-1) / speed
-    pred_dur = torch.round(duration).clamp(min=1).long()
-    pred_aln_trg = torch.zeros(input_lengths, pred_dur.sum().item())
-    c_frame = 0
-    for i in range(pred_aln_trg.size(0)):
-        pred_aln_trg[i, c_frame:c_frame + pred_dur[0,i].item()] = 1
-        c_frame += pred_dur[0,i].item()
-    en = d.transpose(-1, -2) @ pred_aln_trg.unsqueeze(0).to(device)
-    F0_pred, N_pred = model.predictor.F0Ntrain(en, s)
-    t_en = model.text_encoder(tokens, input_lengths, text_mask)
-    asr = t_en @ pred_aln_trg.unsqueeze(0).to(device)
-    return model.decoder(asr, F0_pred, N_pred, ref_s[:, :128]).squeeze().cpu().numpy()
+def resplit_strings(arr):
+    # Handle edge cases
+    if not arr:
+        return '', ''
+    if len(arr) == 1:
+        return arr[0], ''
+    # Try each possible split point
+    min_diff = float('inf')
+    best_split = 0
+    # Calculate lengths when joined with spaces
+    lengths = [len(s) for s in arr]
+    spaces = len(arr) - 1  # Total spaces needed
+    # Try each split point
+    left_len = 0
+    right_len = sum(lengths) + spaces
+    for i in range(1, len(arr)):
+        # Add current word and space to left side
+        left_len += lengths[i-1] + (1 if i > 1 else 0)
+        # Remove current word and space from right side
+        right_len -= lengths[i-1] + 1
+        diff = abs(left_len - right_len)
+        if diff < min_diff:
+            min_diff = diff
+            best_split = i
+    # Join the strings with the best split point
+    return ' '.join(arr[:best_split]), ' '.join(arr[best_split:])
 
-def generate(model, text, voicepack, lang='a', speed=1, ps=None):
-    ps = ps or phonemize(text, lang)
-    tokens = tokenize(ps)
-    if not tokens:
-        return None
-    elif len(tokens) > 510:
-        tokens = tokens[:510]
-        print('Truncated to 510 tokens')
-    ref_s = voicepack[len(tokens)]
-    out = forward(model, tokens, ref_s, speed)
-    ps = ''.join(next(k for k, v in VOCAB.items() if i == v) for i in tokens)
-    return out, ps
+def recursive_split(text, lang):
+    if not text:
+        return []
+    tokens = phonemize(text, lang, norm=False)
+    if len(tokens) < 511:
+        return [(text, tokens, len(tokens))] if tokens else []
+    if ' ' not in text:
+        return []
+    for punctuation in ['!.?…', ':;', ',—']:
+        splits = re.split(f'(?:(?<=[{punctuation}])|(?<=[{punctuation}]["\'»])|(?<=[{punctuation}]["\'»]["\'»])) ', text)
+        if len(splits) > 1:
+            break
+        else:
+            splits = None
+    splits = splits or text.split(' ')
+    a, b = resplit_strings(splits)
+    return recursive_split(a, lang) + recursive_split(b, lang)
+
+# def segment_and_tokenize(text, voice, lang, skip_square_brackets=True, newline_split=2):
+def segment_and_tokenize(text, lang, newline_split=2):
+    # if skip_square_brackets:
+    #     text = re.sub(r'\[.*?\]', '', text)
+    texts = [t.strip() for t in re.split('\n{'+str(newline_split)+',}', normalize_text(text))] if newline_split > 0 else [normalize_text(text)]
+    segments = [row for t in texts for row in recursive_split(t, lang)]
+    return [(i, *row) for i, row in enumerate(segments)]
+
+@torch.no_grad()
+def forward(model, token_lists, voicepack, speed, device='cuda'):
+    outs = []
+    for tokens in token_lists:
+        ref_s = voicepack[len(tokens)]
+        s = ref_s[:, 128:]
+        tokens = torch.LongTensor([[0, *tokens, 0]]).to(device)
+        input_lengths = torch.LongTensor([tokens.shape[-1]]).to(device)
+        text_mask = length_to_mask(input_lengths).to(device)
+        bert_dur = model.bert(tokens, attention_mask=(~text_mask).int())
+        d_en = model.bert_encoder(bert_dur).transpose(-1, -2)
+        d = model.predictor.text_encoder(d_en, s, input_lengths, text_mask)
+        x, _ = model.predictor.lstm(d)
+        duration = model.predictor.duration_proj(x)
+        duration = torch.sigmoid(duration).sum(axis=-1) / speed
+        pred_dur = torch.round(duration).clamp(min=1).long()
+        pred_aln_trg = torch.zeros(input_lengths, pred_dur.sum().item())
+        c_frame = 0
+        for i in range(pred_aln_trg.size(0)):
+            pred_aln_trg[i, c_frame:c_frame + pred_dur[0,i].item()] = 1
+            c_frame += pred_dur[0,i].item()
+        en = d.transpose(-1, -2) @ pred_aln_trg.unsqueeze(0).to(device)
+        F0_pred, N_pred = model.predictor.F0Ntrain(en, s)
+        t_en = model.text_encoder(tokens, input_lengths, text_mask)
+        asr = t_en @ pred_aln_trg.unsqueeze(0).to(device)
+        outs.append(model.decoder(asr, F0_pred, N_pred, ref_s[:, :128]).squeeze().cpu().numpy())
+    
+    return outs
+
+# def lf_generate(segments, voice, speed=1, trim=0, pad_between=0, use_gpu=True, sk=None):
+def lf_generate(model, segments, voicepack, speed=1, trim=0, pad_between=True):
+    token_lists = list(map(tokenize, [s[2] for s in segments]))
+    speed = clamp_speed(speed)
+    trim = clamp_trim(trim)
+    pad_between = int(pad_between)
+    batch_sizes = [89, 55, 34, 21, 13, 8, 5, 3, 2, 1, 1]
+    i = 0
+    outs = None
+    while i < len(token_lists):
+        bs = batch_sizes.pop() if batch_sizes else 100
+        tokens = token_lists[i:i+bs]
+        try:
+            outs = forward(model, tokens, voicepack, speed)
+        except:
+            if outs:
+                i = len(token_lists)
+            else:
+                raise
+        for out in outs:
+            if i > 0 and pad_between > 0:
+                yield np.zeros(pad_between)
+            out = trim_if_needed(out, trim)
+            yield out
+        i += bs
+
+def generate(model, text, voicepack, lang='a', speed=1, newline_split=2):
+    segments = segment_and_tokenize(text, lang, newline_split=newline_split)
+    audio_segments = list(lf_generate(model, segments, voicepack, speed=speed, pad_between=False))
+    return np.concatenate(audio_segments)

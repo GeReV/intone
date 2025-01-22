@@ -2,7 +2,6 @@
 import argparse
 import io
 import logging
-import wave
 import torch
 from pathlib import Path
 from typing import Any, Dict
@@ -94,9 +93,8 @@ def main() -> None:
         wav_io = io.BytesIO()
 
         rate = request.args.get("rate", 1.0)
-        rate = clamp_speed(rate)
 
-        audio_data, _phonemes = generate(MODEL, text=text, voicepack=VOICEPACK, lang=VOICE_NAME[0], speed=rate)
+        audio_data = generate(MODEL, text=text, voicepack=VOICEPACK, lang=VOICE_NAME[0], speed=rate)
 
         wavfile.write(wav_io, 24000, audio_data)
 
