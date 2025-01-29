@@ -43,7 +43,7 @@ export class ReadabilityDoc implements Doc {
                 continue;
               }
 
-              line += itemContent.replace(/(?<![.,:;])$/, ".\n");
+              line += itemContent.replace(/(?<![.,:;])$/, ".") + "\n";
             }
 
             lines.push(line);
