@@ -18,7 +18,7 @@ export class ReadabilityDoc implements Doc {
 
         assert(content);
 
-        while (content?.childNodes.length === 1) {
+        while (content?.children.length === 1) {
           content = content.firstElementChild;
         }
 
@@ -26,9 +26,11 @@ export class ReadabilityDoc implements Doc {
           return Promise.resolve(null);
         }
 
-        const lines: string[] = [];
+        const lines: string[] = [
+          parsed.title,
+        ];
 
-        content.childNodes.forEach(child => {
+        content.querySelectorAll("p,ol,ul").forEach(child => {
           const text = child.textContent?.trim() ?? "";
           if (!text) {
             return;
@@ -37,7 +39,7 @@ export class ReadabilityDoc implements Doc {
           if (child.nodeName === "OL" || child.nodeName === "UL") {
             let line = "";
 
-            for (const item of Array.from(child.childNodes)) {
+            for (const item of Array.from(child.children)) {
               const itemContent = item.textContent?.trim();
               if (!itemContent) {
                 continue;
