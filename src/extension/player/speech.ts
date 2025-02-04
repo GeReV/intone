@@ -20,6 +20,8 @@ type SpeechEvent =
     }
   };
 
+const PLAYER_FRAME_ID = "__readout_player_frame";
+
 async function sendMessageWithResponse<K extends DataTypeKey>(port: MessagePort, messageId: K, data: GetDataType<K, null>): Promise<GetReturnType<K>> {
   return new Promise<GetReturnType<K>>(resolve => {
     const id = nextId();
@@ -65,20 +67,9 @@ export class Speech {
       }
     }
 
-    if (this.texts.length) {
-      this.texts = this.getChunks(this.texts.join("\n\n"));
-    }
-
     this.port = createPlayerFrame();
 
     this.ready = this.port;
-  }
-
-  getChunks(text: string) {
-    const isEA = /^zh|ko|ja/.test(this.options.lang);
-    const punctuator = isEA ? new EastAsianPunctuator() : new LatinPunctuator();
-
-    return new CharBreaker(750, punctuator, 200).breakText(text);
   }
 
   async getState(): Promise<"PLAYING" | "PAUSED" | "LOADING"> {
@@ -307,263 +298,28 @@ export class Speech {
   }
 }
 
-
-//text breakers
-
-
-// class WordBreaker {
-//   constructor(private readonly wordLimit: number, private readonly punctuator: Punctuator) {
-//   }
-//
-//   breakText(text: string): string[] {
-//     return this.punctuator.getParagraphs(text).flatMap(this.breakParagraph.bind(this));
-//   }
-//
-//   private breakParagraph(text: string): string[] {
-//     return this.punctuator.getSentences(text).flatMap(this.breakSentence.bind(this));
-//   }
-//
-//   breakSentence(sentence: string): string[] {
-//     return this.merge(this.punctuator.getPhrases(sentence), this.breakPhrase.bind(this));
-//   }
-//
-//   breakPhrase(phrase: string): string[] {
-//     let words = this.punctuator.getWords(phrase);
-//
-//     const splitPoint = Math.min(Math.ceil(words.length / 2), this.wordLimit);
-//     const result: string[] = [];
-//
-//     while (words.length) {
-//       result.push(words.slice(0, splitPoint).join(""));
-//       words = words.slice(splitPoint);
-//     }
-//
-//     return result;
-//   }
-//
-//   merge(parts: string[], breakPart: (s: string) => string[]) {
-//     const result: string[] = [];
-//     let group: { wordCount: number; parts: string[] } = { parts: [], wordCount: 0 };
-//
-//     const flush = () => {
-//       if (group.parts.length) {
-//         result.push(group.parts.join(""));
-//         group = { parts: [], wordCount: 0 };
-//       }
-//     };
-//
-//     parts.forEach((part) => {
-//       const wordCount = this.punctuator.getWords(part).length;
-//
-//       if (wordCount > this.wordLimit) {
-//         flush();
-//
-//         const subParts = breakPart(part);
-//
-//         for (const subPart of subParts) {
-//           result.push(subPart);
-//         }
-//       } else {
-//         if (group.wordCount + wordCount > this.wordLimit) {
-//           flush();
-//         }
-//         group.parts.push(part);
-//         group.wordCount += wordCount;
-//       }
-//     });
-//
-//     flush();
-//
-//     return result;
-//   }
-// }
-//
-class CharBreaker {
-  constructor(private charLimit: number, private punctuator: Punctuator, private paragraphCombineThreshold: number) {
-  }
-
-  breakText(text: string): string[] {
-    return this.merge(this.punctuator.getParagraphs(text), this.breakParagraph.bind(this), this.paragraphCombineThreshold);
-  }
-
-  breakParagraph(text: string): string[] {
-    return this.merge(this.punctuator.getSentences(text), this.breakSentence.bind(this));
-  }
-
-  breakSentence(sentence: string): string[] {
-    return this.merge(this.punctuator.getPhrases(sentence), this.breakPhrase.bind(this));
-  }
-
-  breakPhrase(phrase: string): string[] {
-    return this.merge(this.punctuator.getWords(phrase), this.breakWord.bind(this));
-  }
-
-  breakWord(word: string): string[] {
-    const result: string[] = [];
-
-    while (word) {
-      result.push(word.slice(0, this.charLimit));
-      word = word.slice(this.charLimit);
-    }
-
-    return result;
-  }
-
-  merge(parts: string[], breakPart: (s: string) => string[], combineThreshold?: number) {
-    const result: string[] = [];
-    let group: { charCount: number; parts: string[] } = { parts: [], charCount: 0 };
-
-    const flush = () => {
-      if (group.parts.length) {
-        result.push(group.parts.join(""));
-        group = { parts: [], charCount: 0 };
-      }
-    };
-
-    parts.forEach((part) => {
-      const charCount = part.length;
-
-      if (charCount > this.charLimit) {
-        flush();
-
-        const subParts = breakPart(part);
-
-        for (const subPart of subParts) {
-          result.push(subPart);
-        }
-      } else {
-        if (group.charCount + charCount > (combineThreshold ?? this.charLimit)) {
-          flush();
-        }
-
-        group.parts.push(part);
-        group.charCount += charCount;
-      }
-    });
-
-    flush();
-
-    return result;
-  }
-}
-
-//punctuators
-
-interface Punctuator {
-  getParagraphs(text: string): string[];
-
-  getSentences(text: string): string[];
-
-  getPhrases(text: string): string[];
-
-  getWords(text: string): string[];
-}
-
-class LatinPunctuator implements Punctuator {
-  getParagraphs(text: string) {
-    return this.recombine(text.split(/((?:\r?\n\s*){2,})/));
-  }
-
-  getSentences(text: string) {
-    return this.recombine(text.split(/([.!?]+[\s\u200b]+)/), /\b(\w|[A-Z][a-z]|Assn|Ave|Capt|Col|Comdr|Corp|Cpl|Gen|Gov|Hon|Inc|Lieut|Ltd|Rev|Univ|Jan|Feb|Mar|Apr|Aug|Sept|Oct|Nov|Dec|dept|ed|est|vol|vs)\.\s+$/);
-  }
-
-  getPhrases(sentence: string) {
-    return this.recombine(sentence.split(/([,;:]\s+|\s-+\s+|—\s*)/));
-  }
-
-  getWords(sentence: string) {
-    const tokens = sentence.trim().split(/([~@#%^*_+=<>]|[\s\-—/]+|\.(?=\w{2,})|,(?=[0-9]))/);
-    const result: string[] = [];
-    for (let i = 0; i < tokens.length; i += 2) {
-      const t = tokens[i];
-
-      if (t) {
-        result.push(t);
-      }
-
-      if (i + 1 < tokens.length) {
-        const t2 = tokens[i + 1];
-
-        if (t2 && /^[~@#%^*_+=<>]$/.test(t2)) {
-          result.push(t2);
-        } else if (result.length) {
-          result[result.length - 1] += t2;
-        }
-      }
-    }
-
-    return result;
-  }
-
-  recombine(tokens: string[], nonPunc?: RegExp) {
-    const result: string[] = [];
-
-    for (let i = 0; i < tokens.length; i += 2) {
-      const part = (i + 1 < tokens.length) ? (tokens[i] + (tokens[i + 1] ?? "")) : tokens[i];
-
-      if (part) {
-        if (nonPunc && result.length && nonPunc.test(result[result.length - 1] ?? "")) {
-          result[result.length - 1] += part;
-        } else {
-          result.push(part);
-        }
-      }
-    }
-
-    return result;
-  }
-}
-
-class EastAsianPunctuator implements Punctuator {
-  getParagraphs(text: string): string[] {
-    return this.recombine(text.split(/((?:\r?\n\s*){2,})/));
-  }
-
-  getSentences(text: string): string[] {
-    return this.recombine(text.split(/([.!?]+[\s\u200b]+|[\u3002\uff01]+)/));
-  }
-
-  getPhrases(sentence: string): string[] {
-    return this.recombine(sentence.split(/([,;:]\s+|[\u2025\u2026\u3000\u3001\uff0c\uff1b]+)/));
-  }
-
-  getWords(sentence: string): string[] {
-    return sentence.replace(/\s+/g, "").split("");
-  }
-
-  recombine(tokens: string[]): string[] {
-    const result: string[] = [];
-
-    for (let i = 0; i < tokens.length; i += 2) {
-      const t = tokens[i];
-
-      if (i + 1 < tokens.length) {
-        const t2 = tokens[i + 1];
-        assert(t2);
-
-        result.push(t + t2);
-      } else if (t) {
-        result.push(t);
-      }
-    }
-
-    return result;
-  }
-}
-
-function createPlayerFrame() {
-  const channel = new MessageChannel();
-
-  const frame = document.createElement("iframe");
-  frame.src = browser.runtime.getURL("dist/player/index.html");
-  frame.style.position = "absolute";
-  frame.style.height = "0";
-  frame.style.borderWidth = "0";
-
-  document.body.appendChild(frame);
-
+function createPlayerFrame(): Promise<MessagePort> {
   return new Promise<MessagePort>(resolve => {
+    const channel = new MessageChannel();
+
+    let frame: HTMLIFrameElement | null = document.querySelector(`#${PLAYER_FRAME_ID}`);
+
+    if (frame) {
+      assert(frame.contentWindow);
+      frame.contentWindow.postMessage("init", "*", [channel.port2]);
+
+      resolve(channel.port1); return;
+    }
+
+    frame = document.createElement("iframe");
+    frame.id = PLAYER_FRAME_ID;
+    frame.src = browser.runtime.getURL("dist/player/index.html");
+    frame.style.position = "absolute";
+    frame.style.height = "0";
+    frame.style.borderWidth = "0";
+
+    document.body.appendChild(frame);
+
     frame.addEventListener("load", () => {
       assert(frame.contentWindow);
       frame.contentWindow.postMessage("init", "*", [channel.port2]);
