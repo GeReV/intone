@@ -1,7 +1,7 @@
 import type { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
 import { sendMessage } from "webext-bridge/popup";
 import * as browser from "webextension-polyfill";
-import { escapeHtml, getQueryString, nextId } from "~/utils";
+import { getQueryString, nextId } from "~/utils";
 import assert from "~/utils/assert";
 import { $ } from "~/utils/dom";
 import { PermissionsError } from "~/utils/errors";
@@ -167,13 +167,17 @@ export class Popup {
           }
 
           for (let i = 0; i < pos.texts.length; i++) {
-            const html = escapeHtml(pos.texts[i] ?? "").replace(/\r?\n/g, "<br/>");
+            const text = pos.texts[i] ?? "";
 
-            const span = document.createElement("span");
-            span.innerHTML = html;
-            span.addEventListener("click", this.onSeek.bind(this, i), false);
+            if (!text) {
+              continue;
+            }
 
-            elem.appendChild(span);
+            const p = document.createElement("p");
+            p.textContent = text;
+            p.addEventListener("click", this.onSeek.bind(this, i), false);
+
+            elem.appendChild(p);
           }
         }
 
