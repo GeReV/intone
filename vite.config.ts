@@ -3,8 +3,8 @@
 import { dirname, relative, resolve } from "node:path";
 import type { UserConfig } from "vite";
 import { defineConfig } from "vite";
-import packageJson from "./package.json";
 import mkcert from "vite-plugin-mkcert";
+import packageJson from "./package.json";
 
 export const r = (...args: string[]) => resolve(__dirname, ...args);
 
@@ -59,7 +59,7 @@ export default defineConfig(({ command }) => ({
       : undefined,
     outDir: r("extension/dist"),
     emptyOutDir: false,
-    sourcemap: isDev ? "inline" : false,
+    sourcemap: "inline", // isDev ? "inline" : false,
     // https://developer.chrome.com/docs/webstore/program_policies/#:~:text=Code%20Readability%20Requirements
     terserOptions: {
       mangle: false,

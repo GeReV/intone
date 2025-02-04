@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
-import { onMessage, sendMessage } from "webext-bridge/content-script";
+import { onMessage } from "webext-bridge/content-script";
 import { lazy } from "~/utils/lazy";
 
 const player = lazy(async () => {
   const { Player } = await import("../player/player");
 
-  return new Player(false);
+  return new Player();
 });
 
 // Firefox `browser.tabs.executeScript()` requires scripts return a primitive value
@@ -24,7 +24,7 @@ const player = lazy(async () => {
     close();
   });
 
-  void sendMessage("register", null);
+  // void sendMessage("register", null);
 
   // function getRequireJs() {
   //   if (location.hostname === "docs.google.com") {

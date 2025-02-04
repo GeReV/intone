@@ -1,12 +1,12 @@
-import browser from "webextension-polyfill";
+import { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
 import { onMessage, sendMessage } from "webext-bridge/background";
-import { TaskSingleton } from "~/background/task";
-import { detectTabLanguage, getActiveTab } from "~/utils/webext";
-import { updateSettings } from "~/utils/settings";
+import browser from "webextension-polyfill";
 import { CONTENT_HANDLERS } from "~/background/contentHandlers";
+import { TaskSingleton } from "~/background/task";
 import assert from "~/utils/assert";
 import AwaitableSet from "~/utils/awaitableSet";
-import { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
+import { updateSettings } from "~/utils/settings";
+import { detectTabLanguage, getActiveTab } from "~/utils/webext";
 
 // only on dev mode
 if (import.meta.hot) {
@@ -96,9 +96,9 @@ const currentTask = new TaskSingleton();
 
 const tabRegistry = new AwaitableSet<number>();
 
-async function readyContentScript(tabId: number) {
-  await tabRegistry.waitFor(tabId);
-}
+// async function readyContentScript(tabId: number) {
+//   await tabRegistry.waitFor(tabId);
+// }
 
 browser.tabs.onRemoved.addListener((tabId) => {
   tabRegistry.delete(tabId);
@@ -127,7 +127,7 @@ async function playText(text: string | undefined, opts: { lang: string | undefin
 
     assert(tab?.id);
 
-    await readyContentScript(tab.id);
+    // await readyContentScript(tab.id);
 
     sendToPlayer = async <K extends DataTypeKey>(messageId: K, data: GetDataType<K, null>): Promise<GetReturnType<K, never>> => {
       assert(tab.id);
@@ -149,7 +149,9 @@ async function playTab(tabId?: number) {
 
   assert(tab.id);
 
-  await readyContentScript(tab.id);
+  // console.log("readyContentScript", tab.id);
+  // await readyContentScript(tab.id);
+  // console.log("readyContentScript OK");
 
   sendToPlayer = async <K extends DataTypeKey>(messageId: K, data: GetDataType<K, null>): Promise<GetReturnType<K, never>> => {
     assert(tab.id);
@@ -160,6 +162,8 @@ async function playTab(tabId?: number) {
   const task = currentTask.begin();
   try {
     const handler = CONTENT_HANDLERS.find(h => h.match(tab.url ?? "", tab.title));
+
+    console.log("content handler", handler);
 
     if (handler?.validate) {
       await handler.validate(tab);

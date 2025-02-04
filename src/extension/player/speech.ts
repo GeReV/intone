@@ -1,9 +1,9 @@
-import assert from "~/utils/assert";
-import { TtsOptions } from "~/player/ttsEngines";
-import browser from "webextension-polyfill";
-import { nextId } from "~/utils";
-import { PortMessage } from "~/player/types";
 import { DataTypeKey, GetDataType, GetReturnType } from "webext-bridge";
+import browser from "webextension-polyfill";
+import { TtsOptions } from "~/player/ttsEngines";
+import { PortMessage } from "~/player/types";
+import { nextId } from "~/utils";
+import assert from "~/utils/assert";
 
 export type SpeechPosition = {
   index: number;
@@ -308,7 +308,8 @@ function createPlayerFrame(): Promise<MessagePort> {
       assert(frame.contentWindow);
       frame.contentWindow.postMessage("init", "*", [channel.port2]);
 
-      resolve(channel.port1); return;
+      resolve(channel.port1);
+      return;
     }
 
     frame = document.createElement("iframe");
@@ -320,9 +321,9 @@ function createPlayerFrame(): Promise<MessagePort> {
 
     document.body.appendChild(frame);
 
-    frame.addEventListener("load", () => {
-      assert(frame.contentWindow);
-      frame.contentWindow.postMessage("init", "*", [channel.port2]);
+    frame.addEventListener("load", function () {
+      assert(this.contentWindow);
+      this.contentWindow.postMessage("init", "*", [channel.port2]);
 
       channel.port1.start();
 

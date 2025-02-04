@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
-import { isDev, r, sharedConfig } from "./vite.config";
 import packageJson from "./package.json";
+import { isDev, r, sharedConfig } from "./vite.config";
 
 // bundling the content script using Vite
 export default defineConfig({
@@ -19,7 +19,7 @@ export default defineConfig({
     outDir: r("extension/dist/background"),
     cssCodeSplit: false,
     emptyOutDir: false,
-    sourcemap: isDev ? "inline" : false,
+    sourcemap: "inline", // isDev ? "inline" : false,
     lib: {
       entry: r("src/extension/background/main.ts"),
       name: packageJson.name,

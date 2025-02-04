@@ -173,9 +173,12 @@ export class Popup {
               continue;
             }
 
+            const span = document.createElement("span");
+            span.textContent = text;
+
             const p = document.createElement("p");
-            p.textContent = text;
             p.addEventListener("click", this.onSeek.bind(this, i), false);
+            p.appendChild(span);
 
             elem.appendChild(p);
           }

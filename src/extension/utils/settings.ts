@@ -33,6 +33,7 @@ export async function getSettings(settings: SettingsKey[] = ["voiceName", "rate"
 }
 
 export async function updateSettings(settings: Partial<Settings>): Promise<void> {
+  console.log("update settings", settings);
   return browser.storage.local.set(settings);
 }
 

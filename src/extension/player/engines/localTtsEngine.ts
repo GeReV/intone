@@ -105,15 +105,32 @@ export default class LocalTtsEngine implements TtsEngine {
       url.searchParams.set("rate", String(rate));
     }
 
-    const res = await fetch(url, {
-      method: "GET",
-    });
+    let retry = 3;
+    let lastError: Error | undefined;
 
-    if (!res.ok) {
-      throw await res.text();
+    while (retry > 0) {
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+        });
+
+        if (res.ok) {
+          return URL.createObjectURL(await res.blob());
+        }
+
+        lastError = new Error(await res.text());
+      } catch (err) {
+        if (err instanceof TypeError) {
+          lastError = err;
+        }
+      }
+
+      await new Promise(res => setTimeout(res, 500));
+
+      retry -= 1;
     }
 
-    return URL.createObjectURL(await res.blob());
+    throw lastError ?? new Error("Unknown error has occurred while fetching audio");
   }
 
   async prefetch(utterance: string, options: TtsOptions): Promise<PrefetchedAudio> {

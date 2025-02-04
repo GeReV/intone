@@ -79,7 +79,7 @@ body.is-popup #highlight {
   margin-top: 1rem;
 }
 
-#highlight > .active {
+#highlight > .active span {
   background-color: yellow;
 }
 

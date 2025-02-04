@@ -1,8 +1,7 @@
-import { SpeechPosition } from "~/player/speech";
 import { Doc } from "~/player/doc";
 import { SimpleSource, Source, TabSource } from "~/player/sources";
+import { SpeechPosition } from "~/player/speech";
 import { errorToJson } from "~/utils";
-import { startTimer, Timer } from "~/utils/timer";
 
 
 export type PlaybackState = {
@@ -11,24 +10,9 @@ export type PlaybackState = {
   playbackError?: unknown
 };
 
-function closePlayer() {
-  if (top === self) {
-    window.close();
-  } else {
-    location.href = "about:blank";
-  }
-}
-
 export class Player {
   private activeDoc: Doc | null = null;
   private playbackError: unknown = null;
-  private readonly closeTabTimer: Timer | null = null;
-
-  constructor(autoclose = false) {
-    if (autoclose) {
-      this.closeTabTimer = startTimer(5 * 60 * 1000, closePlayer);
-    }
-  }
 
   openDoc(source: Source, onEnd: (err: unknown) => void) {
     this.activeDoc = new Doc(source, async err => {
@@ -40,20 +24,16 @@ export class Player {
         onEnd(err);
       }
     });
-
-    if (this.closeTabTimer) {
-      this.closeTabTimer.stop();
-    }
   }
 
   async closeDoc() {
+    console.log("close doc");
     if (this.activeDoc) {
       await this.activeDoc.close();
+
       this.activeDoc = null;
 
-      if (this.closeTabTimer) {
-        this.closeTabTimer.restart();
-      }
+      console.log("closed doc");
     }
   }
 
@@ -85,11 +65,13 @@ export class Player {
   }
 
   async playTab() {
+    console.log("player play tab");
     this.playbackError = null;
 
     if (!this.activeDoc) {
       this.openDoc(new TabSource(), err => {
         if (err) {
+          console.error("open doc", err);
           this.playbackError = err;
         }
       });
@@ -98,8 +80,10 @@ export class Player {
     const doc = this.activeDoc;
 
     try {
+      console.log("player play");
       return await this.activeDoc?.play();
     } catch (err) {
+      console.error("player error", err);
       if (doc === this.activeDoc) {
         handleError(err);
 
