@@ -4,7 +4,7 @@ import io
 import logging
 import torch
 
-from scipy.io import wavfile
+import soundfile as sf
 from flask import Flask, request, send_file
 
 from cleaners import clean
@@ -87,17 +87,16 @@ def main() -> None:
 
         _LOGGER.debug("Synthesizing text: %s", text)
 
-        wav_io = io.BytesIO()
-
         rate = request.args.get("rate", 1.0)
 
+        audio_io = io.BytesIO()
         audio_data = generate(MODEL, text=text, voicepack=VOICEPACK, lang=VOICE_NAME[0], speed=rate)
 
-        wavfile.write(wav_io, SAMPLE_RATE, audio_data)
+        sf.write(audio_io, audio_data, samplerate=SAMPLE_RATE, format='OGG')
 
-        wav_io.seek(0)
+        audio_io.seek(0)
 
-        res = send_file(wav_io, mimetype="audio/wav")
+        res = send_file(audio_io, mimetype="audio/ogg")
         res.headers["Access-Control-Allow-Origin"] = "*"
 
         return res

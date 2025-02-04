@@ -8,6 +8,7 @@ RUN apt-get update &&  \
   apt-get install -y --no-install-recommends \
   build-essential git wget unzip \
   espeak-ng \
+  libsndfile1 \
   openjdk-17-jre-headless \
   python3 python3-dev python3-pip python3-venv python3-wheel \
   && rm -rf /var/lib/apt/lists/*
