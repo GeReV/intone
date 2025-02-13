@@ -8,8 +8,12 @@ window.addEventListener("message", initPort);
 
 let port: MessagePort | undefined;
 
-// Setup the transferred port
+// Set up the transferred port
 function initPort(evt: MessageEvent) {
+  if (!evt.ports.length) {
+    return;
+  }
+
   port = evt.ports[0];
 
   assert(port);
@@ -32,7 +36,6 @@ async function getSpeechVoice(engine: TtsEngine, lang = "en") {
 }
 
 // Handle messages received on port2
-
 async function onMessage(evt: MessageEvent<Messages>) {
   const message = evt.data;
 

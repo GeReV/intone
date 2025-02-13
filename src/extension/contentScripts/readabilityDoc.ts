@@ -30,24 +30,14 @@ export class ReadabilityDoc implements Doc {
           parsed.title,
         ];
 
-        content.querySelectorAll(":scope > p,h1,h2,h3,h4,h5,h6,ol,ul").forEach(child => {
-          const text = child.textContent?.trim() ?? "";
+        content.querySelectorAll("p,h1,h2,h3,h4,h5,h6,li:not(:has(> p))").forEach(child => {
+          let text = child.textContent?.trim() ?? "";
           if (!text) {
             return;
           }
 
-          if (child.nodeName === "OL" || child.nodeName === "UL") {
-            for (let i = 0, l = child.childElementCount; i < l; i++) {
-              const li = child.children[i];
-
-              if (!li?.textContent) {
-                continue;
-              }
-
-              lines.push(li.textContent.replace(/(?<![.,:;])$/, "."));
-            }
-
-            return;
+          if (child.nodeName === "LI") {
+            text = text.replace(/(?<![.,:;])$/, ".");
           }
 
           // TODO: Handle DT/DD?
