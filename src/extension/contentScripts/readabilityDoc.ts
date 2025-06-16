@@ -12,7 +12,7 @@ export class ReadabilityDoc implements Doc {
       const parsed = this.readability.parse();
 
       if (parsed) {
-        const cleanedDoc = new DOMParser().parseFromString(parsed.content, "text/html");
+        const cleanedDoc = new DOMParser().parseFromString(parsed.content ?? "", "text/html");
 
         let content: Element | null = cleanedDoc.body;
 
@@ -28,7 +28,7 @@ export class ReadabilityDoc implements Doc {
 
         const lines: string[] = [
           parsed.title,
-        ];
+        ].filter(Boolean);
 
         content.querySelectorAll("p,h1,h2,h3,h4,h5,h6,li:not(:has(> p))").forEach(child => {
           let text = child.textContent?.trim() ?? "";
@@ -37,7 +37,7 @@ export class ReadabilityDoc implements Doc {
           }
 
           if (child.nodeName === "LI") {
-            text = text.replace(/(?<![.,:;])$/, ".");
+            text = this.processNodes(child);
           }
 
           // TODO: Handle DT/DD?
@@ -56,5 +56,44 @@ export class ReadabilityDoc implements Doc {
     }
 
     return Promise.resolve(null);
+  }
+
+  private processNodes(child: Element): string {
+    let text = "";
+
+    // NodeList does not currently support an iterator, at least in Typescript.
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
+    for (let i = 0; i < child.childNodes.length; i++) {
+      const node = child.childNodes[i];
+
+      if (!node) {
+        continue;
+      }
+
+      if (node.nodeType === Node.TEXT_NODE && node.textContent !== null) {
+        // Add a period at the end of an item.
+        text += node.textContent.replace(/(?<![.,:;])$/, ".");
+        text += "\n";
+      }
+
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as Element;
+        let content = "";
+
+        // If this element has any nested lists, continue building it node-by-node,
+        // otherwise just add its text contents.
+        if (el.querySelector("li")) {
+          content = this.processNodes(el);
+        } else {
+          content = el.textContent ?? "";
+        }
+
+        // Add a period at the end of an item.
+        text += content.replace(/(?<![.,:;])$/, ".");
+        text += "\n";
+      }
+    }
+
+    return text;
   }
 }
