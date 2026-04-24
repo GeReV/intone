@@ -16,7 +16,11 @@ module.exports = [
       },
       globals: {
         __DEV__: 'readonly',
-      }
+        Audio: 'readonly',
+        URL: 'readonly',
+        fetch: 'readonly',
+      },
+      ecmaVersion: 2020,
     },
     plugins: {
       '@typescript-eslint': ts,
@@ -24,6 +28,11 @@ module.exports = [
     rules: {
       ...js.configs.recommended.rules,
       'eqeqeq': ['error', 'always'],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_'
+      }],
       '@typescript-eslint/no-misused-promises': ['error', {
         checksVoidReturn: false
       }],
