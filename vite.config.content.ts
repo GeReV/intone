@@ -1,35 +1,28 @@
-import { defineConfig } from "vite";
-import packageJson from "./package.json";
-import { isDev, r, sharedConfig } from "./vite.config";
+// vite.config.content.ts
+import { defineConfig } from 'vite'
+import packageJson from './package.json'
+import { isDev, r, sharedConfig } from './vite.config'
 
-// bundling the content script using Vite
 export default defineConfig({
   ...sharedConfig,
   define: {
-    "__DEV__": isDev,
-    "__NAME__": JSON.stringify(packageJson.name),
-    // https://github.com/vitejs/vite/issues/9320
-    // https://github.com/vitejs/vite/issues/9186
-    "process.env.NODE_ENV": JSON.stringify(isDev ? "development" : "production"),
+    ...sharedConfig.define,
+    'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
   },
   build: {
-    watch: isDev
-      ? {}
-      : undefined,
-    outDir: r("extension/dist/contentScripts"),
-    cssCodeSplit: false,
+    outDir: r('extension/dist/contentScripts'),
     emptyOutDir: false,
-    sourcemap: "inline", // isDev ? "inline" : false,
+    sourcemap: isDev ? 'inline' : false,
     lib: {
-      entry: r("src/extension/contentScripts/main.ts"),
+      entry: r('src/content/index.ts'),
       name: packageJson.name,
-      formats: ["iife"],
+      formats: ['iife'],
     },
     rollupOptions: {
       output: {
-        entryFileNames: "index.global.js",
+        entryFileNames: 'index.global.js',
         extend: true,
       },
     },
   },
-});
+})
