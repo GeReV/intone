@@ -25,6 +25,15 @@ export class Queue {
     if (this.currentIndex > 0) this.currentIndex--
   }
 
+  seekTo(index: number): void {
+    if (this.chunks.length === 0) return
+    this.currentIndex = Math.max(0, Math.min(index, this.chunks.length - 1))
+    for (const url of this.prefetchCache.values()) {
+      URL.revokeObjectURL(url)
+    }
+    this.prefetchCache.clear()
+  }
+
   get index(): number {
     return this.currentIndex
   }

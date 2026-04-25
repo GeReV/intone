@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { Queue } from '../../src/content/queue'
 
+if (typeof URL.revokeObjectURL !== 'function') {
+  URL.revokeObjectURL = () => {}
+}
+
 describe('Queue', () => {
   let q: Queue
 
@@ -75,5 +79,37 @@ describe('Queue', () => {
     q.advance()
     q.load(['a', 'b'])
     expect(q.index).toBe(0)
+  })
+
+  it('seekTo moves to the given index', () => {
+    q.seekTo(2)
+    expect(q.index).toBe(2)
+    expect(q.current()).toBe('chunk 3')
+  })
+
+  it('seekTo clamps negative index to 0', () => {
+    q.seekTo(-5)
+    expect(q.index).toBe(0)
+  })
+
+  it('seekTo clamps index beyond total to last valid index', () => {
+    q.seekTo(99)
+    expect(q.index).toBe(2)
+  })
+
+  it('seekTo clears the entire prefetch cache', () => {
+    q.setPrefetch(0, 'blob:a')
+    q.setPrefetch(1, 'blob:b')
+    q.setPrefetch(2, 'blob:c')
+    q.seekTo(1)
+    expect(q.getPrefetch(0)).toBeUndefined()
+    expect(q.getPrefetch(1)).toBeUndefined()
+    expect(q.getPrefetch(2)).toBeUndefined()
+  })
+
+  it('seekTo does nothing on empty queue', () => {
+    const empty = new Queue()
+    expect(() => { empty.seekTo(0) }).not.toThrow()
+    expect(empty.index).toBe(0)
   })
 })
