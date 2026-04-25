@@ -74,6 +74,25 @@ export class Player {
     if (wasPlaying) await this.playCurrentChunk()
   }
 
+  async seekTo(index: number): Promise<void> {
+    this.fetchController?.abort()
+    this.audio.pause()
+    if (this.audio.src.startsWith('blob:')) URL.revokeObjectURL(this.audio.src)
+    this.audio.src = ''
+    this.queue.seekTo(index)
+    await this.playCurrentChunk()
+  }
+
+  updateRate(rate: number): void {
+    this.settings.rate = rate
+    this.audio.playbackRate = rate
+  }
+
+  updateVolume(volume: number): void {
+    this.settings.volume = volume
+    this.audio.volume = volume
+  }
+
   private async playCurrentChunk(): Promise<void> {
     const text = this.queue.current()
     if (text === null) {
