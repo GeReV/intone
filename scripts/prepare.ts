@@ -9,9 +9,15 @@ function writeManifest() {
 writeManifest()
 
 if (isDev) {
-  // Re-run on manifest or package.json changes using Node's built-in fs.watch
+  // Re-run on manifest or package.json changes using Node's built-in fs.watch.
+  // Debounce because fs.watch fires multiple events per save on many systems.
   const { watch } = await import('node:fs')
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined
+  const debouncedWrite = () => {
+    clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(writeManifest, 100)
+  }
   for (const file of [r('src/manifest.ts'), r('package.json')]) {
-    watch(file, () => { writeManifest() })
+    watch(file, debouncedWrite)
   }
 }
