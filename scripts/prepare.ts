@@ -1,5 +1,6 @@
 // scripts/prepare.ts
 import { execSync } from 'node:child_process'
+import { watch } from 'node:fs'
 import { isDev, r } from '../vite.config'
 
 function writeManifest() {
@@ -11,7 +12,6 @@ writeManifest()
 if (isDev) {
   // Re-run on manifest or package.json changes using Node's built-in fs.watch.
   // Debounce because fs.watch fires multiple events per save on many systems.
-  const { watch } = await import('node:fs')
   let debounceTimer: ReturnType<typeof setTimeout> | undefined
   const debouncedWrite = () => {
     clearTimeout(debounceTimer)
