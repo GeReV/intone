@@ -75,6 +75,7 @@ browser.runtime.onMessage.addListener((raw: unknown): undefined => {
   switch (message.type) {
     case 'play':
       if (!player) void start()
+      else if (player.isPlaying) player.pause()
       else void player.play()
       break
     case 'play-selection':

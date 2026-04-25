@@ -19,8 +19,8 @@ export async function getManifest(): Promise<Manifest.WebExtensionManifest> {
     },
 
     background: isFirefox
-      ? { scripts: ['dist/background/index.mjs'], type: 'module' }
-      : { service_worker: './dist/background/index.mjs' },
+      ? { scripts: ['dist/background/index.js'], type: 'module' }
+      : { service_worker: './dist/background/index.js' },
 
     options_ui: {
       page: './dist/options/index.html',
@@ -56,7 +56,7 @@ export async function getManifest(): Promise<Manifest.WebExtensionManifest> {
     browser_specific_settings: {
       gecko: {
         id: '{acc6d7a2-f165-4019-9fba-0b72cfeed277}',
-        strict_min_version: '110.0',
+        strict_min_version: '121.0',
       },
     },
 

@@ -11,12 +11,16 @@ export class Player {
 
   onStateChange?: (state: PlaybackState) => void
 
+  get isPlaying(): boolean { return this.state === 'playing' }
+
   constructor(
     private readonly queue: Queue,
     private readonly settings: Settings,
   ) {
     this.audio.addEventListener('ended', () => { this.onAudioEnded() })
     this.audio.addEventListener('error', () => {
+      // Ignore errors from intentional stop (audio.src = '' fires MEDIA_ERR_SRC_NOT_SUPPORTED)
+      if (this.state === 'stopped' || this.state === 'idle') return
       this.notify('error', this.audio.error?.message ?? 'Audio playback failed')
     })
   }
@@ -40,6 +44,7 @@ export class Player {
   stop(): void {
     this.fetchController?.abort()
     this.audio.pause()
+    if (this.audio.src.startsWith('blob:')) URL.revokeObjectURL(this.audio.src)
     this.audio.src = ''
     for (let i = this.queue.index; i < this.queue.total; i++) {
       const url = this.queue.getPrefetch(i)
@@ -55,6 +60,7 @@ export class Player {
     const wasPlaying = this.state === 'playing' || this.state === 'paused'
     this.fetchController?.abort()
     this.audio.pause()
+    if (this.audio.src.startsWith('blob:')) URL.revokeObjectURL(this.audio.src)
     this.queue.advance()
     if (wasPlaying) await this.playCurrentChunk()
   }
@@ -63,6 +69,7 @@ export class Player {
     const wasPlaying = this.state === 'playing' || this.state === 'paused'
     this.fetchController?.abort()
     this.audio.pause()
+    if (this.audio.src.startsWith('blob:')) URL.revokeObjectURL(this.audio.src)
     this.queue.retreat()
     if (wasPlaying) await this.playCurrentChunk()
   }
@@ -114,7 +121,13 @@ export class Player {
       const text = this.queue.peek(idx)
       if (text && !this.queue.getPrefetch(idx)) {
         this.fetchAudio(text)
-          .then(blobUrl => { this.queue.setPrefetch(idx, blobUrl) })
+          .then(blobUrl => {
+            if (this.state === 'stopped' || this.state === 'idle') {
+              URL.revokeObjectURL(blobUrl)
+            } else {
+              this.queue.setPrefetch(idx, blobUrl)
+            }
+          })
           .catch(() => { /* prefetch failures are silent */ })
       }
     }
