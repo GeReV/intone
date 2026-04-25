@@ -1,13 +1,15 @@
-const js = require('@eslint/js')
 const ts = require('@typescript-eslint/eslint-plugin')
 const tsParser = require('@typescript-eslint/parser')
+const globals = require('globals')
+
+const IGNORED = ['dist', 'node_modules', 'extension', 'eslint.config.js', 'vite.config*.ts', 'shim.d.ts']
 
 module.exports = [
+  { ignores: IGNORED },
+
+  // TypeScript source — strict + stylistic type-checked
   {
-    ignores: ['dist', 'node_modules', 'extension', 'eslint.config.js', 'vite.config*.ts', 'shim.d.ts']
-  },
-  {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'test/**/*.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -15,32 +17,30 @@ module.exports = [
         tsconfigRootDir: __dirname,
       },
       globals: {
+        ...globals.browser,
+        ...globals.webextensions,
         __DEV__: 'readonly',
-        Audio: 'readonly',
-        URL: 'readonly',
-        fetch: 'readonly',
-        document: 'readonly',
-        HTMLDivElement: 'readonly',
-        HTMLButtonElement: 'readonly',
-        HTMLSpanElement: 'readonly',
       },
-      ecmaVersion: 2020,
     },
-    plugins: {
-      '@typescript-eslint': ts,
-    },
+    plugins: { '@typescript-eslint': ts },
     rules: {
-      ...js.configs.recommended.rules,
+      ...ts.configs['flat/strict-type-checked'][1]?.rules,
+      ...ts.configs['flat/stylistic-type-checked'][1]?.rules,
       'eqeqeq': ['error', 'always'],
-      'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_'
-      }],
-      '@typescript-eslint/no-misused-promises': ['error', {
-        checksVoidReturn: false
-      }],
+      '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
       '@typescript-eslint/consistent-type-definitions': 'off',
-    }
-  }
+    },
+  },
+
+  // JS scripts — disable type-checked rules (no tsconfig available)
+  {
+    files: ['scripts/**/*.js', '*.js'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    plugins: { '@typescript-eslint': ts },
+    rules: {
+      ...ts.configs['flat/disable-type-checked']?.rules,
+    },
+  },
 ]
