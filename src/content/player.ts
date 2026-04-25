@@ -22,7 +22,7 @@ export class Player {
   }
 
   async play(): Promise<void> {
-    if (this.state === 'playing') return
+    if (this.state === 'playing' || this.state === 'loading') return
     if (this.state === 'paused') {
       await this.audio.play()
       this.notify('playing')
@@ -41,11 +41,19 @@ export class Player {
     this.fetchController?.abort()
     this.audio.pause()
     this.audio.src = ''
+    for (let i = this.queue.index; i < this.queue.total; i++) {
+      const url = this.queue.getPrefetch(i)
+      if (url) {
+        URL.revokeObjectURL(url)
+        this.queue.clearPrefetch(i)
+      }
+    }
     this.notify('stopped')
   }
 
   async forward(): Promise<void> {
     const wasPlaying = this.state === 'playing' || this.state === 'paused'
+    this.fetchController?.abort()
     this.audio.pause()
     this.queue.advance()
     if (wasPlaying) await this.playCurrentChunk()
@@ -53,6 +61,7 @@ export class Player {
 
   async rewind(): Promise<void> {
     const wasPlaying = this.state === 'playing' || this.state === 'paused'
+    this.fetchController?.abort()
     this.audio.pause()
     this.queue.retreat()
     if (wasPlaying) await this.playCurrentChunk()
@@ -90,6 +99,7 @@ export class Player {
   }
 
   private async fetchAudio(text: string): Promise<string> {
+    this.fetchController?.abort()
     this.fetchController = new AbortController()
     const url = new URL(this.settings.serverUrl)
     url.searchParams.set('text', text)
