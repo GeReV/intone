@@ -5,6 +5,7 @@ export type Settings = {
   extractor: 'readability'
   rate: number
   volume: number
+  showPreview: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -12,6 +13,7 @@ export const DEFAULT_SETTINGS: Settings = {
   extractor: 'readability',
   rate: 1.0,
   volume: 1.0,
+  showPreview: true,
 }
 
 export async function getSettings(): Promise<Settings> {
