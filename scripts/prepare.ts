@@ -1,45 +1,17 @@
-// generate stub index.html files for dev entry
-import { execSync } from "node:child_process";
-// import fs from "fs-extra";
-import chokidar from "chokidar";
-// import { log } from "~/utils";
-import { isDev, r } from "../vite.config";
-
-/**
- * Stub index.html to use Vite in development
- */
-// async function stubIndexHtml() {
-//   const views = [
-//     "options",
-//     "popup",
-//     "player",
-//   ];
-//
-//   for (const view of views) {
-//     await fs.ensureDir(r(`extension/dist/${view}`));
-//     let data = await fs.readFile(r(`src/extension/${view}/index.html`), "utf-8");
-//     data = data
-//       .replace("\"./main.ts\"", `"http://localhost:${port}/${view}/main.ts"`)
-//       .replace("<div id=\"app\"></div>", "<div id=\"app\">Vite server did not start</div>");
-//     await fs.writeFile(r(`extension/dist/${view}/index.html`), data, "utf-8");
-//     log("PRE", `stub ${view}`);
-//   }
-// }
+// scripts/prepare.ts
+import { execSync } from 'node:child_process'
+import { isDev, r } from '../vite.config'
 
 function writeManifest() {
-  execSync("yarn tsx ./scripts/manifest.ts", { stdio: "inherit" });
+  execSync('yarn tsx ./scripts/manifest.ts', { stdio: 'inherit' })
 }
 
-writeManifest();
+writeManifest()
 
 if (isDev) {
-  // void stubIndexHtml();
-  // chokidar.watch(r("src/**/*.html"))
-  //   .on("change", () => {
-  //     void stubIndexHtml();
-  //   });
-  chokidar.watch([r("src/extension/manifest.ts"), r("package.json")])
-    .on("change", () => {
-      writeManifest();
-    });
+  // Re-run on manifest or package.json changes using Node's built-in fs.watch
+  const { watch } = await import('node:fs')
+  for (const file of [r('src/manifest.ts'), r('package.json')]) {
+    watch(file, () => { writeManifest() })
+  }
 }
