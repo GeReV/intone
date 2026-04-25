@@ -2,11 +2,11 @@
 import browser from 'webextension-polyfill'
 import { HOOKS } from './extractor/hooks'
 import { ReadabilityExtractor } from './extractor/readability'
-import { chunk } from './chunker'
+import { chunkIntoGroups } from './chunker'
 import { Queue } from './queue'
 import { Player } from './player'
 import { FloatingUI } from './ui'
-import { getSettings } from './settings'
+import { getSettings, saveSettings } from './settings'
 
 type Message = { type: 'play' | 'stop' | 'forward' | 'rewind' | 'play-selection'; text?: string }
 
@@ -34,18 +34,20 @@ async function start(textOverride?: string): Promise<void> {
     title = result.title
   }
 
-  const chunks = chunk(paragraphs)
+  const groups = chunkIntoGroups(paragraphs)
+  const flatChunks = groups.flatMap(g => g.sentences.map(s => s.text))
 
-  if (chunks.length === 0) {
+  if (flatChunks.length === 0) {
     console.warn('[Read Out] No readable content found on this page.')
     return
   }
 
   const queue = new Queue()
-  queue.load(chunks)
+  queue.load(flatChunks)
 
   player = new Player(queue, settings)
   ui = new FloatingUI()
+  ui.loadChunks(groups, settings)
 
   player.onStateChange = (state) => {
     ui?.update(state)
@@ -59,8 +61,14 @@ async function start(textOverride?: string): Promise<void> {
   ui.onStop = () => { player?.stop() }
   ui.onForward = () => { void player?.forward() }
   ui.onRewind = () => { void player?.rewind() }
+  ui.onSeekTo = (index) => { void player?.seekTo(index) }
+  ui.onSettingsChange = async (partial) => {
+    await saveSettings(partial)
+    if (partial.rate !== undefined) player?.updateRate(partial.rate)
+    if (partial.volume !== undefined) player?.updateVolume(partial.volume)
+  }
 
-  console.info(`[Read Out] Starting — "${title}", ${chunks.length} chunks`)
+  console.info(`[Read Out] Starting — "${title}", ${flatChunks.length} chunks`)
   void player.play()
 }
 
