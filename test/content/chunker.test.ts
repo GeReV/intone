@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chunk } from '../../src/content/chunker'
+import { chunk, chunkIntoGroups } from '../../src/content/chunker'
 
 describe('chunk', () => {
   it('splits a single sentence-terminated paragraph', () => {
@@ -35,5 +35,49 @@ describe('chunk', () => {
 
   it('drops empty strings', () => {
     expect(chunk(['', 'Hello.', ''])).toEqual(['Hello.'])
+  })
+})
+
+describe('chunkIntoGroups', () => {
+  it('returns one group per paragraph with flat indices starting at 0', () => {
+    const result = chunkIntoGroups(['Hello world. How are you?'])
+    expect(result).toEqual([
+      {
+        sentences: [
+          { index: 0, text: 'Hello world.' },
+          { index: 1, text: 'How are you?' },
+        ],
+      },
+    ])
+  })
+
+  it('indices are contiguous across multiple paragraphs', () => {
+    const result = chunkIntoGroups(['First.', 'Second. Third.'])
+    expect(result).toEqual([
+      { sentences: [{ index: 0, text: 'First.' }] },
+      {
+        sentences: [
+          { index: 1, text: 'Second.' },
+          { index: 2, text: 'Third.' },
+        ],
+      },
+    ])
+  })
+
+  it('drops empty paragraphs', () => {
+    const result = chunkIntoGroups(['', 'Hello.', ''])
+    expect(result).toEqual([
+      { sentences: [{ index: 0, text: 'Hello.' }] },
+    ])
+  })
+
+  it('returns empty array for empty input', () => {
+    expect(chunkIntoGroups([])).toEqual([])
+  })
+
+  it('chunk() produces the same flat list as chunkIntoGroups() flattened', () => {
+    const paragraphs = ['First sentence. Second sentence.', 'Third sentence.']
+    const flat = chunkIntoGroups(paragraphs).flatMap(g => g.sentences.map(s => s.text))
+    expect(flat).toEqual(chunk(paragraphs))
   })
 })
