@@ -78,7 +78,8 @@ const CSS = `
   flex-shrink: 0;
   padding: 0;
 }
-.btn:hover { background: rgba(255,255,255,0.12); }
+.btn:not(:disabled):hover { background: rgba(255,255,255,0.12); }
+.btn:disabled { opacity: 0.3; cursor: default; }
 .btn svg { display: block; }
 .settings-panel {
   display: flex;
@@ -287,8 +288,8 @@ export class FloatingUI {
     // Keep nav buttons visible while loading between sentences (totalChunks > 0 means playback is in progress)
     const showNav = playing || ps.state === 'paused' || (loading && ps.totalChunks > 0)
 
-    this.btnPlay.hidden = playing || loading
-    this.btnPause.hidden = !playing
+    this.btnPlay.disabled = playing || loading;
+    this.btnPause.disabled = !playing;
     this.btnStop.hidden = ps.state === 'idle' || ps.state === 'stopped'
     this.btnForward.hidden = !showNav
     this.btnRewind.hidden = !showNav
