@@ -1,83 +1,90 @@
-import { describe, expect, it } from 'vitest'
-import { chunk, chunkIntoGroups } from '../../src/content/chunker'
+import { describe, expect, it } from "vitest";
+import { chunk, chunkIntoGroups } from "../../src/content/chunker";
 
-describe('chunk', () => {
-  it('splits a single sentence-terminated paragraph', () => {
-    expect(chunk(['Hello world. How are you? Fine!'])).toEqual([
-      'Hello world.',
-      'How are you?',
-      'Fine!',
-    ])
-  })
+// All sentences in this helper are 4 chars ("Foo."), so avg=4, threshold=12.
+// Two sentences joined = "Foo. Foo." = 9 chars (≤12); three = 14 chars (>12).
+const FOUR_CHAR = "Foo.";
 
-  it('flattens multiple paragraphs into one list', () => {
-    expect(chunk(['First sentence.', 'Second paragraph. Third sentence.'])).toEqual([
-      'First sentence.',
-      'Second paragraph.',
-      'Third sentence.',
-    ])
-  })
+describe("chunkIntoGroups — grouping behaviour", () => {
+  it("merges short sentences within a paragraph into fewer chunks", () => {
+    // 4 × 4-char sentences → avg=4, threshold=12 → pairs merge → 2 chunks
+    const input = [`${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR}`];
+    const result = chunkIntoGroups(input);
 
-  it('trims surrounding whitespace from each chunk', () => {
-    expect(chunk(['  Hello world.  How are you?  '])).toEqual([
-      'Hello world.',
-      'How are you?',
-    ])
-  })
+    expect(result).toHaveLength(1);
+    expect(result[0].sentences).toHaveLength(2);
+    expect(result[0].sentences[0].text).toBe("Foo. Foo.");
+    expect(result[0].sentences[1].text).toBe("Foo. Foo.");
+  });
 
-  it('returns empty array for empty input', () => {
-    expect(chunk([])).toEqual([])
-  })
+  it("assigns contiguous flat indices across merged chunks", () => {
+    // 6 × 4-char sentences → 3 merged chunks, indices 0-2
+    const input = [
+      `${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR}`,
+    ];
+    const result = chunkIntoGroups(input);
 
-  it('returns a single chunk when there are no sentence boundaries', () => {
-    expect(chunk(['Hello world'])).toEqual(['Hello world'])
-  })
+    expect(result[0].sentences.map((s) => s.index)).toEqual([0, 1, 2]);
+  });
 
-  it('drops empty strings', () => {
-    expect(chunk(['', 'Hello.', ''])).toEqual(['Hello.'])
-  })
-})
+  it("never merges sentences across paragraph boundaries", () => {
+    // Two single-sentence paragraphs — each must stay in its own group/chunk
+    const result = chunkIntoGroups([FOUR_CHAR, FOUR_CHAR]);
 
-describe('chunkIntoGroups', () => {
-  it('returns one group per paragraph with flat indices starting at 0', () => {
-    const result = chunkIntoGroups(['Hello world. How are you?'])
-    expect(result).toEqual([
-      {
-        sentences: [
-          { index: 0, text: 'Hello world.' },
-          { index: 1, text: 'How are you?' },
-        ],
-      },
-    ])
-  })
+    expect(result).toHaveLength(2);
+    expect(result[0].sentences[0].text).toBe(FOUR_CHAR);
+    expect(result[1].sentences[0].text).toBe(FOUR_CHAR);
+  });
 
-  it('indices are contiguous across multiple paragraphs', () => {
-    const result = chunkIntoGroups(['First.', 'Second. Third.'])
-    expect(result).toEqual([
-      { sentences: [{ index: 0, text: 'First.' }] },
-      {
-        sentences: [
-          { index: 1, text: 'Second.' },
-          { index: 2, text: 'Third.' },
-        ],
-      },
-    ])
-  })
+  it("flat indices are contiguous across multiple paragraphs", () => {
+    // 2 paragraphs × 2 sentences each → 4 chunks total (pairs merge → 1 chunk/para)
+    const twoSentencePara = `${FOUR_CHAR} ${FOUR_CHAR}`;
+    const result = chunkIntoGroups([twoSentencePara, twoSentencePara]);
 
-  it('drops empty paragraphs', () => {
-    const result = chunkIntoGroups(['', 'Hello.', ''])
-    expect(result).toEqual([
-      { sentences: [{ index: 0, text: 'Hello.' }] },
-    ])
-  })
+    const indices = result.flatMap((g) => g.sentences.map((s) => s.index));
+    expect(indices).toEqual([0, 1]);
+  });
 
-  it('returns empty array for empty input', () => {
-    expect(chunkIntoGroups([])).toEqual([])
-  })
+  it("a single long sentence becomes its own chunk", () => {
+    // One very long sentence that is already above threshold on its own
+    const longSentence = "a".repeat(200) + ".";
+    const result = chunkIntoGroups([longSentence]);
 
-  it('chunk() produces the same flat list as chunkIntoGroups() flattened', () => {
-    const paragraphs = ['First sentence. Second sentence.', 'Third sentence.']
-    const flat = chunkIntoGroups(paragraphs).flatMap(g => g.sentences.map(s => s.text))
-    expect(flat).toEqual(chunk(paragraphs))
-  })
-})
+    expect(result).toHaveLength(1);
+    expect(result[0].sentences).toHaveLength(1);
+    expect(result[0].sentences[0].text).toBe(longSentence);
+  });
+
+  it("drops empty paragraphs", () => {
+    const result = chunkIntoGroups(["", FOUR_CHAR, ""]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].sentences[0].text).toBe(FOUR_CHAR);
+  });
+
+  it("returns empty array for empty input", () => {
+    expect(chunkIntoGroups([])).toEqual([]);
+  });
+});
+
+describe("chunk", () => {
+  it("returns flat list of merged texts", () => {
+    // 4 × 4-char sentences → 2 merged chunks
+    const input = [`${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR}`];
+    expect(chunk(input)).toEqual(["Foo. Foo.", "Foo. Foo."]);
+  });
+
+  it("returns empty array for empty input", () => {
+    expect(chunk([])).toEqual([]);
+  });
+
+  it("drops empty paragraphs", () => {
+    expect(chunk(["", FOUR_CHAR, ""])).toEqual([FOUR_CHAR]);
+  });
+
+  it("matches chunkIntoGroups flat output", () => {
+    const paragraphs = [`${FOUR_CHAR} ${FOUR_CHAR}`, `${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR}`];
+    const flat = chunkIntoGroups(paragraphs).flatMap((g) => g.sentences.map((s) => s.text));
+    expect(chunk(paragraphs)).toEqual(flat);
+  });
+});
