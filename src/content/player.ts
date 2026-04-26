@@ -53,21 +53,21 @@ export class Player {
   }
 
   async forward(): Promise<void> {
-    const wasPlaying = this.state === 'playing' || this.state === 'paused'
+    const wasActive = this.state === 'playing' || this.state === 'paused' || this.state === 'loading'
     this.fetchController?.abort()
     this.audio.pause()
     this.audio.src = ''
     this.queue.advance()
-    if (wasPlaying) await this.playCurrentChunk()
+    if (wasActive) await this.playCurrentChunk()
   }
 
   async rewind(): Promise<void> {
-    const wasPlaying = this.state === 'playing' || this.state === 'paused'
+    const wasActive = this.state === 'playing' || this.state === 'paused' || this.state === 'loading'
     this.fetchController?.abort()
     this.audio.pause()
     this.audio.src = ''
     this.queue.retreat()
-    if (wasPlaying) await this.playCurrentChunk()
+    if (wasActive) await this.playCurrentChunk()
   }
 
   async seekTo(index: number): Promise<void> {
@@ -153,17 +153,26 @@ export class Player {
       const idx = this.queue.index + i
       const text = this.queue.peek(idx)
       if (text && !this.audioCache.has(idx)) {
-        this.fetchAudio(text)
-          .then(blobUrl => {
-            if (this.state === 'stopped' || this.state === 'idle') {
-              URL.revokeObjectURL(blobUrl)
-            } else {
-              this.audioCache.set(idx, blobUrl)
-            }
-          })
-          .catch(() => { /* prefetch failures are silent */ })
+        void this.prefetchOne(idx, text)
       }
     }
+  }
+
+  private async prefetchOne(idx: number, text: string): Promise<void> {
+    // Uses its own fetch call — does NOT touch fetchController so it won't cancel the main fetch
+    const reqUrl = new URL(this.settings.serverUrl)
+    reqUrl.searchParams.set('text', text)
+    try {
+      const res = await fetch(reqUrl.toString())
+      if (!res.ok) return
+      const blobUrl = URL.createObjectURL(await res.blob())
+      if (this.state === 'stopped' || this.state === 'idle') {
+        URL.revokeObjectURL(blobUrl)
+      } else {
+        this.audioCache.set(idx, blobUrl)
+      }
+    }
+    catch { /* prefetch failures are silent */ }
   }
 
   private onAudioEnded(): void {
