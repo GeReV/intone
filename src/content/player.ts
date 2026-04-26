@@ -19,8 +19,8 @@ export class Player {
   ) {
     this.audio.addEventListener('ended', () => { this.onAudioEnded() })
     this.audio.addEventListener('error', () => {
-      // Ignore errors from intentional stop (audio.src = '' fires MEDIA_ERR_SRC_NOT_SUPPORTED)
-      if (this.state === 'stopped' || this.state === 'idle') return
+      // Ignore errors from intentional stop or seek (audio.src = '' fires MEDIA_ERR_SRC_NOT_SUPPORTED)
+      if (this.state === 'stopped' || this.state === 'idle' || this.state === 'loading') return
       this.notify('error', this.audio.error?.message ?? 'Audio playback failed')
     })
   }

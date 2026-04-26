@@ -55,6 +55,8 @@ const CSS = `
 }
 .sentence:hover { opacity: 0.7; }
 .sentence.active { background: rgba(255,220,0,0.35); }
+@keyframes sentence-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.sentence.loading { animation: sentence-pulse 0.9s ease-in-out infinite; }
 .bar {
   display: flex;
   align-items: center;
@@ -281,21 +283,26 @@ export class FloatingUI {
 
   update(ps: PlaybackState): void {
     const playing = ps.state === 'playing'
-    const active = playing || ps.state === 'paused'
     const loading = ps.state === 'loading'
+    // Keep nav buttons visible while loading between sentences (totalChunks > 0 means playback is in progress)
+    const showNav = playing || ps.state === 'paused' || (loading && ps.totalChunks > 0)
 
     this.btnPlay.hidden = playing || loading
     this.btnPause.hidden = !playing
     this.btnStop.hidden = ps.state === 'idle' || ps.state === 'stopped'
-    this.btnForward.hidden = !active
-    this.btnRewind.hidden = !active
+    this.btnForward.hidden = !showNav
+    this.btnRewind.hidden = !showNav
 
     if (ps.chunkIndex !== this.activeIndex) {
-      this.sentenceMap.get(this.activeIndex)?.classList.remove('active')
-      this.sentenceMap.get(ps.chunkIndex)?.classList.add('active')
-      this.sentenceMap.get(ps.chunkIndex)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      const prev = this.sentenceMap.get(this.activeIndex)
+      prev?.classList.remove('active', 'loading')
+      const curr = this.sentenceMap.get(ps.chunkIndex)
+      curr?.classList.add('active')
+      curr?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       this.activeIndex = ps.chunkIndex
     }
+
+    this.sentenceMap.get(this.activeIndex)?.classList.toggle('loading', loading)
   }
 
   remove(): void {
