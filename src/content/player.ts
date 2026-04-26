@@ -159,14 +159,15 @@ export class Player {
   }
 
   private async prefetchOne(idx: number, text: string): Promise<void> {
-    // Uses its own fetch call — does NOT touch fetchController so it won't cancel the main fetch
+    // Re-check inside the async body — another path may have cached this since schedulePrefetch checked
+    if (this.audioCache.has(idx)) return
     const reqUrl = new URL(this.settings.serverUrl)
     reqUrl.searchParams.set('text', text)
     try {
       const res = await fetch(reqUrl.toString())
       if (!res.ok) return
       const blobUrl = URL.createObjectURL(await res.blob())
-      if (this.state === 'stopped' || this.state === 'idle') {
+      if (this.state === 'stopped' || this.state === 'idle' || this.audioCache.has(idx)) {
         URL.revokeObjectURL(blobUrl)
       } else {
         this.audioCache.set(idx, blobUrl)
