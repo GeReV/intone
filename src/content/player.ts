@@ -1,13 +1,16 @@
 import type { PlaybackState } from './types'
 import type { Queue } from './queue'
 import type { Settings } from './settings'
+import { AudioCache } from './audio-cache'
 
 const PREFETCH_AHEAD = 2
+const MAX_RETRIES = 3
 
 export class Player {
   private audio = new Audio()
   private state: PlaybackState['state'] = 'idle'
   private fetchController: AbortController | null = null
+  private readonly audioCache = new AudioCache()
 
   onStateChange?: (state: PlaybackState) => void
 
@@ -44,15 +47,8 @@ export class Player {
   stop(): void {
     this.fetchController?.abort()
     this.audio.pause()
-    if (this.audio.src.startsWith('blob:')) URL.revokeObjectURL(this.audio.src)
     this.audio.src = ''
-    for (let i = this.queue.index; i < this.queue.total; i++) {
-      const url = this.queue.getPrefetch(i)
-      if (url) {
-        URL.revokeObjectURL(url)
-        this.queue.clearPrefetch(i)
-      }
-    }
+    this.audioCache.clear()
     this.notify('stopped')
   }
 
@@ -60,7 +56,7 @@ export class Player {
     const wasPlaying = this.state === 'playing' || this.state === 'paused'
     this.fetchController?.abort()
     this.audio.pause()
-    if (this.audio.src.startsWith('blob:')) URL.revokeObjectURL(this.audio.src)
+    this.audio.src = ''
     this.queue.advance()
     if (wasPlaying) await this.playCurrentChunk()
   }
@@ -69,7 +65,7 @@ export class Player {
     const wasPlaying = this.state === 'playing' || this.state === 'paused'
     this.fetchController?.abort()
     this.audio.pause()
-    if (this.audio.src.startsWith('blob:')) URL.revokeObjectURL(this.audio.src)
+    this.audio.src = ''
     this.queue.retreat()
     if (wasPlaying) await this.playCurrentChunk()
   }
@@ -77,7 +73,6 @@ export class Player {
   async seekTo(index: number): Promise<void> {
     this.fetchController?.abort()
     this.audio.pause()
-    if (this.audio.src.startsWith('blob:')) URL.revokeObjectURL(this.audio.src)
     this.audio.src = ''
     this.queue.seekTo(index)
     await this.playCurrentChunk()
@@ -119,32 +114,51 @@ export class Player {
   }
 
   private async resolveAudio(text: string, index: number): Promise<string> {
-    const cached = this.queue.getPrefetch(index)
+    const cached = this.audioCache.get(index)
     if (cached) return cached
-    return this.fetchAudio(text)
+    const url = await this.fetchAudio(text)
+    this.audioCache.set(index, url)
+    return url
   }
 
   private async fetchAudio(text: string): Promise<string> {
     this.fetchController?.abort()
     this.fetchController = new AbortController()
-    const url = new URL(this.settings.serverUrl)
-    url.searchParams.set('text', text)
-    const res = await fetch(url.toString(), { signal: this.fetchController.signal })
-    if (!res.ok) throw new Error(`TTS server responded with ${res.status}`)
-    return URL.createObjectURL(await res.blob())
+    const { signal } = this.fetchController
+    const reqUrl = new URL(this.settings.serverUrl)
+    reqUrl.searchParams.set('text', text)
+    const urlStr = reqUrl.toString()
+
+    let lastError: Error = new Error('Failed to fetch audio')
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        await new Promise<void>(resolve => setTimeout(resolve, attempt * 1000))
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
+      }
+      try {
+        const res = await fetch(urlStr, { signal })
+        if (!res.ok) throw new Error(`TTS server responded with ${res.status}`)
+        return URL.createObjectURL(await res.blob())
+      }
+      catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') throw err
+        lastError = err instanceof Error ? err : new Error(String(err))
+      }
+    }
+    throw lastError
   }
 
   private schedulePrefetch(): void {
     for (let i = 1; i <= PREFETCH_AHEAD; i++) {
       const idx = this.queue.index + i
       const text = this.queue.peek(idx)
-      if (text && !this.queue.getPrefetch(idx)) {
+      if (text && !this.audioCache.has(idx)) {
         this.fetchAudio(text)
           .then(blobUrl => {
             if (this.state === 'stopped' || this.state === 'idle') {
               URL.revokeObjectURL(blobUrl)
             } else {
-              this.queue.setPrefetch(idx, blobUrl)
+              this.audioCache.set(idx, blobUrl)
             }
           })
           .catch(() => { /* prefetch failures are silent */ })
@@ -153,9 +167,7 @@ export class Player {
   }
 
   private onAudioEnded(): void {
-    const src = this.audio.src
-    if (src.startsWith('blob:')) URL.revokeObjectURL(src)
-    this.queue.clearPrefetch(this.queue.index)
+    // Blob URL stays in AudioCache — available if the user seeks back to this sentence
     this.queue.advance()
     void this.playCurrentChunk()
   }
