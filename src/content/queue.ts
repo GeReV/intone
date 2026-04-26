@@ -1,56 +1,61 @@
 export class Queue {
-  private chunks: string[] = []
-  private prefetchCache = new Map<number, string>()
-  private currentIndex = 0
+  private chunks: string[] = [];
+  private prefetchCache = new Map<number, string>();
+  private currentIndex = 0;
 
   load(chunks: string[]): void {
-    this.chunks = chunks
-    this.currentIndex = 0
-    this.prefetchCache.clear()
+    this.chunks = chunks;
+    this.currentIndex = 0;
+    this.prefetchCache.clear();
   }
 
   current(): string | null {
-    return this.chunks[this.currentIndex] ?? null
+    return this.chunks[this.currentIndex] ?? null;
   }
 
   peek(index: number): string | null {
-    return this.chunks[index] ?? null
+    return this.chunks[index] ?? null;
   }
 
   advance(): void {
-    this.currentIndex++
+    this.currentIndex++;
   }
 
   retreat(): void {
-    if (this.currentIndex > 0) this.currentIndex--
+    if (this.currentIndex > 0) this.currentIndex--;
   }
 
   seekTo(index: number): void {
-    if (this.chunks.length === 0) return
-    this.currentIndex = Math.max(0, Math.min(index, this.chunks.length - 1))
-    for (const url of this.prefetchCache.values()) {
-      URL.revokeObjectURL(url)
+    if (this.chunks.length === 0) {
+      return;
     }
-    this.prefetchCache.clear()
+
+    this.currentIndex = Math.max(0, Math.min(index, this.chunks.length - 1));
+
+    for (const url of this.prefetchCache.values()) {
+      URL.revokeObjectURL(url);
+    }
+
+    this.prefetchCache.clear();
   }
 
   get index(): number {
-    return this.currentIndex
+    return this.currentIndex;
   }
 
   get total(): number {
-    return this.chunks.length
+    return this.chunks.length;
   }
 
   setPrefetch(index: number, url: string): void {
-    this.prefetchCache.set(index, url)
+    this.prefetchCache.set(index, url);
   }
 
   getPrefetch(index: number): string | undefined {
-    return this.prefetchCache.get(index)
+    return this.prefetchCache.get(index);
   }
 
   clearPrefetch(index: number): void {
-    this.prefetchCache.delete(index)
+    this.prefetchCache.delete(index);
   }
 }
