@@ -2,6 +2,7 @@ import browser from "webextension-polyfill";
 
 export type Settings = {
   serverUrl: string
+  voiceName: string
   extractor: "readability"
   rate: number
   volume: number
@@ -9,7 +10,8 @@ export type Settings = {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  serverUrl: "http://localhost:5000",
+  serverUrl: "https://localhost:5000",
+  voiceName: "af",
   extractor: "readability",
   rate: 1.0,
   volume: 1.0,

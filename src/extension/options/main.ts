@@ -1,14 +1,36 @@
-// src/options/main.ts
 import { DEFAULT_SETTINGS, getSettings, saveSettings } from '~/extension/content/settings'
 
 const form = document.getElementById('form') as HTMLFormElement
 const serverUrlInput = document.getElementById('serverUrl') as HTMLInputElement
+const voiceSelect = document.getElementById('voiceName') as HTMLSelectElement
 const extractorSelect = document.getElementById('extractor') as HTMLSelectElement
 const rateInput = document.getElementById('rate') as HTMLInputElement
 const rateVal = document.getElementById('rateVal') as HTMLSpanElement
 const volumeInput = document.getElementById('volume') as HTMLInputElement
 const volumeVal = document.getElementById('volumeVal') as HTMLSpanElement
 const savedMsg = document.getElementById('saved') as HTMLParagraphElement
+
+async function fetchVoices(serverUrl: string): Promise<string[]> {
+  try {
+    const res = await fetch(new URL("/voices", serverUrl).toString())
+    if (!res.ok) return []
+    return await res.json() as string[]
+  } catch {
+    return []
+  }
+}
+
+function populateVoices(voices: string[], selected: string): void {
+  voiceSelect.innerHTML = ''
+  const list = voices.length > 0 ? voices : [DEFAULT_SETTINGS.voiceName]
+  for (const v of list) {
+    const opt = document.createElement('option')
+    opt.value = v
+    opt.textContent = v
+    opt.selected = v === selected
+    voiceSelect.appendChild(opt)
+  }
+}
 
 async function load(): Promise<void> {
   const s = await getSettings()
@@ -18,7 +40,15 @@ async function load(): Promise<void> {
   rateVal.textContent = s.rate.toFixed(1)
   volumeInput.value = String(s.volume)
   volumeVal.textContent = String(Math.round(s.volume * 100))
+
+  const voices = await fetchVoices(s.serverUrl)
+  populateVoices(voices, s.voiceName)
 }
+
+serverUrlInput.addEventListener('change', async () => {
+  const voices = await fetchVoices(serverUrlInput.value)
+  populateVoices(voices, voiceSelect.value)
+})
 
 rateInput.addEventListener('input', () => {
   rateVal.textContent = Number(rateInput.value).toFixed(1)
@@ -32,6 +62,7 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault()
   await saveSettings({
     serverUrl: serverUrlInput.value || DEFAULT_SETTINGS.serverUrl,
+    voiceName: voiceSelect.value || DEFAULT_SETTINGS.voiceName,
     extractor: extractorSelect.value as 'readability',
     rate: Number(rateInput.value),
     volume: Number(volumeInput.value),

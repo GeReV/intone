@@ -168,8 +168,10 @@ export class Player {
 
     const { signal } = this.fetchController;
 
-    const reqUrl = new URL(this.settings.serverUrl);
+    const reqUrl = new URL("/synthesize", this.settings.serverUrl);
     reqUrl.searchParams.set("text", text);
+    reqUrl.searchParams.set("voice", this.settings.voiceName);
+    reqUrl.searchParams.set("rate", String(this.settings.rate));
 
     const urlStr = reqUrl.toString();
 
@@ -219,8 +221,10 @@ export class Player {
       return;
     }
 
-    const reqUrl = new URL(this.settings.serverUrl);
+    const reqUrl = new URL("/synthesize", this.settings.serverUrl);
     reqUrl.searchParams.set("text", text);
+    reqUrl.searchParams.set("voice", this.settings.voiceName);
+    reqUrl.searchParams.set("rate", String(this.settings.rate));
 
     try {
       const res = await fetch(reqUrl.toString());
