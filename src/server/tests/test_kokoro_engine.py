@@ -14,29 +14,19 @@ KOKORO_VOICES = [
 ]
 
 
-def _make_mock_modules():
-    """Register stub modules so engines.kokoro can be imported without real deps."""
-    stubs = {}
+@pytest.fixture
+def engine(monkeypatch):
     for name in ("torch", "soundfile", "kokoro", "models", "cleaners"):
         if name not in sys.modules:
-            mod = types.ModuleType(name)
-            sys.modules[name] = mod
-            stubs[name] = mod
-    # Ensure kokoro module has required attributes
+            monkeypatch.setitem(sys.modules, name, types.ModuleType(name))
+
     sys.modules["kokoro"].SAMPLE_RATE = 24000
     sys.modules["kokoro"].generate = MagicMock()
     sys.modules["models"].build_model = MagicMock()
     sys.modules["cleaners"].clean = MagicMock(side_effect=lambda x: x)
     sys.modules["soundfile"].write = MagicMock()
-    return stubs
 
-
-@pytest.fixture
-def engine():
-    _make_mock_modules()
-
-    # Remove cached engines.kokoro so each fixture gets a fresh import
-    sys.modules.pop("engines.kokoro", None)
+    monkeypatch.delitem(sys.modules, "engines.kokoro", raising=False)
 
     mock_voicepack = MagicMock()
     mock_voicepack.to.return_value = mock_voicepack
