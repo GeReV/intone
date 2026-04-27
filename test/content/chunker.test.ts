@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chunk, chunkIntoGroups } from "../../src/content/chunker";
+import { chunk, chunkIntoGroups } from "../../src/extension/content/chunker";
 
 // All sentences in this helper are 4 chars ("Foo."), so avg=4, threshold=12.
 // Two sentences joined = "Foo. Foo." = 9 chars (≤12); three = 14 chars (>12).

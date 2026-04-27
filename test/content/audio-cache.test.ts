@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { AudioCache } from '../../src/content/audio-cache'
+import { AudioCache } from '../../src/extension/content/audio-cache'
 
 if (typeof URL.revokeObjectURL !== 'function') {
   URL.revokeObjectURL = () => {}

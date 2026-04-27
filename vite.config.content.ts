@@ -14,7 +14,7 @@ export default defineConfig({
     emptyOutDir: false,
     sourcemap: isDev ? 'inline' : false,
     lib: {
-      entry: r('src/content/index.ts'),
+      entry: r('src/extension/content/index.ts'),
       name: packageJson.name,
       formats: ['iife'],
     },

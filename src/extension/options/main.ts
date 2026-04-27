@@ -1,5 +1,5 @@
 // src/options/main.ts
-import { DEFAULT_SETTINGS, getSettings, saveSettings } from '~/content/settings'
+import { DEFAULT_SETTINGS, getSettings, saveSettings } from '~/extension/content/settings'
 
 const form = document.getElementById('form') as HTMLFormElement
 const serverUrlInput = document.getElementById('serverUrl') as HTMLInputElement

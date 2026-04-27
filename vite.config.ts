@@ -28,7 +28,7 @@ export default defineConfig({
     emptyOutDir: false,
     rollupOptions: {
       input: {
-        options: r('src/options/index.html'),
+        options: r('src/extension/options/index.html'),
       },
       output: {
         assetFileNames: 'assets/[name]-[hash][extname]',

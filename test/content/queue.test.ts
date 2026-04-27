@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { Queue } from '../../src/content/queue'
+import { Queue } from '../../src/extension/content/queue'
 
 if (typeof URL.revokeObjectURL !== 'function') {
   URL.revokeObjectURL = () => {}

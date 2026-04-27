@@ -17,7 +17,7 @@ if (isDev) {
     clearTimeout(debounceTimer)
     debounceTimer = setTimeout(writeManifest, 100)
   }
-  for (const file of [r('src/manifest.ts'), r('package.json')]) {
+  for (const file of [r('src/extension/manifest.ts'), r('package.json')]) {
     watch(file, debouncedWrite)
   }
 }

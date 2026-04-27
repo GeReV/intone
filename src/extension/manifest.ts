@@ -1,8 +1,8 @@
 // src/manifest.ts
 import fs from 'fs-extra'
 import type { Manifest } from 'webextension-polyfill'
-import type PkgType from '../package.json'
-import { isDev, isFirefox, r } from '../vite.config'
+import type PkgType from '../../package.json'
+import { isDev, isFirefox, r } from '../../vite.config'
 
 export async function getManifest(): Promise<Manifest.WebExtensionManifest> {
   const pkg = await fs.readJSON(r('package.json')) as typeof PkgType
@@ -23,7 +23,7 @@ export async function getManifest(): Promise<Manifest.WebExtensionManifest> {
       : { service_worker: './dist/background/index.js' },
 
     options_ui: {
-      page: './dist/options/index.html',
+      page: './dist/extension/options/index.html',
       open_in_tab: true,
     },
 
