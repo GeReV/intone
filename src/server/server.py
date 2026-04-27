@@ -23,7 +23,11 @@ def create_app(engine: TTSEngine) -> Flask:
 
     @app.route("/voices", methods=["GET"])
     def get_voices():
-        return jsonify(engine.voices())
+        try:
+            return jsonify(engine.voices())
+        except Exception:
+            _LOGGER.exception("Failed to list voices")
+            return "Failed to list voices", 500
 
     @app.route("/synthesize", methods=["GET"])
     def synthesize():

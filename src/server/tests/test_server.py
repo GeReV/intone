@@ -97,3 +97,25 @@ def test_synthesis_error_returns_500(mock_engine, monkeypatch):
     with app.test_client() as c:
         response = c.get("/synthesize?text=hello")
     assert response.status_code == 500
+
+
+def test_voices_error_returns_500(mock_engine, monkeypatch):
+    def boom():
+        raise RuntimeError("engine dead")
+
+    monkeypatch.setattr(mock_engine, "voices", boom)
+    app = create_app(mock_engine)
+    app.config["TESTING"] = True
+    with app.test_client() as c:
+        response = c.get("/voices")
+    assert response.status_code == 500
+
+
+def test_synthesize_unknown_default_voice_returns_400(mock_engine, monkeypatch):
+    import server as server_module
+    monkeypatch.setattr(server_module, "DEFAULT_VOICE", "nonexistent")
+    app = create_app(mock_engine)
+    app.config["TESTING"] = True
+    with app.test_client() as c:
+        response = c.get("/synthesize?text=hello")
+    assert response.status_code == 400
