@@ -70,7 +70,7 @@ def test_synthesize_returns_bytes(engine):
 
 
 def test_synthesize_unknown_voice_raises(engine):
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError):
         engine.synthesize("hello", "not_a_real_voice", 1.0)
 
 

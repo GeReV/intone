@@ -33,13 +33,16 @@ class KokoroEngine:
 
     def synthesize(self, text: str, voice: str, rate: float) -> bytes:
         text = clean(text)
+        if voice not in self._voicepacks:
+            raise ValueError(f"Unknown voice: {voice!r}")
         voicepack = self._voicepacks[voice]
+        # Lock covers only inference; OGG encoding uses a fresh numpy array and is lock-free.
         with self._lock:
             audio_data = generate(
                 self._model,
                 text=text,
                 voicepack=voicepack,
-                lang=voice[0],
+                lang=voice[0],  # 'a' = American English, 'b' = British English
                 speed=rate,
             )
         audio_io = io.BytesIO()
