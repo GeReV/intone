@@ -1,0 +1,6 @@
+*.pt
+*.pth
+__pycache__/
+.venv/
+stanford-ner-*/
+voices/
