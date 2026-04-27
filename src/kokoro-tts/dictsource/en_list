@@ -12,7 +12,7 @@
 // ?2  Use voiceless [w#] for "wh"
 // ?3  General American
 // ?!3  Not General American
-// ?5  split [3:] er [3:], ir [IR], ur [VR] 
+// ?5  split [3:] er [3:], ir [IR], ur [VR]
 // ?6  'one' = [wVn], 'of' = [Vv]  (now uses phoneme [02])
 // ?7  Scottish
 // ?8  Use full vowel, not schwa in some word endings
@@ -353,7 +353,7 @@ _ِ	i
 _ُ	u
 _ّ	S'ada#
 _ْ	suk'un
-	
+
 
 
 
@@ -520,7 +520,7 @@ aes	$abbrev
 afk	$abbrev
 (a . k . a .)	aka#_!
 agpl	$abbrev
-agm	$abbrev 
+agm	$abbrev
 ai	$abbrev
 aitb	$abbrev
 aj	$abbrev $capital
@@ -783,7 +783,7 @@ adverse		$2
 adversity	$2
 advert		a#dv3:t  $verb
 advertise	adv3taIz
-advertiser	adv3taIz3 
+advertiser	adv3taIz3
 advertize	adv3taIz
 advertisement	a#dv3:tIsm@nt
 ?3 advertisement  $3
@@ -853,7 +853,7 @@ alt		0lt   // not abbrev
 alternate	O:lt'3:n@t     $only
 alternate	O:lt3neIt      $verb
 alternately	O:lt'3:n@tlI   $verbf
-alternative	O:lt'3:n@tIv 
+alternative	O:lt'3:n@tIv
 altogether	,O:lt@gED3
 always		O:lweIz
 aluminium	aljUm'Ini@m
@@ -1041,7 +1041,7 @@ ballast		bal@st
 ballet		baleI
 ?3 ballet	bal'eI
 balloon		b@lu:n
-ballot		bal@t 
+ballot		bal@t
 baloney		b@loUni
 bagel		beIg@L
 banal		beIn@L
@@ -1442,7 +1442,7 @@ competing	k@mp'i:tIN
 competition	k0mp@t'IS@n
 ?3 composite	$2
 compromise	k0mpr@maIz
-compound	$2 $verb 
+compound	$2 $verb
 ?3 comrade	k0mrad
 comte		k0nt
 con		k0n
@@ -1607,7 +1607,7 @@ defatig		dI#fatIg   // -able
 defect		di:fEkt
 defect		dI#fEkt	$verb
 defens		dI#fEns          // for defensible
-deficit		dEfI2sIt 
+deficit		dEfI2sIt
 definitive	dI#fInI2tIv
 ?!3 defragment	di:fragm'Ent
 degas		di:g'as
@@ -1691,7 +1691,7 @@ dinosaur	daIn@sO@
 diode		daIoUd
 diplomacy	dIpl'oUm@si
 dipole		daIpoUl
-disconsolate	dIsk'0ns@l@t 
+disconsolate	dIsk'0ns@l@t
 disc		dIsk          // for discs
 disciple	dIs'aIp@L
 discourse	$1
@@ -1763,7 +1763,7 @@ edutain		$3
 edwardian	Edw'O@di@n
 efile		$alt6
 egalitarian	I#galI2t'e@ri@n
-egg		Eg	// egging 
+egg		Eg	// egging
 egregious	Igr'i:dZ@s
 egress		Igr'Es $verb
 egret		i:gr@t
@@ -1936,7 +1936,7 @@ finance		faInans       $only
 finance		$verb
 finess		fI2nEs		// for finessed
 finesse		fI2nEs
-finite		faInaIt 
+finite		faInaIt
 fishnet		$alt1
 fiord		fi:O@d
 fix		fIks		// for fixer
@@ -1997,7 +1997,7 @@ galactic	$alt3
 galaga		gal@g@
 galaxy		gala#ksi
 galena		$alt3
-galileo		galI#l'eIoU 
+galileo		galI#l'eIoU
 galore		$alt3
 galleria	$alt1
 gallivant	$alt1
@@ -2168,7 +2168,7 @@ hostess		hoUstEs
 hostname	hoUstneIm
 hotheaded	$2
 hotkey		h0tki:
-house		haUz          $verb 
+house		haUz          $verb
 however		$2
 howto		haUtu:
 hubris		hu:brIs
@@ -2246,7 +2246,7 @@ infer		Inf'3:
 inference	Inf@r@ns
 influenza	Influ:'Enz@
 infomercial	InfoUm'3:S@L
-infrastructure	$1 
+infrastructure	$1
 ingenuity	IndZI#n'ju:I2ti
 inherit		Inh'ErIt	// inherited
 innard		In3d
@@ -2698,7 +2698,7 @@ nonetheless	n02nD@l'Es
 nosedive	noUzdaIv
 nosir		noUs3:
 ?5 nosir	noUsIR
-not		noUt          // for noted, notable, etc 
+not		noUt          // for noted, notable, etc
 nots		n0ts
 (nôtre dame)	noUtr@'dA:m
 nott		n0t
@@ -2731,7 +2731,7 @@ obstinate	$alt2
 occupier	0kju:paI|3
 occult		$alt3
 ocelot		0s@l0t
-ochre		oUk3 
+ochre		oUk3
 o'clock		@kl0k
 octave		0ktIv
 october		0kt'oUb3
@@ -3140,7 +3140,7 @@ redone		ri:d'Vn
 reference	rEfr@ns
 referee		rEf@r'i:
 referral	rI#f3:r@L
-referring	rI#f3:rIN 
+referring	rI#f3:rIN
 refinery	rI#faIn@ri
 refit		ri:fIt
 reflux		ri:flVks
@@ -3195,7 +3195,7 @@ resist		rI#zIst
 résistance	reIzIst'A~ns
 ?3 respite	rEspI2t
 restive		rEstIv
-respiration	rEspI#r'eIS@n 
+respiration	rEspI#r'eIS@n
 respiratory	rI#spIr@t@ri
 ?3 respiratory	rEspr@to@ri
 respite		rEspaIt
@@ -3923,7 +3923,7 @@ zulus		zu:lu:z
 
 // place names
 
-Altrincham	O:ltrIN@m 
+Altrincham	O:ltrIN@m
 Anglesey	aNg@Lsi
 Argyle		A@g'aIl
 Argyll		A@g;aIl
@@ -4352,7 +4352,7 @@ Ouagadougou	$3
 Ozark		oUzA@k
 Pacific		$alt3
 Pakhtunkhwa	p@xtUnkwA:
-Palestine	pal@staIn 
+Palestine	pal@staIn
 Palestinia	pal@st'Ini:@
 Panaji		pVna#dZi:
 Panama		pan@mA:
@@ -5417,7 +5417,7 @@ haves            havz
 has              %ha#z		$pastf $only
 has              haz		$only $atend
 (has been)       %ha#z%bIn	$pastf
-(has-been)       hazbi:n   
+(has-been)       hazbi:n
 (has to)         haztu:		$atend
 (has not)        h@zn%0t	$pastf
 (has not)        ha#zn0t	$pastf $atend
@@ -5646,7 +5646,7 @@ there've	 De@v		$u
 than             Da#n		$u $only
 (than a)         ,Dan@		$nounf
 (than an)        ,Dan@n		$nounf
-then             DEn		$verbf 
+then             DEn		$verbf
 
 // these should be stressed at the start of a sentence
 which		,wItS		$pause $strend2 $only $verbf

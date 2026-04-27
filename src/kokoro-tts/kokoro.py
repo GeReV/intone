@@ -91,7 +91,6 @@ def normalize_text(text: str) -> str:
     text = text.replace('«', chr(8220)).replace('»', chr(8221))
     text = text.replace(chr(8220), '"').replace(chr(8221), '"')
     text = text.replace('(', '«').replace(')', '»')
-    text = text.replace(' - ', ' : ')
     for a, b in zip('、。！，：；？', ',.!,:;?'):
         text = text.replace(a, b + ' ')
     text = re.sub(r'[^\S \n]', ' ', text)
@@ -117,6 +116,7 @@ def normalize_text(text: str) -> str:
     text = re.sub(r"(?<=X')S\b", 's', text)
     text = re.sub(r'(?:[A-Za-z]\.){2,} [a-z]', lambda m: m.group().replace('.', '-'), text)
     text = re.sub(r'(?i)(?<=[A-Z])\.(?=[A-Z])', '-', text)
+    text = re.sub(' [-–—] ', ' : ', text)
     return text.strip()
 
 
