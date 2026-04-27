@@ -1,6 +1,0 @@
-*.pt
-*.pth
-
-__pycache__/
-
-stanford-ner-*/
