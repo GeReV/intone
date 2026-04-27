@@ -6,6 +6,6 @@ __pycache__
 voices/
 stanford-ner-*/
 tests/
-requirements-dev.txt
+requirements*.txt
 .gitignore
 .dockerignore
