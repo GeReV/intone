@@ -1,0 +1,20 @@
+services:
+  server:
+    build:
+      context: .
+    environment:
+      - SERVER_ENGINE=kokoro
+      - SERVER_VOICE=af
+      - SERVER_CUDA=1
+    ports:
+      - 5000:5000
+    volumes:
+      - ./certs:/certs:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
