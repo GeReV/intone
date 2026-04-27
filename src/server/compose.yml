@@ -1,3 +1,4 @@
+name: "read-out"
 services:
   server:
     build:
@@ -17,4 +18,4 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu]
+              capabilities: [ gpu ]
