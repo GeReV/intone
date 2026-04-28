@@ -3,12 +3,11 @@ import threading
 
 import soundfile as sf
 import torch
-
 from cleaners import clean
 from kokoro import SAMPLE_RATE, generate
 from models import build_model
 
-MODEL_NAME = "kokoro-v0_19.pth"
+MODEL_NAME = "/model/kokoro-v0_19.pth"
 
 VOICES: list[str] = [
     "af",
@@ -24,7 +23,7 @@ class KokoroEngine:
         self._lock = threading.Lock()
         self._model = build_model(MODEL_NAME, device)
         self._voicepacks = {
-            name: torch.load(f"voices/{name}.pt", weights_only=True).to(device)
+            name: torch.load(f"/model/voices/{name}.pt", weights_only=True).to(device)
             for name in VOICES
         }
 

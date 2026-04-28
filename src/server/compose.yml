@@ -5,12 +5,13 @@ services:
       context: .
     environment:
       - SERVER_ENGINE=kokoro
-      - SERVER_VOICE=af
+      - SERVER_VOICE=am_adam
       - SERVER_CUDA=1
     ports:
       - 5000:5000
     volumes:
       - ./certs:/certs:ro
+      - ./model:/model:ro
     restart: unless-stopped
     deploy:
       resources:

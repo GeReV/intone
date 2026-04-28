@@ -1,7 +1,7 @@
 # https://github.com/yl4579/StyleTTS2/blob/main/models.py
 import json
 from pathlib import Path
-from typing import Literal, NewType
+from typing import Literal, NewType, Union
 
 import numpy as np
 import torch
@@ -11,7 +11,8 @@ from istftnet import AdaIN1d, Decoder
 from munch import Munch
 from plbert import load_plbert
 from torch.nn.utils import weight_norm
-from torch.types import FileLike
+import os
+FileLike = Union[str, bytes, os.PathLike]
 
 Model = NewType("Model", Munch)
 
