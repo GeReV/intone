@@ -11,7 +11,7 @@ export type Settings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   serverUrl: "https://localhost:5000",
-  voiceName: "af",
+  voiceName: "am_adam",
   extractor: "readability",
   rate: 1.0,
   volume: 1.0,
