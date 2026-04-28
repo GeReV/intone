@@ -1,17 +1,20 @@
 # https://github.com/yl4579/StyleTTS2/blob/main/models.py
-from typing import Literal, NewType
-from istftnet import AdaIN1d, Decoder
-from munch import Munch
-from pathlib import Path
-from plbert import load_plbert
-from torch.nn.utils import weight_norm
 import json
+from pathlib import Path
+from typing import Literal, NewType
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from istftnet import AdaIN1d, Decoder
+from munch import Munch
+from plbert import load_plbert
+from torch.nn.utils import weight_norm
+from torch.types import FileLike
 
 Model = NewType("Model", Munch)
+
 
 class LinearNorm(torch.nn.Module):
     def __init__(self, in_dim, out_dim, bias=True, w_init_gain='linear'):
@@ -20,10 +23,12 @@ class LinearNorm(torch.nn.Module):
 
         torch.nn.init.xavier_uniform_(
             self.linear_layer.weight,
-            gain=torch.nn.init.calculate_gain(w_init_gain))
+            gain=torch.nn.init.calculate_gain(w_init_gain)
+        )
 
     def forward(self, x):
         return self.linear_layer(x)
+
 
 class LayerNorm(nn.Module):
     def __init__(self, channels, eps=1e-5):
@@ -39,6 +44,7 @@ class LayerNorm(nn.Module):
         x = F.layer_norm(x, (self.channels,), self.gamma, self.beta, self.eps)
         return x.transpose(1, -1)
 
+
 class TextEncoder(nn.Module):
     def __init__(self, channels, kernel_size, depth, n_symbols, actv=nn.LeakyReLU(0.2)):
         super().__init__()
@@ -47,15 +53,17 @@ class TextEncoder(nn.Module):
         padding = (kernel_size - 1) // 2
         self.cnn = nn.ModuleList()
         for _ in range(depth):
-            self.cnn.append(nn.Sequential(
-                weight_norm(nn.Conv1d(channels, channels, kernel_size=kernel_size, padding=padding)),
-                LayerNorm(channels),
-                actv,
-                nn.Dropout(0.2),
-            ))
+            self.cnn.append(
+                nn.Sequential(
+                    weight_norm(nn.Conv1d(channels, channels, kernel_size=kernel_size, padding=padding)),
+                    LayerNorm(channels),
+                    actv,
+                    nn.Dropout(0.2),
+                )
+            )
         # self.cnn = nn.Sequential(*self.cnn)
 
-        self.lstm = nn.LSTM(channels, channels//2, 1, batch_first=True, bidirectional=True)
+        self.lstm = nn.LSTM(channels, channels // 2, 1, batch_first=True, bidirectional=True)
 
     def forward(self, x, input_lengths, m):
         x = self.embedding(x)  # [B, T, emb]
@@ -71,12 +79,14 @@ class TextEncoder(nn.Module):
 
         input_lengths = input_lengths.cpu().numpy()
         x = nn.utils.rnn.pack_padded_sequence(
-            x, input_lengths, batch_first=True, enforce_sorted=False)
+            x, input_lengths, batch_first=True, enforce_sorted=False
+        )
 
         self.lstm.flatten_parameters()
         x, _ = self.lstm(x)
         x, _ = nn.utils.rnn.pad_packed_sequence(
-            x, batch_first=True)
+            x, batch_first=True
+        )
 
         x = x.transpose(-1, -2)
         x_pad = torch.zeros([x.shape[0], x.shape[1], m.shape[-1]])
@@ -99,7 +109,7 @@ class TextEncoder(nn.Module):
 
     def length_to_mask(self, lengths):
         mask = torch.arange(lengths.max()).unsqueeze(0).expand(lengths.shape[0], -1).type_as(lengths)
-        mask = torch.gt(mask+1, lengths.unsqueeze(1))
+        mask = torch.gt(mask + 1, lengths.unsqueeze(1))
         return mask
 
 
@@ -114,9 +124,12 @@ class UpSample1d(nn.Module):
         else:
             return F.interpolate(x, scale_factor=2, mode='nearest')
 
+
 class AdainResBlk1d(nn.Module):
-    def __init__(self, dim_in, dim_out, style_dim=64, actv=nn.LeakyReLU(0.2),
-                 upsample='none', dropout_p=0.0):
+    def __init__(
+        self, dim_in, dim_out, style_dim=64, actv=nn.LeakyReLU(0.2),
+        upsample='none', dropout_p=0.0
+    ):
         super().__init__()
         self.actv = actv
         self.upsample_type = upsample
@@ -128,8 +141,9 @@ class AdainResBlk1d(nn.Module):
         if upsample == 'none':
             self.pool = nn.Identity()
         else:
-            self.pool = weight_norm(nn.ConvTranspose1d(dim_in, dim_in, kernel_size=3, stride=2, groups=dim_in, padding=1, output_padding=1))
-
+            self.pool = weight_norm(
+                nn.ConvTranspose1d(dim_in, dim_in, kernel_size=3, stride=2, groups=dim_in, padding=1, output_padding=1)
+            )
 
     def _build_weights(self, dim_in, dim_out, style_dim):
         self.conv1 = weight_norm(nn.Conv1d(dim_in, dim_out, 3, 1, 1))
@@ -160,13 +174,14 @@ class AdainResBlk1d(nn.Module):
         out = (out + self._shortcut(x)) / np.sqrt(2)
         return out
 
+
 class AdaLayerNorm(nn.Module):
     def __init__(self, style_dim, channels, eps=1e-5):
         super().__init__()
         self.channels = channels
         self.eps = eps
 
-        self.fc = nn.Linear(style_dim, channels*2)
+        self.fc = nn.Linear(style_dim, channels * 2)
 
     def forward(self, x, s):
         x = x.transpose(-1, -2)
@@ -177,20 +192,22 @@ class AdaLayerNorm(nn.Module):
         gamma, beta = torch.chunk(h, chunks=2, dim=1)
         gamma, beta = gamma.transpose(1, -1), beta.transpose(1, -1)
 
-
         x = F.layer_norm(x, (self.channels,), eps=self.eps)
         x = (1 + gamma) * x + beta
         return x.transpose(1, -1).transpose(-1, -2)
+
 
 class ProsodyPredictor(nn.Module):
 
     def __init__(self, style_dim, d_hid, nlayers, max_dur=50, dropout=0.1):
         super().__init__()
 
-        self.text_encoder = DurationEncoder(sty_dim=style_dim,
-                                            d_model=d_hid,
-                                            nlayers=nlayers,
-                                            dropout=dropout)
+        self.text_encoder = DurationEncoder(
+            sty_dim=style_dim,
+            d_model=d_hid,
+            nlayers=nlayers,
+            dropout=dropout
+        )
 
         self.lstm = nn.LSTM(d_hid + style_dim, d_hid // 2, 1, batch_first=True, bidirectional=True)
         self.duration_proj = LinearNorm(d_hid, max_dur)
@@ -209,7 +226,6 @@ class ProsodyPredictor(nn.Module):
         self.F0_proj = nn.Conv1d(d_hid // 2, 1, 1, 1, 0)
         self.N_proj = nn.Conv1d(d_hid // 2, 1, 1, 1, 0)
 
-
     def forward(self, texts, style, text_lengths, alignment, m):
         d = self.text_encoder(texts, style, text_lengths, m)
 
@@ -219,14 +235,16 @@ class ProsodyPredictor(nn.Module):
         # predict duration
         input_lengths = text_lengths.cpu().numpy()
         x = nn.utils.rnn.pack_padded_sequence(
-            d, input_lengths, batch_first=True, enforce_sorted=False)
+            d, input_lengths, batch_first=True, enforce_sorted=False
+        )
 
         m = m.to(text_lengths.device).unsqueeze(1)
 
         self.lstm.flatten_parameters()
         x, _ = self.lstm(x)
         x, _ = nn.utils.rnn.pad_packed_sequence(
-            x, batch_first=True)
+            x, batch_first=True
+        )
 
         x_pad = torch.zeros([x.shape[0], m.shape[-1], x.shape[-1]])
 
@@ -256,8 +274,9 @@ class ProsodyPredictor(nn.Module):
 
     def length_to_mask(self, lengths):
         mask = torch.arange(lengths.max()).unsqueeze(0).expand(lengths.shape[0], -1).type_as(lengths)
-        mask = torch.gt(mask+1, lengths.unsqueeze(1))
+        mask = torch.gt(mask + 1, lengths.unsqueeze(1))
         return mask
+
 
 class DurationEncoder(nn.Module):
 
@@ -265,14 +284,17 @@ class DurationEncoder(nn.Module):
         super().__init__()
         self.lstms = nn.ModuleList()
         for _ in range(nlayers):
-            self.lstms.append(nn.LSTM(d_model + sty_dim,
-                                 d_model // 2,
-                                 num_layers=1,
-                                 batch_first=True,
-                                 bidirectional=True,
-                                 dropout=dropout))
+            self.lstms.append(
+                nn.LSTM(
+                    d_model + sty_dim,
+                    d_model // 2,
+                    num_layers=1,
+                    batch_first=True,
+                    bidirectional=True,
+                    dropout=dropout
+                )
+            )
             self.lstms.append(AdaLayerNorm(sty_dim, d_model))
-
 
         self.dropout = dropout
         self.d_model = d_model
@@ -298,11 +320,13 @@ class DurationEncoder(nn.Module):
             else:
                 x = x.transpose(-1, -2)
                 x = nn.utils.rnn.pack_padded_sequence(
-                    x, input_lengths, batch_first=True, enforce_sorted=False)
+                    x, input_lengths, batch_first=True, enforce_sorted=False
+                )
                 block.flatten_parameters()
                 x, _ = block(x)
                 x, _ = nn.utils.rnn.pad_packed_sequence(
-                    x, batch_first=True)
+                    x, batch_first=True
+                )
                 x = F.dropout(x, p=self.dropout, training=self.training)
                 x = x.transpose(-1, -2)
 
@@ -323,8 +347,9 @@ class DurationEncoder(nn.Module):
 
     def length_to_mask(self, lengths):
         mask = torch.arange(lengths.max()).unsqueeze(0).expand(lengths.shape[0], -1).type_as(lengths)
-        mask = torch.gt(mask+1, lengths.unsqueeze(1))
+        mask = torch.gt(mask + 1, lengths.unsqueeze(1))
         return mask
+
 
 # https://github.com/yl4579/StyleTTS2/blob/main/utils.py
 def recursive_munch(d: dict | list):
@@ -335,21 +360,30 @@ def recursive_munch(d: dict | list):
     else:
         return d
 
-def build_model(path: torch.serialization.FILE_LIKE, device: Literal["cpu", "cuda"]) -> Model:
+
+def build_model(path: FileLike, device: Literal["cpu", "cuda"]) -> Model:
     config = Path(__file__).parent / 'config.json'
     assert config.exists(), f'Config path incorrect: config.json not found at {config}'
     with open(config, 'r') as r:
         args = recursive_munch(json.load(r))
     assert args.decoder.type == 'istftnet', f'Unknown decoder type: {args.decoder.type}'
-    decoder = Decoder(dim_in=args.hidden_dim, style_dim=args.style_dim, dim_out=args.n_mels,
-            resblock_kernel_sizes = args.decoder.resblock_kernel_sizes,
-            upsample_rates = args.decoder.upsample_rates,
-            upsample_initial_channel=args.decoder.upsample_initial_channel,
-            resblock_dilation_sizes=args.decoder.resblock_dilation_sizes,
-            upsample_kernel_sizes=args.decoder.upsample_kernel_sizes,
-            gen_istft_n_fft=args.decoder.gen_istft_n_fft, gen_istft_hop_size=args.decoder.gen_istft_hop_size)
+    decoder = Decoder(
+        dim_in=args.hidden_dim, style_dim=args.style_dim, dim_out=args.n_mels,
+        resblock_kernel_sizes=args.decoder.resblock_kernel_sizes,
+        upsample_rates=args.decoder.upsample_rates,
+        upsample_initial_channel=args.decoder.upsample_initial_channel,
+        resblock_dilation_sizes=args.decoder.resblock_dilation_sizes,
+        upsample_kernel_sizes=args.decoder.upsample_kernel_sizes,
+        gen_istft_n_fft=args.decoder.gen_istft_n_fft, gen_istft_hop_size=args.decoder.gen_istft_hop_size
+    )
     text_encoder = TextEncoder(channels=args.hidden_dim, kernel_size=5, depth=args.n_layer, n_symbols=args.n_token)
-    predictor = ProsodyPredictor(style_dim=args.style_dim, d_hid=args.hidden_dim, nlayers=args.n_layer, max_dur=args.max_dur, dropout=args.dropout)
+    predictor = ProsodyPredictor(
+        style_dim=args.style_dim,
+        d_hid=args.hidden_dim,
+        nlayers=args.n_layer,
+        max_dur=args.max_dur,
+        dropout=args.dropout
+    )
     bert = load_plbert()
     bert_encoder = nn.Linear(bert.config.hidden_size, args.hidden_dim)
     for parent in [bert, bert_encoder, predictor, decoder, text_encoder]:
@@ -368,6 +402,6 @@ def build_model(path: torch.serialization.FILE_LIKE, device: Literal["cpu", "cud
         try:
             model[key].load_state_dict(state_dict)
         except:
-            state_dict = {k[7:]: v for k, v in state_dict.items()}
+            state_dict = { k[7:]: v for k, v in state_dict.items() }
             model[key].load_state_dict(state_dict, strict=False)
     return model
