@@ -49,6 +49,12 @@ def test_synthesize_unknown_voice_raises(engine):
         engine.synthesize("hello", "not_a_real_voice", 1.0)
 
 
+def test_synthesize_empty_pipeline_returns_empty_bytes(engine):
+    engine._pipeline.return_value = []
+    result = engine.synthesize("hello", "af_heart", 1.0)
+    assert result == b""
+
+
 def test_synthesize_returns_bytes(engine):
     chunk1 = np.array([0.1, 0.2], dtype=np.float32)
     chunk2 = np.array([0.3, 0.4], dtype=np.float32)

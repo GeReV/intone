@@ -27,7 +27,10 @@ class Kokoro1Engine:
         if voice not in VOICES:
             raise ValueError(f"Unknown voice: {voice!r}")
         with self._lock:
+            # Lock covers only pipeline generation; concatenation and OGG encoding are lock-free.
             chunks = [audio for _, _, audio in self._pipeline(text, voice=voice, speed=rate)]
+        if not chunks:
+            return b""
         audio = np.concatenate(chunks)
         audio_io = io.BytesIO()
         sf.write(audio_io, audio, samplerate=SAMPLE_RATE, format="OGG")
