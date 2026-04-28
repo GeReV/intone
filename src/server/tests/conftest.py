@@ -1,4 +1,5 @@
 import pytest
+from server import EngineRef
 
 
 class MockEngine:
@@ -12,3 +13,8 @@ class MockEngine:
 @pytest.fixture
 def mock_engine() -> MockEngine:
     return MockEngine()
+
+
+@pytest.fixture
+def engine_ref(mock_engine) -> EngineRef:
+    return EngineRef(name="mock", engine=mock_engine, device="cpu")

@@ -2,12 +2,12 @@ import json
 
 import pytest
 
-from server import create_app
+from server import EngineRef, create_app
 
 
 @pytest.fixture
-def client(mock_engine):
-    app = create_app(mock_engine)
+def client(engine_ref):
+    app = create_app(engine_ref)
     app.config["TESTING"] = True
     with app.test_client() as c:
         yield c
@@ -92,7 +92,7 @@ def test_synthesis_error_returns_500(mock_engine, monkeypatch):
         raise RuntimeError("model exploded")
 
     monkeypatch.setattr(mock_engine, "synthesize", boom)
-    app = create_app(mock_engine)
+    app = create_app(EngineRef(name="mock", engine=mock_engine, device="cpu"))
     app.config["TESTING"] = True
     with app.test_client() as c:
         response = c.get("/synthesize?text=hello")
@@ -104,7 +104,7 @@ def test_voices_error_returns_500(mock_engine, monkeypatch):
         raise RuntimeError("engine dead")
 
     monkeypatch.setattr(mock_engine, "voices", boom)
-    app = create_app(mock_engine)
+    app = create_app(EngineRef(name="mock", engine=mock_engine, device="cpu"))
     app.config["TESTING"] = True
     with app.test_client() as c:
         response = c.get("/voices")
@@ -114,8 +114,83 @@ def test_voices_error_returns_500(mock_engine, monkeypatch):
 def test_synthesize_unknown_default_voice_returns_400(mock_engine, monkeypatch):
     import server as server_module
     monkeypatch.setattr(server_module, "DEFAULT_VOICE", "nonexistent")
-    app = create_app(mock_engine)
+    app = create_app(EngineRef(name="mock", engine=mock_engine, device="cpu"))
     app.config["TESTING"] = True
     with app.test_client() as c:
         response = c.get("/synthesize?text=hello")
     assert response.status_code == 400
+
+
+# --- GET /engine ---
+
+def test_get_engine_returns_name_and_voices(client):
+    response = client.get("/engine")
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data["engine"] == "mock"
+    assert data["voices"] == ["af", "af_bella"]
+
+
+# --- POST /engine ---
+
+def test_swap_engine_success(client, engine_ref, monkeypatch):
+    import server as server_module
+
+    new_mock = type("NewMock", (), {
+        "voices": lambda self: ["af_heart"],
+        "synthesize": lambda self, t, v, r: b"new_audio",
+    })()
+
+    monkeypatch.setattr(server_module, "_build_engine", lambda name, device: new_mock)
+
+    response = client.post("/engine?name=kokoro1")
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data["engine"] == "kokoro1"
+    assert data["voices"] == ["af_heart"]
+    assert engine_ref.current is new_mock
+
+
+def test_swap_engine_missing_name_returns_400(client):
+    response = client.post("/engine")
+    assert response.status_code == 400
+
+
+def test_swap_engine_unknown_name_returns_400(client, monkeypatch):
+    import server as server_module
+
+    def raise_value_error(name, device):
+        raise ValueError(f"Unknown engine: {name!r}")
+
+    monkeypatch.setattr(server_module, "_build_engine", raise_value_error)
+
+    response = client.post("/engine?name=nonexistent")
+    assert response.status_code == 400
+
+
+def test_swap_engine_init_failure_returns_500(client, monkeypatch):
+    import server as server_module
+
+    def exploding_build(name, device):
+        raise RuntimeError("GPU exploded")
+
+    monkeypatch.setattr(server_module, "_build_engine", exploding_build)
+
+    response = client.post("/engine?name=kokoro1")
+    assert response.status_code == 500
+
+
+def test_swap_engine_updates_voices_endpoint(client, engine_ref, monkeypatch):
+    import server as server_module
+
+    new_mock = type("NewMock", (), {
+        "voices": lambda self: ["af_heart", "am_adam"],
+        "synthesize": lambda self, t, v, r: b"x",
+    })()
+
+    monkeypatch.setattr(server_module, "_build_engine", lambda name, device: new_mock)
+    client.post("/engine?name=kokoro1")
+
+    response = client.get("/voices")
+    data = json.loads(response.data)
+    assert data == ["af_heart", "am_adam"]

@@ -2,6 +2,7 @@ import argparse
 import io
 import logging
 import os
+import threading
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_file
@@ -17,7 +18,15 @@ KEY_PATH = Path("/certs/key.pem")
 DEFAULT_VOICE = os.environ.get("SERVER_VOICE", "af")
 
 
-def create_app(engine: TTSEngine) -> Flask:
+class EngineRef:
+    def __init__(self, name: str, engine: TTSEngine, device: str) -> None:
+        self.name = name
+        self.current = engine
+        self.device = device
+        self.swap_lock = threading.Lock()
+
+
+def create_app(engine_ref: EngineRef) -> Flask:
     app = Flask(__name__)
     CORS(app)
 
@@ -28,7 +37,7 @@ def create_app(engine: TTSEngine) -> Flask:
     @app.route("/voices", methods=["GET"])
     def get_voices():
         try:
-            return jsonify(engine.voices())
+            return jsonify(engine_ref.current.voices())
         except Exception:
             _LOGGER.exception("Failed to list voices")
             return "Failed to list voices", 500
@@ -39,6 +48,7 @@ def create_app(engine: TTSEngine) -> Flask:
         if not text:
             return "text parameter is required", 400
 
+        engine = engine_ref.current
         voice = request.args.get("voice", DEFAULT_VOICE)
         if voice not in engine.voices():
             return f"unknown voice: {voice}", 400
@@ -57,6 +67,27 @@ def create_app(engine: TTSEngine) -> Flask:
 
         return send_file(io.BytesIO(audio_bytes), mimetype="audio/ogg")
 
+    @app.route("/engine", methods=["GET"])
+    def get_engine():
+        return jsonify({"engine": engine_ref.name, "voices": engine_ref.current.voices()})
+
+    @app.route("/engine", methods=["POST"])
+    def swap_engine():
+        name = request.args.get("name", "").strip()
+        if not name:
+            return "name parameter is required", 400
+        with engine_ref.swap_lock:
+            try:
+                new_engine = _build_engine(name, engine_ref.device)
+            except ValueError as e:
+                return str(e), 400
+            except Exception:
+                _LOGGER.exception("Failed to initialize engine %r", name)
+                return f"Failed to initialize engine {name!r}", 500
+            engine_ref.name = name
+            engine_ref.current = new_engine
+        return jsonify({"engine": engine_ref.name, "voices": engine_ref.current.voices()})
+
     return app
 
 
@@ -64,7 +95,10 @@ def _build_engine(name: str, device: str) -> TTSEngine:
     if name == "kokoro":
         from engines.kokoro import KokoroEngine
         return KokoroEngine(device=device)
-    raise ValueError(f"Unknown engine: {name!r}. Available: kokoro")
+    if name == "kokoro1":
+        from engines.kokoro1 import Kokoro1Engine
+        return Kokoro1Engine()
+    raise ValueError(f"Unknown engine: {name!r}. Available: kokoro, kokoro1")
 
 
 def main() -> None:
@@ -83,10 +117,14 @@ def main() -> None:
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
 
     device = "cuda" if args.cuda else "cpu"
-    engine = _build_engine(args.engine, device)
+    engine_ref = EngineRef(
+        name=args.engine,
+        engine=_build_engine(args.engine, device),
+        device=device,
+    )
     _LOGGER.info("Engine %r loaded on %s", args.engine, device)
 
-    app = create_app(engine)
+    app = create_app(engine_ref)
 
     ssl_context = None
     if CERT_PATH.exists() and KEY_PATH.exists():
