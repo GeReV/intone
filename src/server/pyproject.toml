@@ -14,6 +14,7 @@ dependencies = [
     "munch>=4.0",
     "librosa>=0.10",
     "numpy>=2.1",
+    "transformers>=5.6.2",
 ]
 
 [dependency-groups]

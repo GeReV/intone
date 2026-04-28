@@ -21,6 +21,10 @@ def create_app(engine: TTSEngine) -> Flask:
     app = Flask(__name__)
     CORS(app)
 
+    @app.route("/", methods=["GET"])
+    def index():
+        return "OK"
+
     @app.route("/voices", methods=["GET"])
     def get_voices():
         try:
