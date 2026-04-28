@@ -69,7 +69,10 @@ def create_app(engine_ref: EngineRef) -> Flask:
 
     @app.route("/engine", methods=["GET"])
     def get_engine():
-        return jsonify({"engine": engine_ref.name, "voices": engine_ref.current.voices()})
+        with engine_ref.swap_lock:
+            name = engine_ref.name
+            voices = engine_ref.current.voices()
+        return jsonify({"engine": name, "voices": voices})
 
     @app.route("/engine", methods=["POST"])
     def swap_engine():
@@ -86,7 +89,9 @@ def create_app(engine_ref: EngineRef) -> Flask:
                 return f"Failed to initialize engine {name!r}", 500
             engine_ref.name = name
             engine_ref.current = new_engine
-        return jsonify({"engine": engine_ref.name, "voices": engine_ref.current.voices()})
+            confirmed_name = engine_ref.name
+            confirmed_voices = new_engine.voices()
+        return jsonify({"engine": confirmed_name, "voices": confirmed_voices})
 
     return app
 
