@@ -116,7 +116,6 @@ export class Player {
 
   updateRate(rate: number): void {
     this.settings.rate = rate;
-    this.audio.playbackRate = rate;
   }
 
   updateVolume(volume: number): void {
@@ -136,7 +135,6 @@ export class Player {
     try {
       const url = await this.resolveAudio(text, this.queue.index);
       this.audio.src = url;
-      this.audio.playbackRate = this.settings.rate;
       this.audio.volume = this.settings.volume;
 
       await this.audio.play();
