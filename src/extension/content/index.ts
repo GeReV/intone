@@ -37,7 +37,7 @@ async function fetchEngineState(serverUrl: string): Promise<EngineState | null> 
 }
 
 async function start(textOverride?: string): Promise<void> {
-  let settings: Settings = await getSettings()
+  const settings: Settings = await getSettings()
 
   let paragraphs: string[]
   let title: string
@@ -87,7 +87,7 @@ async function start(textOverride?: string): Promise<void> {
   ui.onSeekTo = (index) => { void player?.seekTo(index) }
   ui.onSettingsChange = async (partial) => {
     await saveSettings(partial)
-    settings = { ...settings, ...partial }
+    Object.assign(settings, partial)
     if (partial.rate !== undefined) player?.updateRate(partial.rate)
     if (partial.volume !== undefined) player?.updateVolume(partial.volume)
   }
@@ -108,13 +108,14 @@ async function start(textOverride?: string): Promise<void> {
       const res = await fetch(url.toString(), { method: 'POST' })
       if (!res.ok) { revert(); return }
       const state = await res.json() as EngineState
-      ui?.setVoices(state.voices, settings.voiceName)
-      const firstVoice = state.voices[0]
-      if (!state.voices.includes(settings.voiceName) && firstVoice !== undefined) {
-        await saveSettings({ voiceName: firstVoice })
-        settings = { ...settings, voiceName: firstVoice }
-        ui?.setVoices(state.voices, firstVoice)
+      const nextVoice = state.voices.includes(settings.voiceName)
+        ? settings.voiceName
+        : (state.voices[0] ?? settings.voiceName)
+      if (nextVoice !== settings.voiceName) {
+        settings.voiceName = nextVoice
+        await saveSettings({ voiceName: nextVoice })
       }
+      ui?.setVoices(state.voices, nextVoice)
     } catch {
       revert()
     }
@@ -122,7 +123,7 @@ async function start(textOverride?: string): Promise<void> {
 
   ui.onVoiceChange = async (voiceName) => {
     await saveSettings({ voiceName })
-    settings = { ...settings, voiceName }
+    settings.voiceName = voiceName
   }
 
   console.info(`[Read Out] Starting — "${title}", ${flatChunks.length} chunks`)
