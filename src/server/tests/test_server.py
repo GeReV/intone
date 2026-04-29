@@ -194,3 +194,26 @@ def test_swap_engine_updates_voices_endpoint(client, engine_ref, monkeypatch):
     response = client.get("/voices")
     data = json.loads(response.data)
     assert data == ["af_heart", "am_adam"]
+
+
+# --- GET /engines ---
+
+def test_get_engines_returns_list(client):
+    response = client.get("/engines")
+    assert response.status_code == 200
+    assert response.content_type == "application/json"
+    data = json.loads(response.data)
+    assert data == ["kokoro", "kokoro1"]
+
+
+def test_get_engines_has_cors_header(client):
+    response = client.get("/engines")
+    assert "Access-Control-Allow-Origin" in response.headers
+
+
+def test_build_engine_unknown_name_mentions_known_engines():
+    from server import _build_engine, KNOWN_ENGINES
+    with pytest.raises(ValueError) as exc_info:
+        _build_engine("nonexistent", "cpu")
+    for engine in KNOWN_ENGINES:
+        assert engine in str(exc_info.value)

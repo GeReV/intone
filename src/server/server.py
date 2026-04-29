@@ -16,6 +16,7 @@ CERT_PATH = Path("/certs/cert.pem")
 KEY_PATH = Path("/certs/key.pem")
 
 DEFAULT_VOICE = os.environ.get("SERVER_VOICE", "af")
+KNOWN_ENGINES: list[str] = ["kokoro", "kokoro1"]
 
 
 class EngineRef:
@@ -74,6 +75,10 @@ def create_app(engine_ref: EngineRef) -> Flask:
             voices = engine_ref.current.voices()
         return jsonify({"engine": name, "voices": voices})
 
+    @app.route("/engines", methods=["GET"])
+    def get_engines():
+        return jsonify(KNOWN_ENGINES)
+
     @app.route("/engine", methods=["POST"])
     def swap_engine():
         name = request.args.get("name", "").strip()
@@ -103,7 +108,7 @@ def _build_engine(name: str, device: str) -> TTSEngine:
     if name == "kokoro1":
         from engines.kokoro1 import Kokoro1Engine
         return Kokoro1Engine()
-    raise ValueError(f"Unknown engine: {name!r}. Available: kokoro, kokoro1")
+    raise ValueError(f"Unknown engine: {name!r}. Available: {', '.join(KNOWN_ENGINES)}")
 
 
 def main() -> None:
