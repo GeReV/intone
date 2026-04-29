@@ -45,6 +45,7 @@ function populateEngines(engines: string[], selected: string): void {
     opt.textContent = '— unavailable —'
     engineSelect.appendChild(opt)
     engineSelect.disabled = true
+    prevEngine = ''
     return
   }
   engineSelect.disabled = false
@@ -60,6 +61,15 @@ function populateEngines(engines: string[], selected: string): void {
 
 function populateVoices(voices: string[], selected: string): void {
   voiceSelect.innerHTML = ''
+  if (voices.length === 0) {
+    const opt = document.createElement('option')
+    opt.value = ''
+    opt.textContent = '— no voices —'
+    voiceSelect.appendChild(opt)
+    voiceSelect.disabled = true
+    return
+  }
+  voiceSelect.disabled = false
   for (const v of voices) {
     const opt = document.createElement('option')
     opt.value = v
@@ -89,7 +99,9 @@ async function load(): Promise<void> {
 
 engineSelect.addEventListener('change', async () => {
   const selected = engineSelect.value
+  const revertTo = prevEngine
   engineErrorMsg.style.visibility = 'hidden'
+  engineSelect.disabled = true
   try {
     const url = new URL('/engine', serverUrlInput.value)
     url.searchParams.set('name', selected)
@@ -103,12 +115,15 @@ engineSelect.addEventListener('change', async () => {
     }
     prevEngine = selected
   } catch {
-    engineSelect.value = prevEngine
+    engineSelect.value = revertTo
     engineErrorMsg.style.visibility = 'visible'
+  } finally {
+    engineSelect.disabled = false
   }
 })
 
 serverUrlInput.addEventListener('change', async () => {
+  engineErrorMsg.style.visibility = 'hidden'
   const [engines, state] = await Promise.all([
     fetchEngines(serverUrlInput.value),
     fetchEngineState(serverUrlInput.value),
