@@ -199,11 +199,12 @@ def test_swap_engine_updates_voices_endpoint(client, engine_ref, monkeypatch):
 # --- GET /engines ---
 
 def test_get_engines_returns_list(client):
+    from server import KNOWN_ENGINES
     response = client.get("/engines")
     assert response.status_code == 200
     assert response.content_type == "application/json"
     data = json.loads(response.data)
-    assert data == ["kokoro", "kokoro1"]
+    assert data == KNOWN_ENGINES
 
 
 def test_get_engines_has_cors_header(client):
