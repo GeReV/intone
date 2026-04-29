@@ -304,6 +304,7 @@ export class FloatingUI {
   updateSettings(settings: Settings): void {
     this.inputServerUrl.value = settings.serverUrl
     this.selectExtractor.value = settings.extractor
+    this.selectVoice.value = settings.voiceName
     this.inputRate.value = String(settings.rate)
     this.spanRateVal.textContent = `${settings.rate.toFixed(1)}×`
     this.inputVolume.value = String(settings.volume)
@@ -335,6 +336,15 @@ export class FloatingUI {
 
   setVoices(voices: string[], selectedVoice: string): void {
     this.selectVoice.innerHTML = ''
+    if (voices.length === 0) {
+      const opt = document.createElement('option')
+      opt.value = ''
+      opt.textContent = '— no voices —'
+      this.selectVoice.appendChild(opt)
+      this.selectVoice.disabled = true
+      return
+    }
+    this.selectVoice.disabled = false
     for (const v of voices) {
       const opt = document.createElement('option')
       opt.value = v
