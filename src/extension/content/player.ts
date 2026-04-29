@@ -160,16 +160,21 @@ export class Player {
     return url;
   }
 
+  private synthesizeUrl(text: string): URL {
+    const url = new URL("/synthesize", this.settings.serverUrl);
+    url.searchParams.set("text", text);
+    url.searchParams.set("voice", this.settings.voiceName);
+    url.searchParams.set("rate", String(this.settings.rate));
+    return url;
+  }
+
   private async fetchAudio(text: string): Promise<string> {
     this.fetchController?.abort();
     this.fetchController = new AbortController();
 
     const { signal } = this.fetchController;
 
-    const reqUrl = new URL("/synthesize", this.settings.serverUrl);
-    reqUrl.searchParams.set("text", text);
-    reqUrl.searchParams.set("voice", this.settings.voiceName);
-    reqUrl.searchParams.set("rate", String(this.settings.rate));
+    const reqUrl = this.synthesizeUrl(text);
 
     const urlStr = reqUrl.toString();
 
@@ -219,13 +224,8 @@ export class Player {
       return;
     }
 
-    const reqUrl = new URL("/synthesize", this.settings.serverUrl);
-    reqUrl.searchParams.set("text", text);
-    reqUrl.searchParams.set("voice", this.settings.voiceName);
-    reqUrl.searchParams.set("rate", String(this.settings.rate));
-
     try {
-      const res = await fetch(reqUrl.toString());
+      const res = await fetch(this.synthesizeUrl(text).toString());
 
       if (!res.ok) {
         return;
