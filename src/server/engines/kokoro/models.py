@@ -7,9 +7,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from istftnet import AdaIN1d, Decoder
+from .istftnet import AdaIN1d, Decoder
 from munch import Munch
-from plbert import load_plbert
+from .plbert import load_plbert
 from torch.nn.utils import weight_norm
 import os
 FileLike = Union[str, bytes, os.PathLike]

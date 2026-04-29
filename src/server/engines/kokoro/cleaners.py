@@ -1,9 +1,9 @@
 import re
 from typing import Dict
 
-from utils.entities import expand_named_entities
-from utils.abbreviations import abbreviations_en, months_en, slang_en
-from utils.units import expand_units
+from .utils.entities import expand_named_entities
+from .utils.abbreviations import abbreviations_en, months_en, slang_en
+from .utils.units import expand_units
 
 
 def expand_abbreviations(text: str, abbreviations: Dict[re.Pattern, str]) -> str:

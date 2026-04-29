@@ -6,7 +6,7 @@ import numpy as np
 import phonemizer
 import torch
 
-from models import Model
+from .models import Model
 
 SAMPLE_RATE = 24000
 

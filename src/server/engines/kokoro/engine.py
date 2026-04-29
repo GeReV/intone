@@ -3,9 +3,9 @@ import threading
 
 import soundfile as sf
 import torch
-from cleaners import clean
-from kokoro import SAMPLE_RATE, generate
-from models import build_model
+from .cleaners import clean
+from .kokoro import SAMPLE_RATE, generate
+from .models import build_model
 
 MODEL_NAME = "/model/kokoro-v0_19.pth"
 
