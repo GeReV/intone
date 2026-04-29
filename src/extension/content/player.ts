@@ -168,6 +168,7 @@ export class Player {
     return url;
   }
 
+  // Primary fetch: abortable, retries with backoff, throws on failure.
   private async fetchAudio(text: string): Promise<string> {
     this.fetchController?.abort();
     this.fetchController = new AbortController();
@@ -218,6 +219,7 @@ export class Player {
     }
   }
 
+  // Background prefetch: no abort signal, no retries, failures are silent.
   private async prefetchOne(idx: number, text: string): Promise<void> {
     // Re-check inside the async body — another path may have cached this since schedulePrefetch checked
     if (this.audioCache.has(idx)) {
