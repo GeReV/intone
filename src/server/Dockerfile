@@ -3,8 +3,9 @@
 ARG BASE=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 FROM ${BASE}
 
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
 RUN apt-get update && \
-  apt-get upgrade -y && \
   apt-get install -y --no-install-recommends \
   build-essential git wget unzip curl \
   espeak-ng \
@@ -34,7 +35,8 @@ ENV STANFORD_MODELS="$STANFORD_DIR/classifiers"
 
 COPY pyproject.toml uv.lock ./
 
-RUN uv sync --frozen --no-dev \
+RUN --mount=type=cache,target=/root/.cache/uv \
+  uv sync --frozen --no-dev \
   --extra-index-url https://download.pytorch.org/whl/cu118
 
 RUN uv run python -m nltk.downloader popular
