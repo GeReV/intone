@@ -214,6 +214,7 @@ export class FloatingUI {
       const prev = this._prevEngine
       const revert = () => {
         this.selectEngine.value = prev
+        this._prevEngine = prev
         this.selectEngine.style.borderColor = '#ff4444'
         setTimeout(() => { this.selectEngine.style.borderColor = '' }, 1500)
       }
