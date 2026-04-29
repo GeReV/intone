@@ -138,6 +138,8 @@ export class FloatingUI {
   private readonly settingsPanel: HTMLDivElement
   private readonly inputServerUrl: HTMLInputElement
   private readonly selectExtractor: HTMLSelectElement
+  private readonly selectEngine: HTMLSelectElement
+  private readonly selectVoice: HTMLSelectElement
   private readonly inputRate: HTMLInputElement
   private readonly inputVolume: HTMLInputElement
   private readonly spanRateVal: HTMLSpanElement
@@ -147,6 +149,8 @@ export class FloatingUI {
   private activeIndex = -1
   private previewOpen = true
   private settingsOpen = false
+  private _panelOpened = false
+  private _prevEngine = ''
 
   onPlay?: () => void
   onPause?: () => void
@@ -155,6 +159,9 @@ export class FloatingUI {
   onRewind?: () => void
   onSeekTo?: (index: number) => void
   onSettingsChange?: (partial: Partial<Settings>) => void
+  onPanelOpen?: () => void
+  onSwitchEngine?: (name: string, revert: () => void) => void
+  onVoiceChange?: (voiceName: string) => void
 
   constructor() {
     this.host = document.createElement('div')
@@ -201,6 +208,24 @@ export class FloatingUI {
       this.onSettingsChange?.({ serverUrl: this.inputServerUrl.value })
     })
 
+    this.selectEngine = document.createElement('select')
+    this.selectEngine.addEventListener('change', () => {
+      const selected = this.selectEngine.value
+      const prev = this._prevEngine
+      const revert = () => {
+        this.selectEngine.value = prev
+        this.selectEngine.style.borderColor = '#ff4444'
+        setTimeout(() => { this.selectEngine.style.borderColor = '' }, 1500)
+      }
+      this._prevEngine = selected
+      this.onSwitchEngine?.(selected, revert)
+    })
+
+    this.selectVoice = document.createElement('select')
+    this.selectVoice.addEventListener('change', () => {
+      this.onVoiceChange?.(this.selectVoice.value)
+    })
+
     this.selectExtractor = document.createElement('select')
     const opt = document.createElement('option')
     opt.value = 'readability'
@@ -212,14 +237,14 @@ export class FloatingUI {
 
     this.inputRate = document.createElement('input')
     this.inputRate.type = 'range'
-    this.inputRate.min = '1'
+    this.inputRate.min = '0.5'
     this.inputRate.max = '3'
-    this.inputRate.step = '0.25'
+    this.inputRate.step = '0.1'
     this.spanRateVal = document.createElement('span')
     this.spanRateVal.className = 'range-val'
     this.inputRate.addEventListener('input', () => {
       const val = Number(this.inputRate.value)
-      this.spanRateVal.textContent = `${val.toFixed(2)}×`
+      this.spanRateVal.textContent = `${val.toFixed(1)}×`
       this.onSettingsChange?.({ rate: val })
     })
 
@@ -238,6 +263,8 @@ export class FloatingUI {
 
     this.settingsPanel.append(
       this.settingLabel('Server URL', this.inputServerUrl),
+      this.settingLabel('Engine', this.selectEngine),
+      this.settingLabel('Voice', this.selectVoice),
       this.settingLabel('Extractor', this.selectExtractor),
       this.rangeRow('Rate', this.inputRate, this.spanRateVal),
       this.rangeRow('Volume', this.inputVolume, this.spanVolumeVal),
@@ -270,16 +297,50 @@ export class FloatingUI {
       this.previewEl.appendChild(paraEl)
     }
 
-    // Populate settings inputs with current values
+    this.updateSettings(settings)
+  }
+
+  updateSettings(settings: Settings): void {
     this.inputServerUrl.value = settings.serverUrl
     this.selectExtractor.value = settings.extractor
     this.inputRate.value = String(settings.rate)
-    this.spanRateVal.textContent = `${settings.rate.toFixed(2)}×`
+    this.spanRateVal.textContent = `${settings.rate.toFixed(1)}×`
     this.inputVolume.value = String(settings.volume)
     this.spanVolumeVal.textContent = `${Math.round(settings.volume * 100)}%`
-
     this.previewOpen = settings.showPreview
     this.previewEl.hidden = !this.previewOpen
+  }
+
+  setEngines(engines: string[], currentEngine: string): void {
+    this.selectEngine.innerHTML = ''
+    if (engines.length === 0) {
+      const opt = document.createElement('option')
+      opt.value = ''
+      opt.textContent = '— unavailable —'
+      this.selectEngine.appendChild(opt)
+      this.selectEngine.disabled = true
+      return
+    }
+    this.selectEngine.disabled = false
+    for (const e of engines) {
+      const opt = document.createElement('option')
+      opt.value = e
+      opt.textContent = e
+      opt.selected = e === currentEngine
+      this.selectEngine.appendChild(opt)
+    }
+    this._prevEngine = this.selectEngine.value
+  }
+
+  setVoices(voices: string[], selectedVoice: string): void {
+    this.selectVoice.innerHTML = ''
+    for (const v of voices) {
+      const opt = document.createElement('option')
+      opt.value = v
+      opt.textContent = v
+      opt.selected = v === selectedVoice
+      this.selectVoice.appendChild(opt)
+    }
   }
 
   update(ps: PlaybackState): void {
@@ -318,6 +379,10 @@ export class FloatingUI {
   private toggleSettings(): void {
     this.settingsOpen = !this.settingsOpen
     this.settingsPanel.hidden = !this.settingsOpen
+    if (this.settingsOpen && !this._panelOpened) {
+      this._panelOpened = true
+      this.onPanelOpen?.()
+    }
   }
 
   private btn(svg: string, onClick: () => void): HTMLButtonElement {
