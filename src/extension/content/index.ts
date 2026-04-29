@@ -7,14 +7,37 @@ import { Queue } from './queue'
 import { Player } from './player'
 import { FloatingUI } from './ui'
 import { getSettings, saveSettings } from './settings'
+import type { Settings } from './settings'
 
 type Message = { type: 'play' | 'stop' | 'forward' | 'rewind' | 'play-selection'; text?: string }
+
+interface EngineState { engine: string; voices: string[] }
 
 let player: Player | null = null
 let ui: FloatingUI | null = null
 
+async function fetchEngines(serverUrl: string): Promise<string[]> {
+  try {
+    const res = await fetch(new URL('/engines', serverUrl).toString())
+    if (!res.ok) return []
+    return await res.json() as string[]
+  } catch {
+    return []
+  }
+}
+
+async function fetchEngineState(serverUrl: string): Promise<EngineState | null> {
+  try {
+    const res = await fetch(new URL('/engine', serverUrl).toString())
+    if (!res.ok) return null
+    return await res.json() as EngineState
+  } catch {
+    return null
+  }
+}
+
 async function start(textOverride?: string): Promise<void> {
-  const settings = await getSettings()
+  let settings: Settings = await getSettings()
 
   let paragraphs: string[]
   let title: string
@@ -64,8 +87,42 @@ async function start(textOverride?: string): Promise<void> {
   ui.onSeekTo = (index) => { void player?.seekTo(index) }
   ui.onSettingsChange = async (partial) => {
     await saveSettings(partial)
+    settings = { ...settings, ...partial }
     if (partial.rate !== undefined) player?.updateRate(partial.rate)
     if (partial.volume !== undefined) player?.updateVolume(partial.volume)
+  }
+
+  ui.onPanelOpen = async () => {
+    const [engines, state] = await Promise.all([
+      fetchEngines(settings.serverUrl),
+      fetchEngineState(settings.serverUrl),
+    ])
+    ui?.setEngines(engines, state?.engine ?? '')
+    ui?.setVoices(state?.voices ?? [settings.voiceName], settings.voiceName)
+  }
+
+  ui.onSwitchEngine = async (name, revert) => {
+    try {
+      const url = new URL('/engine', settings.serverUrl)
+      url.searchParams.set('name', name)
+      const res = await fetch(url.toString(), { method: 'POST' })
+      if (!res.ok) { revert(); return }
+      const state = await res.json() as EngineState
+      ui?.setVoices(state.voices, settings.voiceName)
+      const firstVoice = state.voices[0]
+      if (!state.voices.includes(settings.voiceName) && firstVoice !== undefined) {
+        await saveSettings({ voiceName: firstVoice })
+        settings = { ...settings, voiceName: firstVoice }
+        ui?.setVoices(state.voices, firstVoice)
+      }
+    } catch {
+      revert()
+    }
+  }
+
+  ui.onVoiceChange = async (voiceName) => {
+    await saveSettings({ voiceName })
+    settings = { ...settings, voiceName }
   }
 
   console.info(`[Read Out] Starting — "${title}", ${flatChunks.length} chunks`)
