@@ -74,7 +74,7 @@ def test_synthesize_rate_clamped_above(client, mock_engine, monkeypatch):
 
     monkeypatch.setattr(mock_engine, "synthesize", fake_synthesize)
     client.get("/synthesize?text=hello&rate=5.0")
-    assert captured["rate"] == 2.0
+    assert captured["rate"] == 3.0
 
 
 def test_cors_header_on_voices(client):

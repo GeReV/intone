@@ -58,7 +58,7 @@ def create_app(engine_ref: EngineRef) -> Flask:
             rate = float(request.args.get("rate", "1.0"))
         except ValueError:
             rate = 1.0
-        rate = max(0.5, min(2.0, rate))
+        rate = max(0.5, min(3.0, rate))
 
         try:
             audio_bytes = engine.synthesize(text, voice, rate)
