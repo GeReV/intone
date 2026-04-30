@@ -149,7 +149,6 @@ export class FloatingUI {
   private activeIndex = -1
   private previewOpen = true
   private settingsOpen = false
-  private _panelOpened = false
   private _prevEngine = ''
 
   onPlay?: () => void
@@ -390,8 +389,7 @@ export class FloatingUI {
   private toggleSettings(): void {
     this.settingsOpen = !this.settingsOpen
     this.settingsPanel.hidden = !this.settingsOpen
-    if (this.settingsOpen && !this._panelOpened) {
-      this._panelOpened = true
+    if (this.settingsOpen) {
       this.onPanelOpen?.()
     }
   }

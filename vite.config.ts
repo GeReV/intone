@@ -22,7 +22,7 @@ export const sharedConfig: UserConfig = {
 
 export default defineConfig({
   ...sharedConfig,
-  base: '/',
+  base: './',
   build: {
     outDir: r('extension/dist'),
     emptyOutDir: false,

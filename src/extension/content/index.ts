@@ -74,7 +74,7 @@ async function start(textOverride?: string): Promise<void> {
 
   player.onStateChange = (state) => {
     ui?.update(state)
-    if (state.state === 'stopped' || state.state === 'error') {
+    if (state.state === 'stopped') {
       teardown()
     }
   }

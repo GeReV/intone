@@ -10,7 +10,7 @@ services:
     ports:
       - 5000:5000
     volumes:
-      - ./certs:/certs:ro
+      - ./engines/kokoro/model:/model:ro
       - hf_cache:/root/.cache/huggingface
     restart: unless-stopped
     deploy:

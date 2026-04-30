@@ -3,8 +3,8 @@ import io
 import logging
 import os
 import threading
-from pathlib import Path
 
+import gunicorn.app.base
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
@@ -12,19 +12,34 @@ from engine import TTSEngine
 
 _LOGGER = logging.getLogger(__name__)
 
-CERT_PATH = Path("/certs/cert.pem")
-KEY_PATH = Path("/certs/key.pem")
-
 DEFAULT_VOICE = os.environ.get("SERVER_VOICE", "af")
 KNOWN_ENGINES: list[str] = ["kokoro", "kokoro1"]
 
 
 class EngineRef:
-    def __init__(self, name: str, engine: TTSEngine, device: str) -> None:
+    def __init__(self, name: str, device: str) -> None:
         self.name = name
-        self.current = engine
         self.device = device
-        self.swap_lock = threading.Lock()
+        self._current: TTSEngine | None = None
+        self._lock = threading.Lock()
+
+    @property
+    def current(self) -> TTSEngine:
+        if self._current is None:
+            with self._lock:
+                if self._current is None:
+                    self._current = _build_engine(self.name, self.device)
+                    _LOGGER.info("Engine %r loaded on %s", self.name, self.device)
+        return self._current
+
+    @current.setter
+    def current(self, value: TTSEngine) -> None:
+        self._current = value
+
+    # Keep swap_lock as an alias so swap_engine route still works
+    @property
+    def swap_lock(self) -> threading.Lock:
+        return self._lock
 
 
 def create_app(engine_ref: EngineRef) -> Flask:
@@ -111,6 +126,21 @@ def _build_engine(name: str, device: str) -> TTSEngine:
     raise ValueError(f"Unknown engine: {name!r}. Available: {', '.join(KNOWN_ENGINES)}")
 
 
+class _GunicornApp(gunicorn.app.base.BaseApplication):
+    def __init__(self, app: Flask, options: dict) -> None:
+        self.options = options
+        self.application = app
+        super().__init__()
+
+    def load_config(self) -> None:
+        for key, value in self.options.items():
+            if key in self.cfg.settings and value is not None:
+                self.cfg.set(key.lower(), value)
+
+    def load(self) -> Flask:
+        return self.application
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="0.0.0.0")
@@ -127,23 +157,15 @@ def main() -> None:
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
 
     device = "cuda" if args.cuda else "cpu"
-    engine_ref = EngineRef(
-        name=args.engine,
-        engine=_build_engine(args.engine, device),
-        device=device,
-    )
-    _LOGGER.info("Engine %r loaded on %s", args.engine, device)
+    engine_ref = EngineRef(name=args.engine, device=device)
 
     app = create_app(engine_ref)
-
-    ssl_context = None
-    if CERT_PATH.exists() and KEY_PATH.exists():
-        ssl_context = (str(CERT_PATH), str(KEY_PATH))
-        _LOGGER.info("HTTPS enabled (certs at %s)", CERT_PATH.parent)
-    else:
-        _LOGGER.warning("No certs at /certs — running plain HTTP")
-
-    app.run(host=args.host, port=args.port, ssl_context=ssl_context)
+    _GunicornApp(app, {
+        "bind": f"{args.host}:{args.port}",
+        "workers": 1,
+        "worker_class": "gthread",
+        "threads": 4,
+    }).run()
 
 
 if __name__ == "__main__":
