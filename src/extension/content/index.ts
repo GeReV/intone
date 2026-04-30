@@ -10,17 +10,22 @@ import { getSettings, saveSettings } from './settings'
 import type { Settings } from './settings'
 
 type Message = { type: 'play' | 'stop' | 'forward' | 'rewind' | 'play-selection'; text?: string }
+type BgFetchResponse = { ok: boolean; status: number; json?: unknown; error?: string }
 
 interface EngineState { engine: string; voices: string[] }
 
 let player: Player | null = null
 let ui: FloatingUI | null = null
 
+async function bgFetch(url: string, method = 'GET'): Promise<BgFetchResponse> {
+  return browser.runtime.sendMessage({ type: 'bg-fetch', url, method }) as Promise<BgFetchResponse>
+}
+
 async function fetchEngines(serverUrl: string): Promise<string[]> {
   try {
-    const res = await fetch(new URL('/engines', serverUrl).toString())
+    const res = await bgFetch(new URL('/engines', serverUrl).toString())
     if (!res.ok) return []
-    return await res.json() as string[]
+    return res.json as string[]
   } catch {
     return []
   }
@@ -28,9 +33,9 @@ async function fetchEngines(serverUrl: string): Promise<string[]> {
 
 async function fetchEngineState(serverUrl: string): Promise<EngineState | null> {
   try {
-    const res = await fetch(new URL('/engine', serverUrl).toString())
+    const res = await bgFetch(new URL('/engine', serverUrl).toString())
     if (!res.ok) return null
-    return await res.json() as EngineState
+    return res.json as EngineState
   } catch {
     return null
   }
@@ -105,9 +110,9 @@ async function start(textOverride?: string): Promise<void> {
     try {
       const url = new URL('/engine', settings.serverUrl)
       url.searchParams.set('name', name)
-      const res = await fetch(url.toString(), { method: 'POST' })
+      const res = await bgFetch(url.toString(), 'POST')
       if (!res.ok) { revert(); return }
-      const state = await res.json() as EngineState
+      const state = res.json as EngineState
       const nextVoice = state.voices.includes(settings.voiceName)
         ? settings.voiceName
         : (state.voices[0] ?? settings.voiceName)

@@ -35,7 +35,7 @@ export class AudioCache {
       if (!first.done) {
         const [lruIndex, lruUrl] = first.value;
 
-        URL.revokeObjectURL(lruUrl);
+        if (lruUrl.startsWith('blob:')) URL.revokeObjectURL(lruUrl);
 
         this.entries.delete(lruIndex);
       }
@@ -45,7 +45,7 @@ export class AudioCache {
 
   clear(): void {
     for (const url of this.entries.values()) {
-      URL.revokeObjectURL(url);
+      if (url.startsWith('blob:')) URL.revokeObjectURL(url);
     }
 
     this.entries.clear();

@@ -12,7 +12,7 @@ export default defineConfig({
   build: {
     outDir: r('extension/dist/background'),
     emptyOutDir: false,
-    sourcemap: isDev ? 'inline' : false,
+    sourcemap: 'inline',
     lib: {
       entry: r('src/extension/background/main.ts'),
       name: packageJson.name,

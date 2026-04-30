@@ -47,10 +47,16 @@ export async function getManifest(): Promise<Manifest.WebExtensionManifest> {
       },
     ],
 
+    host_permissions: [
+      'http://localhost/*',
+      'http://127.0.0.1/*',
+      'http://[::1]/*',
+    ],
+
     content_security_policy: {
       extension_pages: isDev
-        ? "script-src 'self' 'unsafe-eval'; object-src 'self'; connect-src 'self' http://localhost:* http://127.0.0.1:*"
-        : "script-src 'self'; object-src 'self'; connect-src 'self' http://localhost:* http://127.0.0.1:*",
+        ? "script-src 'self' 'unsafe-eval'; object-src 'self'"
+        : "script-src 'self'; object-src 'self'",
     },
 
     browser_specific_settings: {

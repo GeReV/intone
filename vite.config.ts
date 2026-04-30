@@ -26,6 +26,7 @@ export default defineConfig({
   build: {
     outDir: r('extension/dist'),
     emptyOutDir: false,
+    sourcemap: 'inline',
     rollupOptions: {
       input: {
         options: r('src/extension/options/index.html'),

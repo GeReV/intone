@@ -1,7 +1,10 @@
+import browser from "webextension-polyfill";
 import { AudioCache } from "./audio-cache";
 import type { Queue } from "./queue";
 import type { Settings } from "./settings";
 import type { PlaybackState } from "./types";
+
+type TtsFetchResponse = { buffer: ArrayBuffer; contentType: string } | { error: string }
 
 const PREFETCH_AHEAD = 2;
 const MAX_RETRIES = 3;
@@ -143,6 +146,7 @@ export class Player {
       this.schedulePrefetch();
     } catch (err) {
       if (err instanceof Error && err.name !== "AbortError") {
+        console.error('[Read Out] Playback error:', err.message);
         this.notify("error", err.message);
       }
     }
@@ -189,13 +193,13 @@ export class Player {
         }
       }
       try {
-        const res = await fetch(urlStr, { signal });
+        const resp = await browser.runtime.sendMessage({ type: 'tts-fetch', url: urlStr }) as TtsFetchResponse;
 
-        if (!res.ok) {
-          throw new Error(`TTS server responded with ${res.status}`);
-        }
+        if (signal.aborted) throw new DOMException("Aborted", "AbortError");
 
-        return URL.createObjectURL(await res.blob());
+        if ('error' in resp) throw new Error(resp.error);
+
+        return URL.createObjectURL(new Blob([resp.buffer], { type: resp.contentType }));
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           throw err;
@@ -227,13 +231,11 @@ export class Player {
     }
 
     try {
-      const res = await fetch(this.synthesizeUrl(text).toString());
+      const resp = await browser.runtime.sendMessage({ type: 'tts-fetch', url: this.synthesizeUrl(text).toString() }) as TtsFetchResponse;
 
-      if (!res.ok) {
-        return;
-      }
+      if ('error' in resp) return;
 
-      const blobUrl = URL.createObjectURL(await res.blob());
+      const blobUrl = URL.createObjectURL(new Blob([resp.buffer], { type: resp.contentType }));
 
       if (this.state === "stopped" || this.state === "idle" || this.audioCache.has(idx)) {
         URL.revokeObjectURL(blobUrl);
