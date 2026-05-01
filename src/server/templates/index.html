@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Read Out TTS</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; color: #eee; font-family: system-ui, sans-serif; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 48px 16px; }
+  .card { background: #1a1a1a; border-radius: 12px; padding: 32px; width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 20px; }
+  h1 { font-size: 20px; font-weight: 600; }
+  label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; opacity: .55; display: block; margin-bottom: 6px; }
+  select, textarea { width: 100%; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; color: #eee; font-size: 14px; padding: 8px 10px; }
+  option { color: #111; background: #fff; }
+  select:focus, textarea:focus { outline: 2px solid #ffd700; outline-offset: -1px; }
+  textarea { height: 140px; resize: vertical; font-family: inherit; line-height: 1.5; }
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+  .range-wrap { display: flex; align-items: center; gap: 10px; }
+  input[type=range] { flex: 1; accent-color: #ffd700; }
+  button { background: #ffd700; color: #111; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; padding: 12px; cursor: pointer; width: 100%; }
+  button:hover { background: #ffe340; }
+  button:disabled { opacity: .45; cursor: default; }
+  audio { width: 100%; border-radius: 6px; }
+  .error { color: #ff6b6b; font-size: 13px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Read Out TTS</h1>
+
+  <div class="row">
+    <div>
+      <label>Engine</label>
+      <select id="engine"></select>
+    </div>
+    <div>
+      <label>Voice</label>
+      <select id="voice"></select>
+    </div>
+  </div>
+
+  <div>
+    <label>Rate — <span id="rateVal">1.0</span>&times;</label>
+    <div class="range-wrap">
+      <input type="range" id="rate" min="0.5" max="3" step="0.1" value="1.0">
+    </div>
+  </div>
+
+  <div>
+    <label>Text</label>
+    <textarea id="text" placeholder="Enter text to synthesize…"></textarea>
+  </div>
+
+  <button id="speak">Speak</button>
+  <p id="status" class="hidden" style="font-size:13px;color:#aaa"></p>
+  <p id="error" class="error hidden"></p>
+  <audio id="player" controls class="hidden"></audio>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+async function loadEngines() {
+  const [enginesRes, stateRes] = await Promise.all([fetch('/engines'), fetch('/engine')]);
+  const engines = await enginesRes.json();
+  const state = await stateRes.json();
+  const sel = $('engine');
+  sel.innerHTML = engines.map(e => `<option${e === state.engine ? ' selected' : ''}>${e}</option>`).join('');
+  prevEngine = state.engine;
+  loadVoices(state.voices, state.engine);
+}
+
+function loadVoices(voices, engine) {
+  const sel = $('voice');
+  const saved = localStorage.getItem('voice_' + engine);
+  sel.innerHTML = voices.map(v => `<option${v === saved ? ' selected' : ''}>${v}</option>`).join('');
+}
+
+let prevEngine = '';
+
+$('engine').addEventListener('change', async () => {
+  const name = $('engine').value;
+  const revertTo = prevEngine;
+  $('error').classList.add('hidden');
+  $('engine').disabled = true;
+  $('speak').disabled = true;
+  showStatus('Switching engine…');
+  try {
+    const res = await fetch('/engine?name=' + encodeURIComponent(name), { method: 'POST' });
+    if (!res.ok) {
+      const msg = (await res.text()).trim();
+      $('engine').value = revertTo;
+      showError(msg || 'Failed to switch engine');
+      return;
+    }
+    const state = await res.json();
+    prevEngine = name;
+    loadVoices(state.voices, name);
+  } catch (e) {
+    $('engine').value = revertTo;
+    showError(e.message);
+  } finally {
+    $('engine').disabled = false;
+    $('speak').disabled = false;
+    hideStatus();
+  }
+});
+
+$('voice').addEventListener('change', () => {
+  localStorage.setItem('voice_' + $('engine').value, $('voice').value);
+});
+
+$('rate').addEventListener('input', () => {
+  const r = Number($('rate').value);
+  $('rateVal').textContent = r.toFixed(1);
+  $('player').playbackRate = r;
+});
+
+$('speak').addEventListener('click', async () => {
+  const text = $('text').value.trim();
+  if (!text) return;
+  const btn = $('speak');
+  btn.disabled = true;
+  btn.textContent = 'Synthesizing…';
+  $('error').classList.add('hidden');
+  $('player').classList.add('hidden');
+  try {
+    const url = '/synthesize?' + new URLSearchParams({ text, voice: $('voice').value });
+    const res = await fetch(url);
+    if (!res.ok) { showError(await res.text()); return; }
+    const blob = await res.blob();
+    $('player').src = URL.createObjectURL(blob);
+    $('player').playbackRate = Number($('rate').value);
+    $('player').classList.remove('hidden');
+    $('player').play();
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Speak';
+  }
+});
+
+function showError(msg) {
+  const el = $('error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function showStatus(msg) {
+  const el = $('status');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function hideStatus() {
+  $('status').classList.add('hidden');
+}
+
+loadEngines();
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@ import os
 import threading
 
 import gunicorn.app.base
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, render_template, request, send_file
 from flask_cors import CORS
 
 from engine import TTSEngine
@@ -21,7 +21,7 @@ class EngineRef:
         self.name = name
         self.device = device
         self._current: TTSEngine | None = None
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     @property
     def current(self) -> TTSEngine:
@@ -48,7 +48,7 @@ def create_app(engine_ref: EngineRef) -> Flask:
 
     @app.route("/", methods=["GET"])
     def index():
-        return "OK"
+        return render_template("index.html")
 
     @app.route("/voices", methods=["GET"])
     def get_voices():
@@ -122,7 +122,7 @@ def _build_engine(name: str, device: str) -> TTSEngine:
         return KokoroEngine(device=device)
     if name == "kokoro1":
         from engines.kokoro1 import Kokoro1Engine
-        return Kokoro1Engine()
+        return Kokoro1Engine(device=device)
     raise ValueError(f"Unknown engine: {name!r}. Available: {', '.join(KNOWN_ENGINES)}")
 
 
@@ -149,22 +149,43 @@ def main() -> None:
     parser.add_argument(
         "--cuda",
         action="store_true",
-        default=os.environ.get("SERVER_CUDA", "").strip() == "1",
+        # Default: use CUDA when available unless explicitly disabled.
+        default=os.environ.get("SERVER_CUDA", "auto").strip() != "0",
     )
+    parser.add_argument("--no-cuda", dest="cuda", action="store_false")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
+    level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
-    device = "cuda" if args.cuda else "cpu"
-    engine_ref = EngineRef(name=args.engine, device=device)
+    # Don't call torch.cuda.is_available() here — it initialises the CUDA
+    # context in the master process and causes "Cannot re-initialize CUDA in
+    # forked subprocess" in the worker.  Resolve the device in _post_fork.
+    engine_ref = EngineRef(name=args.engine, device="cuda" if args.cuda else "cpu")
 
     app = create_app(engine_ref)
+
+    def _post_fork(server, worker):  # noqa: ARG001
+        import torch
+        if engine_ref.device == "cuda" and not torch.cuda.is_available():
+            _LOGGER.warning("CUDA requested but not available; falling back to CPU")
+            engine_ref.device = "cpu"
+        _ = engine_ref.current
+
     _GunicornApp(app, {
         "bind": f"{args.host}:{args.port}",
         "workers": 1,
         "worker_class": "gthread",
         "threads": 4,
+        "post_fork": _post_fork,
+        "accesslog": "-",
+        "errorlog": "-",
+        "loglevel": "debug" if args.debug else "info",
     }).run()
 
 
