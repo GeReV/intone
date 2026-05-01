@@ -14,6 +14,7 @@ const volumeVal = document.getElementById('volumeVal') as HTMLSpanElement
 const showPreviewInput = document.getElementById('showPreview') as HTMLInputElement
 const savedMsg = document.getElementById('saved') as HTMLParagraphElement
 const engineErrorMsg = document.getElementById('engineError') as HTMLParagraphElement
+const engineStatus = document.getElementById('engineStatus') as HTMLElement
 
 let prevEngine = ''
 
@@ -100,13 +101,18 @@ async function load(): Promise<void> {
 engineSelect.addEventListener('change', async () => {
   const selected = engineSelect.value
   const revertTo = prevEngine
-  engineErrorMsg.style.visibility = 'hidden'
+  engineErrorMsg.style.display = 'none'
+  engineStatus.textContent = 'Switching engine…'
+  engineStatus.style.display = 'block'
   engineSelect.disabled = true
   try {
     const url = new URL('/engine', serverUrlInput.value)
     url.searchParams.set('name', selected)
     const res = await fetch(url.toString(), { method: 'POST' })
-    if (!res.ok) throw new Error()
+    if (!res.ok) {
+      const msg = (await res.text()).trim()
+      throw new Error(msg || `Server error ${res.status}`)
+    }
     const state = await res.json() as EngineState
     const currentVoice = voiceSelect.value
     populateVoices(state.voices, currentVoice)
@@ -114,16 +120,18 @@ engineSelect.addEventListener('change', async () => {
       await saveSettings({ voiceName: state.voices[0] })
     }
     prevEngine = selected
-  } catch {
+  } catch (err) {
     engineSelect.value = revertTo
-    engineErrorMsg.style.visibility = 'visible'
+    engineErrorMsg.textContent = err instanceof Error ? err.message : 'Failed to switch engine.'
+    engineErrorMsg.style.display = 'block'
   } finally {
+    engineStatus.style.display = 'none'
     engineSelect.disabled = false
   }
 })
 
 serverUrlInput.addEventListener('change', async () => {
-  engineErrorMsg.style.visibility = 'hidden'
+  engineErrorMsg.style.display = 'none'
   const [engines, state] = await Promise.all([
     fetchEngines(serverUrlInput.value),
     fetchEngineState(serverUrlInput.value),

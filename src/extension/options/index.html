@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
   <title>Read Out — Settings</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
     h1 { font-size: 1.2rem; margin-bottom: 24px; }
     label { display: block; margin-bottom: 16px; }
     label span { display: block; font-size: 0.85rem; color: #555; margin-bottom: 4px; }
-    input, select { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; box-sizing: border-box; }
+    input, select { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; box-sizing: border-box; color: #1a1a1a; background-color: #fff; }
+    option { color: #1a1a1a; background-color: #fff; }
     button { margin-top: 24px; padding: 8px 20px; background: #1a1a1a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
     button:hover { opacity: 0.85; }
     #saved { margin-top: 12px; font-size: 0.85rem; color: green; visibility: hidden; }
@@ -26,6 +28,7 @@
       <span>Engine</span>
       <select id="engine"></select>
     </label>
+    <p id="engineStatus" style="display:none;font-size:0.85rem;color:#555;margin:-8px 0 16px"></p>
     <label>
       <span>Voice</span>
       <select id="voiceName"></select>
@@ -50,7 +53,7 @@
     </label>
     <button type="submit">Save</button>
     <p id="saved">Settings saved.</p>
-    <p id="engineError" style="color:red;font-size:0.85rem;visibility:hidden">Failed to switch engine.</p>
+    <p id="engineError" style="display:none;color:red;font-size:0.85rem;margin-top:8px"></p>
   </form>
   <script type="module" src="./main.ts"></script>
 </body>
