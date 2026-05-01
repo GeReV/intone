@@ -119,6 +119,7 @@ export class Player {
 
   updateRate(rate: number): void {
     this.settings.rate = rate;
+    this.audio.playbackRate = rate;
   }
 
   updateVolume(volume: number): void {
@@ -139,6 +140,7 @@ export class Player {
       const url = await this.resolveAudio(text, this.queue.index);
       this.audio.src = url;
       this.audio.volume = this.settings.volume;
+      this.audio.playbackRate = this.settings.rate;
 
       await this.audio.play();
 
@@ -168,7 +170,6 @@ export class Player {
     const url = new URL("/synthesize", this.settings.serverUrl);
     url.searchParams.set("text", text);
     url.searchParams.set("voice", this.settings.voiceName);
-    url.searchParams.set("rate", String(this.settings.rate));
     return url;
   }
 
