@@ -3,6 +3,25 @@ import threading
 
 import numpy as np
 import soundfile as sf
+
+# misaki 0.9.x calls set_library() and set_data_path() on EspeakWrapper before
+# importing kokoro.  Both are patched to no-ops for different reasons:
+#
+# set_library() already exists but we intentionally discard the argument:
+#   espeakng_loader's bundled binary has the CI build path
+#   (/home/runner/work/...) hardcoded as its espeak-ng-data dir, which doesn't
+#   exist in this container.  Leaving _ESPEAK_LIBRARY=None causes phonemizer to
+#   fall back to the system espeak-ng (installed via apt), which resolves its
+#   own data path correctly.
+#
+# set_data_path() does not exist in phonemizer at all.  EspeakWrapper.data_path
+# is an instance read-only property populated from the library's info() call
+# after load — there is no class-level override mechanism to delegate to.
+from phonemizer.backend.espeak.wrapper import EspeakWrapper
+EspeakWrapper.set_library = classmethod(lambda cls, path: None)
+if not hasattr(EspeakWrapper, "set_data_path"):
+    EspeakWrapper.set_data_path = classmethod(lambda cls, path: None)
+
 from kokoro import KPipeline
 
 SAMPLE_RATE = 24000
@@ -16,8 +35,8 @@ VOICES: list[str] = [
 
 
 class Kokoro1Engine:
-    def __init__(self) -> None:
-        self._pipeline = KPipeline(lang_code="a")
+    def __init__(self, device: str = "cpu") -> None:
+        self._pipeline = KPipeline(lang_code="a", device=device)
         self._lock = threading.Lock()
 
     def voices(self) -> list[str]:
