@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { JSDOM } from "jsdom";
-import { DefuddleExtractor } from "../../src/extension/content/extractor/defuddle";
+import { DefuddleExtractor } from "../../../src/extension/content/extractor/defuddle";
 
 function makeDoc(html: string): Document {
   return new JSDOM(html, { url: "https://example.com/" }).window.document;
