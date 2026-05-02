@@ -1,4 +1,4 @@
-// src/content/extractor/defuddle.ts
+// src/extension/content/extractor/defuddle.ts
 import Defuddle from 'defuddle'
 import type { ExtractionResult, Extractor } from './types'
 
