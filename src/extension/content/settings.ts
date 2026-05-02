@@ -3,7 +3,7 @@ import browser from "webextension-polyfill";
 export type Settings = {
   serverUrl: string
   voiceName: string
-  extractor: "readability"
+  extractor: "readability" | "defuddle"
   rate: number
   volume: number
   showPreview: boolean
