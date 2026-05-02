@@ -8,8 +8,9 @@ export class DefuddleExtractor implements Extractor {
     const url = document.location?.href ?? ''
     const result = new Defuddle(clone, { url }).parse()
 
+    // result.content is typed as string but can be empty when Defuddle finds nothing
     if (!result.content) {
-      return { title: result.title, paragraphs: [] }
+      return { title: result.title || document.title, paragraphs: [] }
     }
 
     const parsed = new DOMParser().parseFromString(result.content, 'text/html')
@@ -24,6 +25,6 @@ export class DefuddleExtractor implements Extractor {
       if (text) paragraphs.push(text)
     })
 
-    return { title: result.title, paragraphs }
+    return { title: result.title || document.title, paragraphs }
   }
 }
