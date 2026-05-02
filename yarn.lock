@@ -544,6 +544,16 @@
   resolved "https://registry.yarnpkg.com/@types/http-cache-semantics/-/http-cache-semantics-4.0.4.tgz#b979ebad3919799c979b17c72621c0bc0a31c6c4"
   integrity sha512-1m0bIFVc7eJWyve9S0RnuRgcQqF/Xd5QsUZAZeQFr1Q3/p9JWoQQEqmVy+DPTNpGXwhgIetAoYF8JSc33q29QA==
 
+"@types/jsdom@^28.0.1":
+  version "28.0.1"
+  resolved "https://registry.yarnpkg.com/@types/jsdom/-/jsdom-28.0.1.tgz#2c014d8c0eca6135233519bff8c49f7aadfeda63"
+  integrity sha512-GJq2QE4TAZ5ajSoCasn5DOFm8u1mI3tIFvM5tIq3W5U/RTB6gsHwc6Yhpl91X9VSDOUVblgXmG+2+sSvFQrdlw==
+  dependencies:
+    "@types/node" "*"
+    "@types/tough-cookie" "*"
+    parse5 "^7.0.0"
+    undici-types "^7.21.0"
+
 "@types/json-schema@^7.0.15":
   version "7.0.15"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
@@ -567,6 +577,11 @@
   integrity sha512-g557vgQjUUfN76MZAN/dt1z3dzcUsimuysco0KeluHgrPdJXkP/XdAURgyO2W9fZWHRtRBiVKzKn8vyOAwlG+w==
   dependencies:
     undici-types "~5.26.4"
+
+"@types/tough-cookie@*":
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/@types/tough-cookie/-/tough-cookie-4.0.5.tgz#cb6e2a691b70cb177c6e3ae9c1d2e8b2ea8cd304"
+  integrity sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==
 
 "@types/webextension-polyfill@^0.12.3":
   version "0.12.3"
@@ -5235,6 +5250,11 @@ unbox-primitive@^1.0.2:
     has-bigints "^1.0.2"
     has-symbols "^1.0.3"
     which-boxed-primitive "^1.0.2"
+
+undici-types@^7.21.0:
+  version "7.25.0"
+  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.25.0.tgz#c5f8feb61c70d8954e05beb5f1c786c7ff95458a"
+  integrity sha512-AXNgS1Byr27fTI+2bsPEkV9CxkT8H6xNyRI68b3TatlZo3RkzlqQBLL+w7SmGPVpokjHbcuNVQUWE7FRTg+LRA==
 
 undici-types@~5.26.4:
   version "5.26.5"
