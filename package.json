@@ -37,6 +37,7 @@
     "@ffflorian/jszip-cli": "^3.6.2",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/fs-extra": "^11.0.4",
+    "@types/jsdom": "^28.0.1",
     "@types/node": "^20.11.5",
     "@types/webextension-polyfill": "^0.12.3",
     "@typescript-eslint/eslint-plugin": "^8.34.1",
@@ -69,6 +70,7 @@
     "string-width": "^4"
   },
   "dependencies": {
-    "@mozilla/readability": "0.6.0"
+    "@mozilla/readability": "0.6.0",
+    "defuddle": "0.18.1"
   }
 }

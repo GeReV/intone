@@ -1,7 +1,6 @@
 // src/content/index.ts
 import browser from 'webextension-polyfill'
 import { HOOKS } from './extractor/hooks'
-import { ReadabilityExtractor } from './extractor/readability'
 import { chunkIntoGroups } from './chunker'
 import { Queue } from './queue'
 import { Player } from './player'
@@ -52,7 +51,9 @@ async function start(textOverride?: string): Promise<void> {
     title = ''
   }
   else {
-    const extractor = new ReadabilityExtractor()
+    const extractor = settings.extractor === 'defuddle'
+      ? new (await import('./extractor/defuddle')).DefuddleExtractor()
+      : new (await import('./extractor/readability')).ReadabilityExtractor()
     let result = extractor.extract(document)
 
     const hook = HOOKS.find(h => h.matches(location.href))

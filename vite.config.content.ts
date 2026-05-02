@@ -1,6 +1,5 @@
 // vite.config.content.ts
 import { defineConfig } from 'vite'
-import packageJson from './package.json'
 import { isDev, r, sharedConfig } from './vite.config'
 
 export default defineConfig({
@@ -13,15 +12,12 @@ export default defineConfig({
     outDir: r('extension/dist/contentScripts'),
     emptyOutDir: false,
     sourcemap: 'inline',
-    lib: {
-      entry: r('src/extension/content/index.ts'),
-      name: packageJson.name,
-      formats: ['iife'],
-    },
     rollupOptions: {
+      input: { index: r('src/extension/content/index.ts') },
       output: {
-        entryFileNames: 'index.global.js',
-        extend: true,
+        format: 'es',
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name]-[hash].js',
       },
     },
   },
