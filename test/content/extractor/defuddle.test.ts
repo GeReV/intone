@@ -24,7 +24,6 @@ describe("DefuddleExtractor", () => {
     const extractor = new DefuddleExtractor();
     const result = extractor.extract(doc);
 
-    expect(result.paragraphs.length).toBeGreaterThan(0);
     expect(result.paragraphs).toContain("First paragraph of content.");
     expect(result.paragraphs).toContain("Second paragraph of content.");
   });
