@@ -70,6 +70,6 @@
   },
   "dependencies": {
     "@mozilla/readability": "0.6.0",
-    "defuddle": "^0.18.1"
+    "defuddle": "0.18.1"
   }
 }

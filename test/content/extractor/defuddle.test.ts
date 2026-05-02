@@ -25,7 +25,8 @@ describe("DefuddleExtractor", () => {
     const result = extractor.extract(doc);
 
     expect(result.paragraphs.length).toBeGreaterThan(0);
-    expect(result.paragraphs.some(p => p.includes("paragraph"))).toBe(true);
+    expect(result.paragraphs).toContain("First paragraph of content.");
+    expect(result.paragraphs).toContain("Second paragraph of content.");
   });
 
   it("returns empty paragraphs when page has no article content", () => {
@@ -40,7 +41,7 @@ describe("DefuddleExtractor", () => {
     const result = extractor.extract(doc);
 
     expect(result.title).toBeDefined();
-    expect(Array.isArray(result.paragraphs)).toBe(true);
+    expect(result.paragraphs).toHaveLength(0);
   });
 
   it("does not mutate the original document", () => {
@@ -51,10 +52,10 @@ describe("DefuddleExtractor", () => {
       </html>
     `);
 
-    const originalParagraphCount = doc.querySelectorAll("p").length;
+    const originalHTML = doc.documentElement.outerHTML;
     const extractor = new DefuddleExtractor();
     extractor.extract(doc);
 
-    expect(doc.querySelectorAll("p").length).toBe(originalParagraphCount);
+    expect(doc.documentElement.outerHTML).toBe(originalHTML);
   });
 });
