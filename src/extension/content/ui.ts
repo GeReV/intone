@@ -227,12 +227,15 @@ export class FloatingUI {
     })
 
     this.selectExtractor = document.createElement('select')
-    const opt = document.createElement('option')
-    opt.value = 'readability'
-    opt.textContent = 'Readability (default)'
-    this.selectExtractor.appendChild(opt)
+    const optReadability = document.createElement('option')
+    optReadability.value = 'readability'
+    optReadability.textContent = 'Readability (default)'
+    const optDefuddle = document.createElement('option')
+    optDefuddle.value = 'defuddle'
+    optDefuddle.textContent = 'Defuddle'
+    this.selectExtractor.append(optReadability, optDefuddle)
     this.selectExtractor.addEventListener('change', () => {
-      this.onSettingsChange?.({ extractor: this.selectExtractor.value as 'readability' })
+      this.onSettingsChange?.({ extractor: this.selectExtractor.value as 'readability' | 'defuddle' })
     })
 
     this.inputRate = document.createElement('input')
