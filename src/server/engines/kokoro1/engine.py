@@ -1,8 +1,14 @@
 import io
+import logging
 import threading
+from pathlib import Path
 
 import numpy as np
 import soundfile as sf
+
+logger = logging.getLogger(__name__)
+
+_EN_EXTRA = Path(__file__).parent.parent.parent / "dictsource" / "en_extra"
 
 # misaki 0.9.x calls set_library() and set_data_path() on EspeakWrapper before
 # importing kokoro.  Both are patched to no-ops for different reasons:
@@ -37,7 +43,19 @@ VOICES: list[str] = [
 class Kokoro1Engine:
     def __init__(self, device: str = "cpu") -> None:
         self._pipeline = KPipeline(lang_code="a", device=device)
+        self._inject_custom_phonemes()
         self._lock = threading.Lock()
+
+    def _inject_custom_phonemes(self) -> None:
+        from utils.custom_phonemes import build_ipa_dict, parse_en_extra
+        if not _EN_EXTRA.exists():
+            logger.warning("en_extra not found at %s; skipping custom phoneme injection", _EN_EXTRA)
+            return
+        entries = parse_en_extra(str(_EN_EXTRA))
+        ipa_dict = build_ipa_dict(entries)
+        if ipa_dict:
+            self._pipeline.g2p.lexicon.golds.update(ipa_dict)
+            logger.info("Injected %d custom phoneme(s) into Kokoro1 G2P lexicon", len(ipa_dict))
 
     def voices(self) -> list[str]:
         return list(VOICES)

@@ -24,7 +24,8 @@ def engine(monkeypatch):
     monkeypatch.delitem(sys.modules, "engines.kokoro1.engine", raising=False)
 
     from engines.kokoro1 import Kokoro1Engine
-    engine = Kokoro1Engine()
+    with patch.object(Kokoro1Engine, "_inject_custom_phonemes"):
+        engine = Kokoro1Engine()
     engine._pipeline = mock_pipeline_instance
     return engine
 
@@ -113,3 +114,56 @@ def test_synthesize_ogg_samplerate(engine):
 
     assert captured["samplerate"] == 24000
     assert captured["format"] == "OGG"
+
+
+# ---------------------------------------------------------------------------
+# _inject_custom_phonemes
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def engine_for_injection(monkeypatch):
+    """Engine fixture that does NOT suppress _inject_custom_phonemes."""
+    mock_kokoro = types.ModuleType("kokoro")
+    mock_pipeline_instance = MagicMock()
+    mock_kokoro.KPipeline = MagicMock(return_value=mock_pipeline_instance)
+    monkeypatch.setitem(sys.modules, "kokoro", mock_kokoro)
+    monkeypatch.delitem(sys.modules, "engines.kokoro1", raising=False)
+    monkeypatch.delitem(sys.modules, "engines.kokoro1.engine", raising=False)
+    return mock_pipeline_instance
+
+
+def test_injection_updates_golds_on_init(engine_for_injection, tmp_path):
+    mock_pipeline = engine_for_injection
+    ipa_dict = {"Tolkien": "tɔlkˈin", "godot": "ɡˈɑdɑt"}
+
+    with patch("utils.custom_phonemes.parse_en_extra", return_value=[]) as mock_parse, \
+         patch("utils.custom_phonemes.build_ipa_dict", return_value=ipa_dict) as mock_build, \
+         patch("engines.kokoro1.engine._EN_EXTRA", tmp_path / "en_extra"):
+        (tmp_path / "en_extra").write_text("")
+        from engines.kokoro1 import Kokoro1Engine
+        Kokoro1Engine()
+
+    mock_pipeline.g2p.lexicon.golds.update.assert_called_once_with(ipa_dict)
+
+
+def test_injection_skips_when_en_extra_missing(engine_for_injection, tmp_path):
+    mock_pipeline = engine_for_injection
+
+    with patch("engines.kokoro1.engine._EN_EXTRA", tmp_path / "nonexistent"):
+        from engines.kokoro1 import Kokoro1Engine
+        Kokoro1Engine()
+
+    mock_pipeline.g2p.lexicon.golds.update.assert_not_called()
+
+
+def test_injection_skips_update_when_dict_is_empty(engine_for_injection, tmp_path):
+    mock_pipeline = engine_for_injection
+
+    with patch("utils.custom_phonemes.parse_en_extra", return_value=[]), \
+         patch("utils.custom_phonemes.build_ipa_dict", return_value={}), \
+         patch("engines.kokoro1.engine._EN_EXTRA", tmp_path / "en_extra"):
+        (tmp_path / "en_extra").write_text("")
+        from engines.kokoro1 import Kokoro1Engine
+        Kokoro1Engine()
+
+    mock_pipeline.g2p.lexicon.golds.update.assert_not_called()
