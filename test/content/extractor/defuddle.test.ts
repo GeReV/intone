@@ -29,6 +29,8 @@ describe("DefuddleExtractor", () => {
   });
 
   it("handles minimal pages gracefully", () => {
+    // Defuddle is more aggressive than Readability and extracts content even
+    // from nav-only pages, so we only assert structural shape here.
     const doc = makeDoc(`
       <html>
         <head><title>Empty</title></head>

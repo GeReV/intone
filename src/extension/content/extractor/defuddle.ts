@@ -1,13 +1,15 @@
+// src/content/extractor/defuddle.ts
 import Defuddle from 'defuddle'
 import type { ExtractionResult, Extractor } from './types'
 
 export class DefuddleExtractor implements Extractor {
   extract(document: Document): ExtractionResult {
     const clone = document.cloneNode(true) as Document
-    const result = new Defuddle(clone, { url: document.location?.href }).parse()
+    const url = document.location?.href ?? ''
+    const result = new Defuddle(clone, { url }).parse()
 
     if (!result.content) {
-      return { title: result.title ?? document.title, paragraphs: [] }
+      return { title: result.title, paragraphs: [] }
     }
 
     const parsed = new DOMParser().parseFromString(result.content, 'text/html')
@@ -22,6 +24,6 @@ export class DefuddleExtractor implements Extractor {
       if (text) paragraphs.push(text)
     })
 
-    return { title: result.title ?? document.title, paragraphs }
+    return { title: result.title, paragraphs }
   }
 }
