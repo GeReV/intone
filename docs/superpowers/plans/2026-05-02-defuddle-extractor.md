@@ -4,7 +4,7 @@
 
 **Goal:** Add Defuddle as a second, user-selectable document parsing engine alongside Readability.
 
-**Architecture:** Create `DefuddleExtractor` implementing the existing `Extractor` interface, widen the `extractor` settings type to include `"defuddle"`, add a factory in `index.ts` to pick the right extractor based on settings, and add the Defuddle option to the settings UI dropdown.
+**Architecture:** Create `DefuddleExtractor` implementing the existing `Extractor` interface, widen the `extractor` settings type to include `"defuddle"`, lazy-load the chosen extractor in `index.ts` via `import()` (so only one parser's code is loaded at runtime), and add the Defuddle option to the settings UI dropdown.
 
 **Tech Stack:** TypeScript, Defuddle 0.18.1, Vitest, WebExtension APIs
 
@@ -18,7 +18,7 @@
 | Create | `src/extension/content/extractor/defuddle.ts` | DefuddleExtractor class |
 | Create | `test/content/extractor/defuddle.test.ts` | Unit tests for DefuddleExtractor |
 | Modify | `src/extension/content/settings.ts:6` | Widen `extractor` type to union |
-| Modify | `src/extension/content/index.ts:55` | Factory to pick extractor by setting |
+| Modify | `src/extension/content/index.ts:4,55` | Remove static extractor import; lazy-load chosen extractor via `import()` |
 | Modify | `src/extension/content/ui.ts:229-236` | Add Defuddle option to `<select>` |
 
 ---
@@ -208,22 +208,24 @@ git commit -m "feat(settings): add defuddle to extractor union type"
 
 ---
 
-### Task 4: Wire up extractor factory in index.ts
+### Task 4: Lazy-load extractor in index.ts
+
+Use dynamic `import()` to load only the chosen extractor at runtime. Neither parser's code is included in the initial bundle slice — the one that was selected in settings is fetched on demand when playback starts.
 
 **Files:**
 - Modify: `src/extension/content/index.ts`
 
-- [ ] **Step 1: Add DefuddleExtractor import**
+- [ ] **Step 1: Remove the static ReadabilityExtractor import**
 
-At the top of `src/extension/content/index.ts`, after the existing `ReadabilityExtractor` import (line 4), add:
+In `src/extension/content/index.ts`, delete line 4:
 
 ```typescript
-import { DefuddleExtractor } from './extractor/defuddle'
+import { ReadabilityExtractor } from './extractor/readability'
 ```
 
-- [ ] **Step 2: Replace hardcoded extractor with factory**
+- [ ] **Step 2: Replace hardcoded extractor instantiation with lazy factory**
 
-In `src/extension/content/index.ts`, replace lines 55-56:
+In `src/extension/content/index.ts`, replace lines 55-56 (now 54-55 after removing the import):
 
 ```typescript
     const extractor = new ReadabilityExtractor()
@@ -234,10 +236,12 @@ with:
 
 ```typescript
     const extractor = settings.extractor === 'defuddle'
-      ? new DefuddleExtractor()
-      : new ReadabilityExtractor()
+      ? new (await import('./extractor/defuddle')).DefuddleExtractor()
+      : new (await import('./extractor/readability')).ReadabilityExtractor()
     let result = extractor.extract(document)
 ```
+
+Note: `start()` is already `async`, so `await import()` works without any further changes.
 
 - [ ] **Step 3: Verify typecheck passes**
 
@@ -251,7 +255,7 @@ Expected: No errors.
 
 ```bash
 git add src/extension/content/index.ts
-git commit -m "feat(content): select extractor based on settings"
+git commit -m "feat(content): lazy-load extractor via dynamic import"
 ```
 
 ---
@@ -327,10 +331,11 @@ yarn build
 
 Expected: Build completes with no errors. Output in `extension/dist/`.
 
-- [ ] **Step 2: Verify defuddle is bundled**
+- [ ] **Step 2: Verify defuddle and readability land in separate chunk files**
 
 ```bash
-grep -r "defuddle" extension/dist/ --include="*.js" -l
+grep -rl "defuddle" extension/dist/ --include="*.js"
+grep -rl "Readability" extension/dist/ --include="*.js"
 ```
 
-Expected: At least one JS file in `extension/dist/` contains defuddle code.
+Expected: The two commands name different JS files, confirming the parsers are in separate lazy chunks and are not merged into the main bundle.
