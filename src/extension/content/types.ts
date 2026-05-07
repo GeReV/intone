@@ -2,7 +2,8 @@ export type PlaybackState = {
   state: "idle" | "loading" | "playing" | "paused" | "stopped" | "error"
   chunkIndex: number
   totalChunks: number
-  error?: string
+  autoplayBlocked: boolean
+  error: string | undefined
 }
 
 export type SentenceChunk = { index: number; text: string }

@@ -44,8 +44,7 @@ export async function getManifest(): Promise<Manifest.WebExtensionManifest> {
       {
         matches: ['<all_urls>'],
         js: ['dist/contentScripts/index.js'],
-        type: 'module',
-      } as any,
+      },
     ],
 
     host_permissions: [

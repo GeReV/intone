@@ -15,9 +15,9 @@ export default defineConfig({
     rollupOptions: {
       input: { index: r('src/extension/content/index.ts') },
       output: {
-        format: 'es',
+        format: 'iife',
         entryFileNames: '[name].js',
-        chunkFileNames: '[name]-[hash].js',
+        inlineDynamicImports: true,
       },
     },
   },

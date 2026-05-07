@@ -12,6 +12,7 @@ const MAX_RETRIES = 3;
 export class Player {
   private audio = new Audio();
   private state: PlaybackState["state"] = "idle";
+  private autoplayBlocked = false;
   private fetchController: AbortController | null = null;
   private readonly audioCache = new AudioCache();
 
@@ -45,9 +46,16 @@ export class Player {
     }
 
     if (this.state === "paused") {
-      await this.audio.play();
-
-      this.notify("playing");
+      try {
+        await this.audio.play();
+        this.autoplayBlocked = false;
+        this.notify("playing");
+      } catch (err) {
+        if (err instanceof Error && err.name === "NotAllowedError") {
+          this.autoplayBlocked = true;
+          this.notify("paused");
+        }
+      }
 
       return;
     }
@@ -144,12 +152,18 @@ export class Player {
 
       await this.audio.play();
 
+      this.autoplayBlocked = false;
       this.notify("playing");
       this.schedulePrefetch();
     } catch (err) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        console.error('[Read Out] Playback error:', err.message);
-        this.notify("error", err.message);
+      if (err instanceof Error) {
+        if (err.name === "NotAllowedError") {
+          this.autoplayBlocked = true;
+          this.notify("paused");
+        } else if (err.name !== "AbortError") {
+          console.error('[Read Out] Playback error:', err.message);
+          this.notify("error", err.message);
+        }
       }
     }
   }
@@ -253,12 +267,13 @@ export class Player {
     void this.playCurrentChunk();
   }
 
-  private notify(state: PlaybackState["state"], error?: string): void {
+  private notify(state: PlaybackState["state"], error: string | undefined = undefined): void {
     this.state = state;
     this.onStateChange?.({
       state,
       chunkIndex: this.queue.index,
       totalChunks: this.queue.total,
+      autoplayBlocked: this.autoplayBlocked,
       error,
     });
   }

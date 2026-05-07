@@ -125,6 +125,14 @@ const CSS = `
 }
 .range-row input[type="range"] { flex: 1; accent-color: #ffd700; }
 .range-val { font-size: 12px; min-width: 40px; text-align: right; opacity: 0.85; }
+.autoplay-hint {
+  font-size: 12px;
+  text-align: center;
+  padding: 6px 14px;
+  background: rgba(255,180,0,0.15);
+  border-top: 1px solid rgba(255,180,0,0.25);
+  color: rgba(255,220,100,0.9);
+}
 `
 
 export class FloatingUI {
@@ -144,6 +152,7 @@ export class FloatingUI {
   private readonly inputVolume: HTMLInputElement
   private readonly spanRateVal: HTMLSpanElement
   private readonly spanVolumeVal: HTMLSpanElement
+  private readonly hintEl: HTMLDivElement
 
   private sentenceMap = new Map<number, HTMLElement>()
   private activeIndex = -1
@@ -273,11 +282,16 @@ export class FloatingUI {
       this.rangeRow('Volume', this.inputVolume, this.spanVolumeVal),
     )
 
-    container.append(this.previewEl, bar, this.settingsPanel)
+    this.hintEl = document.createElement('div')
+    this.hintEl.className = 'autoplay-hint'
+    this.hintEl.textContent = 'Autoplay blocked — click ▶ to begin'
+    this.hintEl.hidden = true
+
+    container.append(this.previewEl, bar, this.hintEl, this.settingsPanel)
     shadow.append(style, container)
     document.body.appendChild(this.host)
 
-    this.update({ state: 'loading', chunkIndex: 0, totalChunks: 0 })
+    this.update({ state: 'loading', chunkIndex: 0, totalChunks: 0, autoplayBlocked: false, error: undefined })
   }
 
   loadChunks(groups: ParagraphGroup[], settings: Settings): void {
@@ -378,6 +392,7 @@ export class FloatingUI {
     }
 
     this.sentenceMap.get(this.activeIndex)?.classList.toggle('loading', loading)
+    this.hintEl.hidden = !ps.autoplayBlocked
   }
 
   remove(): void {
