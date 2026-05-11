@@ -1,0 +1,6 @@
+extension/
+node_modules/
+*.crx
+*.zip
+*.xpi
+*.tgz
