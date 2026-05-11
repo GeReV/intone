@@ -1,7 +1,7 @@
 // vite.config.ts
 import { resolve } from 'node:path'
 import type { UserConfig } from 'vite'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export const r = (...args: string[]) => resolve(__dirname, ...args)
 export const isDev = process.env.NODE_ENV !== 'production'
