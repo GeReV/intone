@@ -3,29 +3,31 @@ export class Queue {
   private prefetchCache = new Map<number, string>();
   private currentIndex = 0;
 
-  load(chunks: string[]): void {
+  public load(chunks: string[]): void {
     this.chunks = chunks;
     this.currentIndex = 0;
     this.prefetchCache.clear();
   }
 
-  current(): string | null {
+  public current(): string | null {
     return this.chunks[this.currentIndex] ?? null;
   }
 
-  peek(index: number): string | null {
+  public peek(index: number): string | null {
     return this.chunks[index] ?? null;
   }
 
-  advance(): void {
+  public advance(): void {
     this.currentIndex++;
   }
 
-  retreat(): void {
-    if (this.currentIndex > 0) this.currentIndex--;
+  public retreat(): void {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+    }
   }
 
-  seekTo(index: number): void {
+  public seekTo(index: number): void {
     if (this.chunks.length === 0) {
       return;
     }
@@ -39,23 +41,23 @@ export class Queue {
     this.prefetchCache.clear();
   }
 
-  get index(): number {
+  public get index(): number {
     return this.currentIndex;
   }
 
-  get total(): number {
+  public get total(): number {
     return this.chunks.length;
   }
 
-  setPrefetch(index: number, url: string): void {
+  public setPrefetch(index: number, url: string): void {
     this.prefetchCache.set(index, url);
   }
 
-  getPrefetch(index: number): string | undefined {
+  public getPrefetch(index: number): string | undefined {
     return this.prefetchCache.get(index);
   }
 
-  clearPrefetch(index: number): void {
+  public clearPrefetch(index: number): void {
     this.prefetchCache.delete(index);
   }
 }

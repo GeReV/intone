@@ -1,5 +1,5 @@
 // src/content/ui.ts
-import type { PlaybackState, ParagraphGroup } from './types'
+import type { ParagraphGroup, PlaybackState } from './types'
 import type { Settings } from './settings'
 
 const HOST_ID = '__readout_controls'
@@ -173,18 +173,18 @@ export class FloatingUI {
   private settingsOpen = false
   private _prevEngine = ''
 
-  onPlay?: () => void
-  onPause?: () => void
-  onStop?: () => void
-  onForward?: () => void
-  onRewind?: () => void
-  onSeekTo?: (index: number) => void
-  onSettingsChange?: (partial: Partial<Settings>) => void
-  onPanelOpen?: () => void
-  onSwitchEngine?: (name: string, revert: () => void) => void
-  onVoiceChange?: (voiceName: string) => void
+  public onPlay?: () => void
+  public onPause?: () => void
+  public onStop?: () => void
+  public onForward?: () => void
+  public onRewind?: () => void
+  public onSeekTo?: (index: number) => void
+  public onSettingsChange?: (partial: Partial<Settings>) => Promise<void> | void
+  public onPanelOpen?: () => Promise<void> | void
+  public onSwitchEngine?: (name: string, revert: () => void) => Promise<void> | void
+  public onVoiceChange?: (voiceName: string) => Promise<void> | void
 
-  constructor() {
+  public constructor() {
     this.host = document.createElement('div')
     this.host.id = HOST_ID
     const shadow = this.host.attachShadow({ mode: 'open' })
@@ -233,7 +233,7 @@ export class FloatingUI {
     this.selectEngine.addEventListener('change', () => {
       const selected = this.selectEngine.value
       const prev = this._prevEngine
-      const revert = () => {
+      const revert = (): void => {
         this.selectEngine.value = prev
         this._prevEngine = prev
         this.selectEngine.style.borderColor = '#ff4444'
@@ -314,7 +314,7 @@ export class FloatingUI {
     this.update({ state: 'loading', chunkIndex: 0, totalChunks: 0, autoplayBlocked: false, error: undefined })
   }
 
-  loadChunks(groups: ParagraphGroup[], settings: Settings): void {
+  public loadChunks(groups: ParagraphGroup[], settings: Settings): void {
     this.sentenceMap.clear()
     this.activeIndex = -1
     this.previewEl.innerHTML = ''
@@ -325,7 +325,7 @@ export class FloatingUI {
       for (const { index, text } of group.sentences) {
         const span = document.createElement('span')
         span.className = 'sentence'
-        span.textContent = text + ' '
+        span.textContent = `${text  } `
         span.dataset.index = String(index)
         span.addEventListener('click', () => { this.onSeekTo?.(index) })
         paraEl.appendChild(span)
@@ -337,7 +337,7 @@ export class FloatingUI {
     this.updateSettings(settings)
   }
 
-  updateSettings(settings: Settings): void {
+  public updateSettings(settings: Settings): void {
     this.inputServerUrl.value = settings.serverUrl
     this.selectExtractor.value = settings.extractor
     this.selectVoice.value = settings.voiceName
@@ -350,7 +350,7 @@ export class FloatingUI {
     this.previewEl.hidden = !this.previewOpen
   }
 
-  setEngines(engines: string[], currentEngine: string): void {
+  public setEngines(engines: string[], currentEngine: string): void {
     this.selectEngine.innerHTML = ''
     if (engines.length === 0) {
       const opt = document.createElement('option')
@@ -371,7 +371,7 @@ export class FloatingUI {
     this._prevEngine = this.selectEngine.value
   }
 
-  setVoices(voices: string[], selectedVoice: string): void {
+  public setVoices(voices: string[], selectedVoice: string): void {
     this.selectVoice.innerHTML = ''
     if (voices.length === 0) {
       const opt = document.createElement('option')
@@ -391,7 +391,7 @@ export class FloatingUI {
     }
   }
 
-  update(ps: PlaybackState): void {
+  public update(ps: PlaybackState): void {
     const playing = ps.state === 'playing'
     const loading = ps.state === 'loading'
     // Keep nav buttons visible while loading between sentences (totalChunks > 0 means playback is in progress)
@@ -416,7 +416,7 @@ export class FloatingUI {
     this.hintEl.hidden = !ps.autoplayBlocked
   }
 
-  remove(): void {
+  public remove(): void {
     this.host.remove()
   }
 

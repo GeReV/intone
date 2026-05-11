@@ -1,5 +1,5 @@
-const HIGHLIGHT_NAME = 'readout-active';
-const STYLE_EL_ID = '__readout_hl_style';
+const HIGHLIGHT_NAME = "readout-active";
+const STYLE_EL_ID = "__readout_hl_style";
 
 const CSS_TEXT = `
 ::highlight(${HIGHLIGHT_NAME}) {
@@ -29,7 +29,7 @@ function buildSegments(): { segments: Segment[]; haystack: string } {
 
       const tag = el.tagName.toLowerCase();
 
-      if (tag === 'script' || tag === 'style' || tag === 'noscript') {
+      if (tag === "script" || tag === "style" || tag === "noscript") {
         return NodeFilter.FILTER_REJECT;
       }
 
@@ -38,29 +38,29 @@ function buildSegments(): { segments: Segment[]; haystack: string } {
   });
 
   const segments: Segment[] = [];
-  let haystack = '';
-  let t: Node | null;
+  let haystack = "";
+  let t: Node | null = null;
 
   while ((t = walker.nextNode())) {
     const node = t as Text;
     const raw = node.data;
-    const norm = raw.replace(/\s+/g, ' ');
+    const norm = raw.replace(/\s+/gu, " ");
 
     segments.push({
       node,
       raw,
       norm,
-      normOffset: haystack.length
+      normOffset: haystack.length,
     });
 
     haystack += norm;
   }
 
-  return {segments, haystack};
+  return { segments, haystack };
 }
 
 function findRange(searchText: string, segments: Segment[], haystack: string): Range | null {
-  const needle = searchText.trim().replace(/\s+/g, ' ');
+  const needle = searchText.trim().replace(/\s+/gu, " ");
   if (!needle) {
     return null;
   }
@@ -88,7 +88,7 @@ function findRange(searchText: string, segments: Segment[], haystack: string): R
       let inWs = false;
 
       for (let j = 0; j < seg.raw.length && normCount < normOffsetInSeg; j++) {
-        const isWs = /\s/.test(seg.raw[j] ?? '');
+        const isWs = /\s/u.test(seg.raw[j] ?? "");
         if (isWs) {
           if (!inWs) {
             normCount++;
@@ -103,7 +103,7 @@ function findRange(searchText: string, segments: Segment[], haystack: string): R
 
       return {
         node: seg.node,
-        offset: rawPos
+        offset: rawPos,
       };
     }
     return null;
@@ -133,29 +133,26 @@ export class PageHighlighter {
   private enabled: boolean;
   private activeIndex = -1;
 
-  constructor(enabled: boolean) {
+  public constructor(enabled: boolean) {
     this.enabled = enabled;
     this.hl = new Highlight();
     CSS.highlights.set(HIGHLIGHT_NAME, this.hl);
 
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.id = STYLE_EL_ID;
     style.textContent = CSS_TEXT;
     document.head.appendChild(style);
   }
 
-  static isSupported(): boolean {
-    return 'highlights' in CSS;
+  public static isSupported(): boolean {
+    return "highlights" in CSS;
   }
 
-  buildIndex(chunks: string[]): void {
-    const {
-      segments,
-      haystack
-    } = buildSegments();
+  public buildIndex(chunks: string[]): void {
+    const { segments, haystack } = buildSegments();
 
     for (let i = 0; i < chunks.length; i++) {
-      const range = findRange(chunks[i] ?? '', segments, haystack);
+      const range = findRange(chunks[i] ?? "", segments, haystack);
 
       if (range) {
         this.chunkRanges.set(i, range);
@@ -163,7 +160,7 @@ export class PageHighlighter {
     }
   }
 
-  setActive(index: number): void {
+  public setActive(index: number): void {
     if (index === this.activeIndex) {
       return;
     }
@@ -182,7 +179,7 @@ export class PageHighlighter {
     }
   }
 
-  setEnabled(enabled: boolean): void {
+  public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
 
     if (!enabled) {
@@ -196,7 +193,7 @@ export class PageHighlighter {
     }
   }
 
-  destroy(): void {
+  public destroy(): void {
     this.hl.clear();
 
     CSS.highlights.delete(HIGHLIGHT_NAME);

@@ -2,11 +2,11 @@ export class AudioCache {
   private readonly maxSize: number;
   private readonly entries = new Map<number, string>();
 
-  constructor(maxSize = 10) {
+  public constructor(maxSize = 10) {
     this.maxSize = maxSize;
   }
 
-  get(index: number): string | undefined {
+  public get(index: number): string | undefined {
     const url = this.entries.get(index);
     if (url === undefined) {
       return undefined;
@@ -18,11 +18,11 @@ export class AudioCache {
     return url;
   }
 
-  has(index: number): boolean {
+  public has(index: number): boolean {
     return this.entries.has(index);
   }
 
-  set(index: number, url: string): void {
+  public set(index: number, url: string): void {
     if (this.entries.has(index)) {
       this.entries.delete(index);
       this.entries.set(index, url);
@@ -35,7 +35,9 @@ export class AudioCache {
       if (!first.done) {
         const [lruIndex, lruUrl] = first.value;
 
-        if (lruUrl.startsWith('blob:')) URL.revokeObjectURL(lruUrl);
+        if (lruUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(lruUrl);
+        }
 
         this.entries.delete(lruIndex);
       }
@@ -43,9 +45,11 @@ export class AudioCache {
     this.entries.set(index, url);
   }
 
-  clear(): void {
+  public clear(): void {
     for (const url of this.entries.values()) {
-      if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+      if (url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+      }
     }
 
     this.entries.clear();

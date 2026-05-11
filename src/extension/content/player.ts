@@ -1,10 +1,10 @@
-import browser from "webextension-polyfill";
 import { AudioCache } from "./audio-cache";
+import type { PlaybackState } from "./types";
 import type { Queue } from "./queue";
 import type { Settings } from "./settings";
-import type { PlaybackState } from "./types";
+import browser from "webextension-polyfill";
 
-type TtsFetchResponse = { buffer: ArrayBuffer; contentType: string } | { error: string }
+type TtsFetchResponse = { buffer: ArrayBuffer; contentType: string } | { error: string };
 
 const PREFETCH_AHEAD = 2;
 const MAX_RETRIES = 3;
@@ -16,13 +16,13 @@ export class Player {
   private fetchController: AbortController | null = null;
   private readonly audioCache = new AudioCache();
 
-  onStateChange?: (state: PlaybackState) => void;
+  public onStateChange?: (state: PlaybackState) => void;
 
-  get isPlaying(): boolean {
+  public get isPlaying(): boolean {
     return this.state === "playing";
   }
 
-  constructor(
+  public constructor(
     private readonly queue: Queue,
     private readonly settings: Settings,
   ) {
@@ -40,7 +40,7 @@ export class Player {
     });
   }
 
-  async play(): Promise<void> {
+  public async play(): Promise<void> {
     if (this.state === "playing" || this.state === "loading") {
       return;
     }
@@ -63,7 +63,7 @@ export class Player {
     await this.playCurrentChunk();
   }
 
-  pause(): void {
+  public pause(): void {
     if (this.state !== "playing") {
       return;
     }
@@ -73,7 +73,7 @@ export class Player {
     this.notify("paused");
   }
 
-  stop(): void {
+  public stop(): void {
     this.fetchController?.abort();
 
     this.audio.pause();
@@ -84,7 +84,7 @@ export class Player {
     this.notify("stopped");
   }
 
-  async forward(): Promise<void> {
+  public async forward(): Promise<void> {
     const wasActive = this.state === "playing" || this.state === "paused" || this.state === "loading";
 
     this.fetchController?.abort();
@@ -99,7 +99,7 @@ export class Player {
     }
   }
 
-  async rewind(): Promise<void> {
+  public async rewind(): Promise<void> {
     const wasActive = this.state === "playing" || this.state === "paused" || this.state === "loading";
 
     this.fetchController?.abort();
@@ -114,7 +114,7 @@ export class Player {
     }
   }
 
-  async seekTo(index: number): Promise<void> {
+  public async seekTo(index: number): Promise<void> {
     this.fetchController?.abort();
 
     this.audio.pause();
@@ -125,12 +125,12 @@ export class Player {
     await this.playCurrentChunk();
   }
 
-  updateRate(rate: number): void {
+  public updateRate(rate: number): void {
     this.settings.rate = rate;
     this.audio.playbackRate = rate;
   }
 
-  updateVolume(volume: number): void {
+  public updateVolume(volume: number): void {
     this.settings.volume = volume;
     this.audio.volume = volume;
   }
@@ -161,7 +161,7 @@ export class Player {
           this.autoplayBlocked = true;
           this.notify("paused");
         } else if (err.name !== "AbortError") {
-          console.error('[Read Out] Playback error:', err.message);
+          console.error("[Read Out] Playback error:", err.message);
           this.notify("error", err.message);
         }
       }
@@ -201,18 +201,27 @@ export class Player {
     let lastError: Error = new Error("Failed to fetch audio");
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       if (attempt > 0) {
-        await new Promise<void>(resolve => setTimeout(resolve, attempt * 1000));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, attempt * 1000);
+        });
 
         if (signal.aborted) {
           throw new DOMException("Aborted", "AbortError");
         }
       }
       try {
-        const resp = await browser.runtime.sendMessage({ type: 'tts-fetch', url: urlStr }) as TtsFetchResponse;
+        const resp = (await browser.runtime.sendMessage({
+          type: "tts-fetch",
+          url: urlStr,
+        })) as TtsFetchResponse;
 
-        if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+        if (signal.aborted) {
+          throw new DOMException("Aborted", "AbortError");
+        }
 
-        if ('error' in resp) throw new Error(resp.error);
+        if ("error" in resp) {
+          throw new Error(resp.error);
+        }
 
         return URL.createObjectURL(new Blob([resp.buffer], { type: resp.contentType }));
       } catch (err) {
@@ -246,9 +255,14 @@ export class Player {
     }
 
     try {
-      const resp = await browser.runtime.sendMessage({ type: 'tts-fetch', url: this.synthesizeUrl(text).toString() }) as TtsFetchResponse;
+      const resp = (await browser.runtime.sendMessage({
+        type: "tts-fetch",
+        url: this.synthesizeUrl(text).toString(),
+      })) as TtsFetchResponse;
 
-      if ('error' in resp) return;
+      if ("error" in resp) {
+        return;
+      }
 
       const blobUrl = URL.createObjectURL(new Blob([resp.buffer], { type: resp.contentType }));
 
@@ -257,7 +271,8 @@ export class Player {
       } else {
         this.audioCache.set(idx, blobUrl);
       }
-    } catch { /* prefetch failures are silent */
+    } catch {
+      /* prefetch failures are silent */
     }
   }
 

@@ -1,0 +1,50 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "error",
+    "style": "error",
+    "restriction": "error"
+  },
+  "env": {
+    "browser": true,
+    "webextensions": true
+  },
+  "globals": {
+    "__DEV__": "readonly"
+  },
+  "rules": {
+    "eqeqeq": "error",
+    "curly": "error",
+    "typescript/consistent-type-definitions": "off",
+    "typescript/no-misused-promises": "error",
+    "typescript/explicit-function-return-type": "error",
+    "typescript/explicit-member-accessibility": "error",
+    "sort-keys": "off",
+    "no-magic-numbers": "off",
+    "func-style": "off",
+    "no-ternary": "off",
+    "no-undefined": "off",
+    "no-plusplus": "off",
+    "id-length": "off",
+    "max-statements": "off",
+    "capitalized-comments": "off",
+    "no-underscore-dangle": "off",
+    "class-methods-use-this": "off",
+    "prefer-destructuring": "off",
+    "no-void": "off",
+    "max-lines-per-function": "off",
+    "max-lines": "off",
+    "no-continue": "off",
+    "no-negated-condition": "off",
+    "init-declarations": "off",
+    "no-inline-comments": "off",
+    "typescript/parameter-properties": "off",
+    "no-console": "off",
+    "sort-imports": "off",
+    "no-use-before-define": ["error", { "functions": false }]
+  },
+  "ignorePatterns": ["/extension/", "node_modules/", "vite.config*.ts", "shim.d.ts"]
+}

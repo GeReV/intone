@@ -7,6 +7,19 @@ type TtsFetchResponse = { buffer: ArrayBuffer; contentType: string } | { error: 
 type BgFetchMessage = { type: 'bg-fetch'; url: string; method?: string }
 type BgFetchResponse = { ok: boolean; status: number; json?: unknown; error?: string }
 
+async function getActiveTab(): Promise<browser.Tabs.Tab | undefined> {
+  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true })
+  return tab
+}
+
+async function send(tabId: number, message: ContentMessage): Promise<void> {
+  try {
+    await browser.tabs.sendMessage(tabId, message)
+  } catch {
+    // Tab may not have the content script yet (e.g. chrome:// pages)
+  }
+}
+
 browser.runtime.onInstalled.addListener(() => {
   browser.contextMenus.create({
     id: 'read-selection',
@@ -22,12 +35,16 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 })
 
 browser.action.onClicked.addListener((tab) => {
-  if (tab.id) void send(tab.id, { type: 'play' })
+  if (tab.id) {
+    void send(tab.id, { type: 'play' })
+  }
 })
 
 browser.commands.onCommand.addListener(async (command) => {
   const tab = await getActiveTab()
-  if (!tab?.id) return
+  if (!tab?.id) {
+    return
+  }
   if (command === 'play' || command === 'stop' || command === 'forward' || command === 'rewind') {
     void send(tab.id, { type: command })
   }
@@ -37,8 +54,10 @@ browser.runtime.onMessage.addListener((raw): Promise<TtsFetchResponse | BgFetchR
   const msg = raw as TtsFetchMessage | BgFetchMessage
   if (msg.type === 'tts-fetch') {
     return fetch(msg.url)
-      .then(async res => {
-        if (!res.ok) throw new Error(`TTS server responded with ${res.status}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`TTS server responded with ${res.status}`)
+        }
         const contentType = res.headers.get('content-type') ?? 'audio/ogg'
         const buffer = await res.arrayBuffer()
         return { buffer, contentType }
@@ -50,8 +69,8 @@ browser.runtime.onMessage.addListener((raw): Promise<TtsFetchResponse | BgFetchR
   }
   if (msg.type === 'bg-fetch') {
     return fetch(msg.url, { method: msg.method ?? 'GET' })
-      .then(async res => {
-        const json = res.ok ? await res.json() as unknown : undefined
+      .then(async (res) => {
+        const json = res.ok ? ((await res.json()) as unknown) : undefined
         return { ok: res.ok, status: res.status, json }
       })
       .catch((err: unknown) => {
@@ -61,17 +80,3 @@ browser.runtime.onMessage.addListener((raw): Promise<TtsFetchResponse | BgFetchR
   }
   return undefined
 })
-
-async function getActiveTab(): Promise<browser.Tabs.Tab | undefined> {
-  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true })
-  return tab
-}
-
-async function send(tabId: number, message: ContentMessage): Promise<void> {
-  try {
-    await browser.tabs.sendMessage(tabId, message)
-  }
-  catch {
-    // Tab may not have the content script yet (e.g. chrome:// pages)
-  }
-}

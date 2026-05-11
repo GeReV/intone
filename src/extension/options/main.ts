@@ -22,7 +22,7 @@ let prevEngine = ''
 async function fetchEngineState(serverUrl: string): Promise<EngineState | null> {
   try {
     const res = await fetch(new URL('/engine', serverUrl).toString())
-    if (!res.ok) return null
+    if (!res.ok) {return null}
     return await res.json() as EngineState
   } catch {
     return null
@@ -32,7 +32,7 @@ async function fetchEngineState(serverUrl: string): Promise<EngineState | null> 
 async function fetchEngines(serverUrl: string): Promise<string[]> {
   try {
     const res = await fetch(new URL('/engines', serverUrl).toString())
-    if (!res.ok) return []
+    if (!res.ok) {return []}
     return await res.json() as string[]
   } catch {
     return []

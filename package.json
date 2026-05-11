@@ -28,7 +28,7 @@
     "start:firefox": "web-ext run --source-dir ./extension --firefox=deved",
     "start:server": "docker compose --project-directory src/piper-tts up --build -d",
     "clear": "rimraf --glob extension/dist extension/manifest.json extension.*",
-    "lint": "eslint --cache .",
+    "lint": "oxlint --config oxlint.json .",
     "test": "vitest test",
     "postinstall": "simple-git-hooks",
     "typecheck": "tsc --noEmit"
@@ -40,15 +40,13 @@
     "@types/jsdom": "^28.0.1",
     "@types/node": "^20.11.5",
     "@types/webextension-polyfill": "^0.12.3",
-    "@typescript-eslint/eslint-plugin": "^8.34.1",
-    "@typescript-eslint/parser": "^8.34.1",
     "cross-env": "^7.0.3",
     "crx": "^5.0.1",
-    "eslint": "^9.29.0",
     "fs-extra": "^11.2.0",
     "jsdom": "^23.2.0",
     "lint-staged": "^15.2.0",
     "npm-run-all": "^4.1.5",
+    "oxlint": "^1.63.0",
     "prettier": "^3.8.3",
     "rimraf": "^5.0.5",
     "simple-git-hooks": "^2.8.1",
@@ -65,7 +63,7 @@
   },
   "lint-staged": {
     "src/extension/**/*.{ts,js,html,css,json,md}": "prettier --write",
-    "*.{ts,js}": "eslint --fix"
+    "src/extension/**/*.{ts,js}": "oxlint --fix --config oxlint.json"
   },
   "resolutions": {
     "strip-ansi": "6.0.1",

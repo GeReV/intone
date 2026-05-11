@@ -1,6 +1,6 @@
 import type { ParagraphGroup, SentenceChunk } from "./types";
 
-const SENTENCE_BOUNDARY = /(?<=[.?!])\s+/;
+const SENTENCE_BOUNDARY = /(?<=[.?!])\s+/u;
 
 export function chunkIntoGroups(paragraphs: string[]): ParagraphGroup[] {
   // Pass 1: split each paragraph into individual sentences
