@@ -7,6 +7,7 @@ export type Settings = {
   rate: number
   volume: number
   showPreview: boolean
+  showHighlighting: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -16,6 +17,7 @@ export const DEFAULT_SETTINGS: Settings = {
   rate: 1.0,
   volume: 1.0,
   showPreview: true,
+  showHighlighting: true,
 };
 
 export async function getSettings(): Promise<Settings> {

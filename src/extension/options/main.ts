@@ -12,6 +12,7 @@ const rateVal = document.getElementById('rateVal') as HTMLSpanElement
 const volumeInput = document.getElementById('volume') as HTMLInputElement
 const volumeVal = document.getElementById('volumeVal') as HTMLSpanElement
 const showPreviewInput = document.getElementById('showPreview') as HTMLInputElement
+const showHighlightingInput = document.getElementById('showHighlighting') as HTMLInputElement
 const savedMsg = document.getElementById('saved') as HTMLParagraphElement
 const engineErrorMsg = document.getElementById('engineError') as HTMLParagraphElement
 const engineStatus = document.getElementById('engineStatus') as HTMLElement
@@ -89,6 +90,7 @@ async function load(): Promise<void> {
   volumeInput.value = String(s.volume)
   volumeVal.textContent = String(Math.round(s.volume * 100))
   showPreviewInput.checked = s.showPreview
+  showHighlightingInput.checked = s.showHighlighting
 
   const [engines, state] = await Promise.all([
     fetchEngines(s.serverUrl),
@@ -157,6 +159,7 @@ form.addEventListener('submit', async (e) => {
     rate: Number(rateInput.value),
     volume: Number(volumeInput.value),
     showPreview: showPreviewInput.checked,
+    showHighlighting: showHighlightingInput.checked,
   })
   savedMsg.style.visibility = 'visible'
   setTimeout(() => { savedMsg.style.visibility = 'hidden' }, 2000)

@@ -125,6 +125,18 @@ const CSS = `
 }
 .range-row input[type="range"] { flex: 1; accent-color: #ffd700; }
 .range-val { font-size: 12px; min-width: 40px; text-align: right; opacity: 0.85; }
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.check-row > span {
+  font-size: 11px;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.check-row input[type="checkbox"] { accent-color: #ffd700; width: 14px; height: 14px; cursor: pointer; }
 .autoplay-hint {
   font-size: 12px;
   text-align: center;
@@ -152,6 +164,7 @@ export class FloatingUI {
   private readonly inputVolume: HTMLInputElement
   private readonly spanRateVal: HTMLSpanElement
   private readonly spanVolumeVal: HTMLSpanElement
+  private readonly checkHighlighting: HTMLInputElement
   private readonly hintEl: HTMLDivElement
 
   private sentenceMap = new Map<number, HTMLElement>()
@@ -273,6 +286,12 @@ export class FloatingUI {
       this.onSettingsChange?.({ volume: val })
     })
 
+    this.checkHighlighting = document.createElement('input')
+    this.checkHighlighting.type = 'checkbox'
+    this.checkHighlighting.addEventListener('change', () => {
+      this.onSettingsChange?.({ showHighlighting: this.checkHighlighting.checked })
+    })
+
     this.settingsPanel.append(
       this.settingLabel('Server URL', this.inputServerUrl),
       this.settingLabel('Engine', this.selectEngine),
@@ -280,6 +299,7 @@ export class FloatingUI {
       this.settingLabel('Extractor', this.selectExtractor),
       this.rangeRow('Rate', this.inputRate, this.spanRateVal),
       this.rangeRow('Volume', this.inputVolume, this.spanVolumeVal),
+      this.checkRow('Highlight sentences', this.checkHighlighting),
     )
 
     this.hintEl = document.createElement('div')
@@ -325,6 +345,7 @@ export class FloatingUI {
     this.spanRateVal.textContent = `${settings.rate.toFixed(1)}×`
     this.inputVolume.value = String(settings.volume)
     this.spanVolumeVal.textContent = `${Math.round(settings.volume * 100)}%`
+    this.checkHighlighting.checked = settings.showHighlighting
     this.previewOpen = settings.showPreview
     this.previewEl.hidden = !this.previewOpen
   }
@@ -435,6 +456,16 @@ export class FloatingUI {
     const label = document.createElement('span')
     label.textContent = labelText
     div.append(label, input, valSpan)
+    return div
+  }
+
+  private checkRow(labelText: string, input: HTMLInputElement): HTMLDivElement {
+    const div = document.createElement('div')
+    div.className = 'check-row'
+    div.append(input)
+    const span = document.createElement('span')
+    span.textContent = labelText
+    div.append(span)
     return div
   }
 }

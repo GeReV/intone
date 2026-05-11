@@ -1,23 +1,28 @@
 // src/content/index.ts
 import browser from 'webextension-polyfill'
-import { HOOKS } from './extractor/hooks'
-import { chunkIntoGroups } from './chunker'
-import { Queue } from './queue'
-import { Player } from './player'
-import { FloatingUI } from './ui'
-import { getSettings, saveSettings } from './settings'
-import type { Settings } from './settings'
+import {HOOKS} from './extractor/hooks'
+import {chunkIntoGroups} from './chunker'
+import {Queue} from './queue'
+import {Player} from './player'
+import {FloatingUI} from './ui'
+import {PageHighlighter} from './highlighter'
+import type {Settings} from './settings'
+import {getSettings, saveSettings} from './settings'
 
 type Message = { type: 'play' | 'stop' | 'forward' | 'rewind' | 'play-selection'; text?: string }
 type BgFetchResponse = { ok: boolean; status: number; json?: unknown; error?: string }
 
-interface EngineState { engine: string; voices: string[] }
+interface EngineState {
+  engine: string;
+  voices: string[]
+}
 
 let player: Player | null = null
 let ui: FloatingUI | null = null
+let highlighter: PageHighlighter | null = null
 
 async function bgFetch(url: string, method = 'GET'): Promise<BgFetchResponse> {
-  return browser.runtime.sendMessage({ type: 'bg-fetch', url, method }) as Promise<BgFetchResponse>
+  return await browser.runtime.sendMessage({type: 'bg-fetch', url, method}) as BgFetchResponse;
 }
 
 async function fetchEngines(serverUrl: string): Promise<string[]> {
@@ -49,8 +54,7 @@ async function start(textOverride?: string): Promise<void> {
   if (textOverride) {
     paragraphs = textOverride.split(/\n{2,}/).map(s => s.trim()).filter(Boolean)
     title = ''
-  }
-  else {
+  } else {
     const extractor = settings.extractor === 'defuddle'
       ? new (await import('./extractor/defuddle')).DefuddleExtractor()
       : new (await import('./extractor/readability')).ReadabilityExtractor()
@@ -74,28 +78,49 @@ async function start(textOverride?: string): Promise<void> {
   const queue = new Queue()
   queue.load(flatChunks)
 
+  if (PageHighlighter.isSupported()) {
+    highlighter = new PageHighlighter(settings.showHighlighting)
+    highlighter.buildIndex(flatChunks)
+  }
+
   player = new Player(queue, settings)
   ui = new FloatingUI()
   ui.loadChunks(groups, settings)
 
   player.onStateChange = (state) => {
     ui?.update(state)
+    if (state.state === 'playing' || state.state === 'paused' || state.state === 'loading') {
+      highlighter?.setActive(state.chunkIndex)
+    }
     if (state.state === 'stopped') {
       teardown()
     }
   }
 
-  ui.onPlay = () => { void player?.play() }
-  ui.onPause = () => { player?.pause() }
-  ui.onStop = () => { player?.stop() }
-  ui.onForward = () => { void player?.forward() }
-  ui.onRewind = () => { void player?.rewind() }
-  ui.onSeekTo = (index) => { void player?.seekTo(index) }
+  ui.onPlay = () => {
+    void player?.play()
+  }
+  ui.onPause = () => {
+    player?.pause()
+  }
+  ui.onStop = () => {
+    player?.stop()
+  }
+  ui.onForward = () => {
+    void player?.forward()
+  }
+  ui.onRewind = () => {
+    void player?.rewind()
+  }
+  ui.onSeekTo = (index) => {
+    void player?.seekTo(index)
+  }
   ui.onSettingsChange = async (partial) => {
     await saveSettings(partial)
     Object.assign(settings, partial)
     if (partial.rate !== undefined) player?.updateRate(partial.rate)
     if (partial.volume !== undefined) player?.updateVolume(partial.volume)
+    if (partial.showHighlighting !== undefined) highlighter?.setEnabled(partial.showHighlighting)
   }
 
   ui.onPanelOpen = async () => {
@@ -112,14 +137,17 @@ async function start(textOverride?: string): Promise<void> {
       const url = new URL('/engine', settings.serverUrl)
       url.searchParams.set('name', name)
       const res = await bgFetch(url.toString(), 'POST')
-      if (!res.ok) { revert(); return }
+      if (!res.ok) {
+        revert();
+        return
+      }
       const state = res.json as EngineState
       const nextVoice = state.voices.includes(settings.voiceName)
         ? settings.voiceName
         : (state.voices[0] ?? settings.voiceName)
       if (nextVoice !== settings.voiceName) {
         settings.voiceName = nextVoice
-        await saveSettings({ voiceName: nextVoice })
+        await saveSettings({voiceName: nextVoice})
       }
       ui?.setVoices(state.voices, nextVoice)
     } catch {
@@ -128,7 +156,7 @@ async function start(textOverride?: string): Promise<void> {
   }
 
   ui.onVoiceChange = async (voiceName) => {
-    await saveSettings({ voiceName })
+    await saveSettings({voiceName})
     settings.voiceName = voiceName
   }
 
@@ -137,6 +165,8 @@ async function start(textOverride?: string): Promise<void> {
 }
 
 function teardown(): void {
+  highlighter?.destroy()
+  highlighter = null
   ui?.remove()
   ui = null
   player = null
