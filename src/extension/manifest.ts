@@ -38,6 +38,7 @@ export async function getManifest(): Promise<Manifest.WebExtensionManifest> {
       'storage',
       'contextMenus',
       'activeTab',
+      'scripting',
     ],
 
     content_scripts: [
