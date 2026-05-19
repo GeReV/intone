@@ -1,12 +1,12 @@
 // src/content/index.ts
 import browser from "webextension-polyfill";
-import { HOOKS } from "./extractor/hooks";
 import { chunkIntoGroups } from "./chunker";
-import { Queue } from "./queue";
-import { Player } from "./player";
-import { FloatingUI } from "./ui";
+import { HOOKS } from "./extractor/hooks";
 import { PageHighlighter } from "./highlighter";
+import { Player } from "./player";
+import { Queue } from "./queue";
 import { getSettings, saveSettings, type Settings } from "./settings";
+import { FloatingUI } from "./ui";
 
 type Message = { type: "play" | "stop" | "forward" | "rewind" | "play-selection"; text?: string };
 type BgFetchResponse = { ok: boolean; status: number; json?: unknown; error?: string };
@@ -56,7 +56,7 @@ async function start(textOverride?: string): Promise<void> {
 
   if (textOverride) {
     paragraphs = textOverride
-      .split(/\n{2,}/u)
+      .split(/(?:\r?\n){2,}/u)
       .map((s) => s.trim())
       .filter(Boolean);
     title = "";
@@ -192,7 +192,8 @@ browser.runtime.onMessage.addListener((raw: unknown): undefined => {
   switch (message.type) {
     case "play":
       if (!player) {
-        void start();
+        const sel = window.getSelection()?.toString().trim();
+        void start(sel || undefined);
       } else if (player.isPlaying) {
         player.pause();
       } else {
