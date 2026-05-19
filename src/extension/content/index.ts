@@ -187,7 +187,16 @@ function teardown(): void {
   player = null;
 }
 
+// If re-injected (e.g. extension reload races with manifest auto-inject),
+// deactivate the previous instance before registering a new listener.
+// 'window' is the extension's isolated world — not visible to page scripts.
+type IsolatedWindow = Window & { __readOutDeactivate?: () => void };
+(window as IsolatedWindow).__readOutDeactivate?.();
+let active = true;
+(window as IsolatedWindow).__readOutDeactivate = (): void => { active = false; };
+
 browser.runtime.onMessage.addListener((raw: unknown): undefined => {
+  if (!active) {return undefined;}
   const message = raw as Message;
   switch (message.type) {
     case "play":

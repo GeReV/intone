@@ -16,9 +16,6 @@ async function send(tabId: number, message: ContentMessage): Promise<void> {
   try {
     await browser.tabs.sendMessage(tabId, message);
   } catch (err) {
-    // Only inject if the content script is genuinely absent. A delivered message
-    // with no sendResponse causes Chrome to reject with a different error — that
-    // case must not trigger a second injection.
     if (!(err instanceof Error) || !err.message.includes('Receiving end does not exist')) {
       return;
     }
