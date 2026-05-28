@@ -3,35 +3,38 @@
 ARG BASE=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 FROM ${BASE}
 
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  apt-get update && \
   apt-get install -y --no-install-recommends \
   build-essential git wget unzip curl \
   espeak-ng \
   libsndfile1 \
   openjdk-17-jre-headless \
-  python3 python3-dev \
-  && rm -rf /var/lib/apt/lists/*
+  python3 python3-dev
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+ARG UV_VERSION=0.11.16
+COPY --from=ghcr.io/astral-sh/uv:${UV_VERSION} /uv /bin/uv
 
 WORKDIR /app
 
 ARG STANFORD_NER_ZIP=stanford-ner-4.2.0.zip
-ARG STANFORD_DIR=/usr/share/java/stanford-ner
-RUN mkdir -p $STANFORD_DIR && \
+ENV STANFORD_DIR=/usr/share/java/stanford-ner
+ENV CLASSPATH=/usr/share/java/stanford-ner
+ENV STANFORD_MODELS=/usr/share/java/stanford-ner/classifiers
+RUN --mount=type=cache,target=/root/.cache/stanford-ner \
+  if [ ! -f /root/.cache/stanford-ner/$STANFORD_NER_ZIP ]; then \
+    wget -O /root/.cache/stanford-ner/$STANFORD_NER_ZIP "https://nlp.stanford.edu/software/$STANFORD_NER_ZIP"; \
+  fi && \
+  mkdir -p $STANFORD_DIR && \
+  cp /root/.cache/stanford-ner/$STANFORD_NER_ZIP $STANFORD_DIR/ && \
   cd $STANFORD_DIR && \
-  wget "https://nlp.stanford.edu/software/$STANFORD_NER_ZIP" && \
   unzip $STANFORD_NER_ZIP && \
   rm $STANFORD_NER_ZIP && \
   cp -r ./stanford-ner-*/* . && rm -rf ./stanford-ner-*
-
-ENV CLASSPATH=$STANFORD_DIR
-ENV STANFORD_MODELS="$STANFORD_DIR/classifiers"
 
 COPY pyproject.toml uv.lock ./
 
@@ -39,10 +42,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
   uv sync --frozen --no-dev \
   --extra-index-url https://download.pytorch.org/whl/cu118
 
-RUN uv run python -m nltk.downloader popular
+RUN --mount=type=cache,target=/root/nltk_data \
+  uv run python -m nltk.downloader popular
 
-COPY . .
+COPY dictsource/ dictsource/
 
 RUN cd dictsource && espeak-ng --compile=en
+
+COPY . .
 
 CMD ["uv", "run", "python", "server.py"]
