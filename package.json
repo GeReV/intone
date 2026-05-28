@@ -3,7 +3,7 @@
   "displayName": "Intone",
   "version": "0.3.3",
   "private": true,
-  "description": "Read out the current web-page article with one click, using text to speech (TTS).",
+  "description": "Browser extension that reads web pages aloud using locally run TTS.",
   "license": "MIT",
   "author": {
     "name": "Amir Grozki",
