@@ -1,6 +1,6 @@
 [project]
 name = "read-out-server"
-version = "0.1.5"
+version = "0.1.6"
 requires-python = ">=3.10,<3.13"
 dependencies = [
   "flask>=3.1",

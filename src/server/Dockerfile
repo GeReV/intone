@@ -1,6 +1,10 @@
 # syntax=docker/dockerfile:1
 
+ARG UV_VERSION=0.11.16
 ARG BASE=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+
+FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
+
 FROM ${BASE}
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -16,8 +20,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-ARG UV_VERSION=0.11.16
-COPY --from=ghcr.io/astral-sh/uv:${UV_VERSION} /uv /bin/uv
+COPY --from=uv /uv /bin/uv
 
 WORKDIR /app
 
