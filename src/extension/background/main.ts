@@ -34,7 +34,7 @@ async function send(tabId: number, message: ContentMessage): Promise<void> {
 browser.runtime.onInstalled.addListener(() => {
   browser.contextMenus.create({
     id: "read-selection",
-    title: browser.i18n.getMessage("context_read_selection") || "Read selection",
+    title: "Read selection",
     contexts: ["selection"],
   });
 });

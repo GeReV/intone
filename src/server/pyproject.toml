@@ -1,5 +1,5 @@
 [project]
-name = "read-out-server"
+name = "intone-server"
 version = "0.1.6"
 requires-python = ">=3.10,<3.13"
 dependencies = [
