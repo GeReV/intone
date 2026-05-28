@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { chunk, chunkIntoGroups } from "../../src/extension/content/chunker";
 
 // All sentences in this helper are 4 chars ("Foo."), so avg=4, threshold=12.
@@ -12,9 +12,14 @@ describe("chunkIntoGroups — grouping behaviour", () => {
     const result = chunkIntoGroups(input);
 
     expect(result).toHaveLength(1);
-    expect(result[0].sentences).toHaveLength(2);
-    expect(result[0].sentences[0].text).toBe("Foo. Foo.");
-    expect(result[0].sentences[1].text).toBe("Foo. Foo.");
+    const [group] = result;
+    assert(group);
+    expect(group.sentences).toHaveLength(2);
+    const [s0, s1] = group.sentences;
+    assert(s0);
+    assert(s1);
+    expect(s0.text).toBe("Foo. Foo.");
+    expect(s1.text).toBe("Foo. Foo.");
   });
 
   it("assigns contiguous flat indices across merged chunks", () => {
@@ -24,7 +29,9 @@ describe("chunkIntoGroups — grouping behaviour", () => {
     ];
     const result = chunkIntoGroups(input);
 
-    expect(result[0].sentences.map((s) => s.index)).toEqual([0, 1, 2]);
+    const [group] = result;
+    assert(group);
+    expect(group.sentences.map((s) => s.index)).toEqual([0, 1, 2]);
   });
 
   it("never merges sentences across paragraph boundaries", () => {
@@ -32,8 +39,15 @@ describe("chunkIntoGroups — grouping behaviour", () => {
     const result = chunkIntoGroups([FOUR_CHAR, FOUR_CHAR]);
 
     expect(result).toHaveLength(2);
-    expect(result[0].sentences[0].text).toBe(FOUR_CHAR);
-    expect(result[1].sentences[0].text).toBe(FOUR_CHAR);
+    const [g0, g1] = result;
+    assert(g0);
+    assert(g1);
+    const [s0] = g0.sentences;
+    const [s1] = g1.sentences;
+    assert(s0);
+    assert(s1);
+    expect(s0.text).toBe(FOUR_CHAR);
+    expect(s1.text).toBe(FOUR_CHAR);
   });
 
   it("flat indices are contiguous across multiple paragraphs", () => {
@@ -51,15 +65,23 @@ describe("chunkIntoGroups — grouping behaviour", () => {
     const result = chunkIntoGroups([longSentence]);
 
     expect(result).toHaveLength(1);
-    expect(result[0].sentences).toHaveLength(1);
-    expect(result[0].sentences[0].text).toBe(longSentence);
+    const [group] = result;
+    assert(group);
+    expect(group.sentences).toHaveLength(1);
+    const [s0] = group.sentences;
+    assert(s0);
+    expect(s0.text).toBe(longSentence);
   });
 
   it("drops empty paragraphs", () => {
     const result = chunkIntoGroups(["", FOUR_CHAR, ""]);
 
     expect(result).toHaveLength(1);
-    expect(result[0].sentences[0].text).toBe(FOUR_CHAR);
+    const [group] = result;
+    assert(group);
+    const [s0] = group.sentences;
+    assert(s0);
+    expect(s0.text).toBe(FOUR_CHAR);
   });
 
   it("returns empty array for empty input", () => {

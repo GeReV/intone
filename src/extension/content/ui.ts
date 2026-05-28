@@ -150,8 +150,7 @@ const CSS = `
 export class FloatingUI {
   private readonly host: HTMLDivElement
   private readonly previewEl: HTMLDivElement
-  private readonly btnPlay: HTMLButtonElement
-  private readonly btnPause: HTMLButtonElement
+  private readonly btnPlayPause: HTMLButtonElement
   private readonly btnStop: HTMLButtonElement
   private readonly btnForward: HTMLButtonElement
   private readonly btnRewind: HTMLButtonElement
@@ -169,6 +168,7 @@ export class FloatingUI {
 
   private sentenceMap = new Map<number, HTMLElement>()
   private activeIndex = -1
+  private _showPause = false
   private previewOpen = true
   private settingsOpen = false
   private _prevEngine = ''
@@ -205,8 +205,13 @@ export class FloatingUI {
     bar.className = 'bar'
 
     this.btnRewind = this.btn(SVG_REWIND, () => { this.onRewind?.() })
-    this.btnPlay = this.btn(SVG_PLAY, () => { this.onPlay?.() })
-    this.btnPause = this.btn(SVG_PAUSE, () => { this.onPause?.() })
+    this.btnPlayPause = this.btn(SVG_PLAY, () => {
+      if (this._showPause) {
+        this.onPause?.()
+      } else {
+        this.onPlay?.()
+      }
+    })
     this.btnStop = this.btn(SVG_STOP, () => { this.onStop?.() })
     this.btnForward = this.btn(SVG_FORWARD, () => { this.onForward?.() })
 
@@ -214,7 +219,7 @@ export class FloatingUI {
     const btnSettings = this.btn(SVG_SETTINGS, () => { this.toggleSettings() })
 
     bar.append(
-      this.btnRewind, this.btnPlay, this.btnPause, this.btnStop, this.btnForward,
+      this.btnRewind, this.btnPlayPause, this.btnStop, this.btnForward,
       btnTogglePreview, btnSettings,
     )
 
@@ -397,8 +402,9 @@ export class FloatingUI {
     // Keep nav buttons visible while loading between sentences (totalChunks > 0 means playback is in progress)
     const showNav = playing || ps.state === 'paused' || (loading && ps.totalChunks > 0)
 
-    this.btnPlay.disabled = playing || loading;
-    this.btnPause.disabled = !playing;
+    this._showPause = playing || (loading && ps.totalChunks > 0)
+    this.btnPlayPause.innerHTML = this._showPause ? SVG_PAUSE : SVG_PLAY
+    this.btnPlayPause.disabled = loading && ps.totalChunks === 0
     this.btnStop.hidden = ps.state === 'idle' || ps.state === 'stopped'
     this.btnForward.hidden = !showNav
     this.btnRewind.hidden = !showNav
