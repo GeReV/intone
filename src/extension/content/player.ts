@@ -161,7 +161,7 @@ export class Player {
           this.autoplayBlocked = true;
           this.notify("paused");
         } else if (err.name !== "AbortError") {
-          console.error("[Read Out] Playback error:", err.message);
+          console.error("[Intone] Playback error:", err.message);
           this.notify("error", err.message);
         }
       }

@@ -80,7 +80,7 @@ async function start(textOverride?: string): Promise<void> {
   const flatChunks = groups.flatMap((g) => g.sentences.map((s) => s.text));
 
   if (flatChunks.length === 0) {
-    console.warn("[Read Out] No readable content found on this page.");
+    console.warn("[Intone] No readable content found on this page.");
     return;
   }
 
@@ -175,7 +175,7 @@ async function start(textOverride?: string): Promise<void> {
     settings.voiceName = voiceName;
   };
 
-  console.info(`[Read Out] Starting — "${title}", ${flatChunks.length} chunks`);
+  console.info(`[Intone] Starting — "${title}", ${flatChunks.length} chunks`);
   void player.play();
 }
 
@@ -190,10 +190,10 @@ function teardown(): void {
 // If re-injected (e.g. extension reload races with manifest auto-inject),
 // deactivate the previous instance before registering a new listener.
 // 'window' is the extension's isolated world — not visible to page scripts.
-type IsolatedWindow = Window & { __readOutDeactivate?: () => void };
-(window as IsolatedWindow).__readOutDeactivate?.();
+type IsolatedWindow = Window & { __intoneDeactivate?: () => void };
+(window as IsolatedWindow).__intoneDeactivate?.();
 let active = true;
-(window as IsolatedWindow).__readOutDeactivate = (): void => { active = false; };
+(window as IsolatedWindow).__intoneDeactivate = (): void => { active = false; };
 
 browser.runtime.onMessage.addListener((raw: unknown): undefined => {
   if (!active) {return undefined;}

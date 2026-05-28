@@ -1,4 +1,4 @@
-# Read Out
+# Intone
 
 A browser extension for reading web pages out loud using _locally run_ Text to Speech models. No cloud, no account — everything runs on your machine.
 
@@ -27,7 +27,7 @@ Load the `extension/` folder as an unpacked extension in your browser:
 
 **3. Use it**
 
-Navigate to any article or web page, then click the Read Out icon in your browser toolbar. The page content will be read aloud.
+Navigate to any article or web page, then click the Intone icon in your browser toolbar. The page content will be read aloud.
 
 ### Folders
 
@@ -73,7 +73,7 @@ yarn build           # Chrome/Chromium
 yarn build:firefox   # Firefox
 ```
 
-Then run `yarn pack` to produce `read-out.zip`, `read-out.crx`, and `read-out.xpi` for distribution.
+Then run `yarn pack` to produce `intone.zip`, `intone.crx`, and `intone.xpi` for distribution.
 
 ## Credits
 

@@ -1,9 +1,9 @@
 {
   "extension_name": {
-    "message": "Read Out: A Text to Speech Voice Reader"
+    "message": "Intone: A Text to Speech Voice Reader"
   },
   "extension_short_name": {
-    "message": "Read Out"
+    "message": "Intone"
   },
   "extension_description": {
     "message": "Read out the current web-page article with one click, using text to speech (TTS)."
@@ -81,7 +81,7 @@
     "message": "Logout"
   },
   "player_tab_explanation": {
-    "message": "Read Out uses this tab for audio playback. This tab will automatically close after 5 minutes of no activity."
+    "message": "Intone uses this tab for audio playback. This tab will automatically close after 5 minutes of no activity."
   },
   "player_hidethistab_link": {
     "message": "Hide this tab"
@@ -90,7 +90,7 @@
     "message": "Hide this tab?"
   },
   "player_hidethistab_dialog_body": {
-    "message": "If you hide this tab, Read Out will play audio inside the current webpage. This means navigating away from the page will cause the speech to stop.\n\n(This setting can be reverted from the extension Options page)"
+    "message": "If you hide this tab, Intone will play audio inside the current webpage. This means navigating away from the page will cause the speech to stop.\n\n(This setting can be reverted from the extension Options page)"
   },
   "player_hidethistab_dialog_ok_button": {
     "message": "Hide"
@@ -102,7 +102,7 @@
     "message": "Permission Requested"
   },
   "player_permission_dialog_body": {
-    "message": "Allow Read Out to play audio?"
+    "message": "Allow Intone to play audio?"
   },
   "player_permission_dialog_ok_button": {
     "message": "Allow"
@@ -126,10 +126,10 @@
     "message": "Cannot read out this website"
   },
   "error_file_access": {
-    "message": "You need to grant Read Out access to file URLs in extension [settings](open-extension-settings)"
+    "message": "You need to grant Intone access to file URLs in extension [settings](open-extension-settings)"
   },
   "error_add_permissions": {
-    "message": "You need to grant Read Out additional [permissions](request-permissions) for this website"
+    "message": "You need to grant Intone additional [permissions](request-permissions) for this website"
   },
   "error_login_required": {
     "message": "Please [sign in](sign-in) to use the Premium Voices"
@@ -156,12 +156,12 @@
     "message": "Back to Options"
   },
   "google_translate_request_permission": {
-    "message": "Read Out would like to use Google Translate for text-to-speech."
+    "message": "Intone would like to use Google Translate for text-to-speech."
   },
   "google_translate_allow_button": {
     "message": "Allow"
   },
   "google_translate_keep_page_open": {
-    "message": "Read Out is using Google Translate for text-to-speech.  Please keep this tab open."
+    "message": "Intone is using Google Translate for text-to-speech.  Please keep this tab open."
   }
 }

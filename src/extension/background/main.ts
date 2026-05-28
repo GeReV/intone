@@ -77,7 +77,7 @@ browser.runtime.onMessage.addListener((raw: unknown): Promise<TtsFetchResponse |
           return { buffer, contentType };
         })
         .catch((err: unknown) => {
-          console.error("[Read Out] tts-fetch failed", msg.url, err);
+          console.error("[Intone] tts-fetch failed", msg.url, err);
           return { error: err instanceof Error ? err.message : String(err) };
         });
     case "bg-fetch":
@@ -87,7 +87,7 @@ browser.runtime.onMessage.addListener((raw: unknown): Promise<TtsFetchResponse |
           return { ok: res.ok, status: res.status, json };
         })
         .catch((err: unknown) => {
-          console.error("[Read Out] bg-fetch failed", msg.url, err);
+          console.error("[Intone] bg-fetch failed", msg.url, err);
           return { ok: false, status: 0, error: err instanceof Error ? err.message : String(err) };
         });
     default:

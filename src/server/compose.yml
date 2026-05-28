@@ -1,4 +1,4 @@
-name: "read-out"
+name: "intone"
 services:
   server:
     build:
