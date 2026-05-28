@@ -20,3 +20,4 @@ node_modules
 .worktrees/
 *.tgz
 TODO
+docs/superpowers/
