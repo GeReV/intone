@@ -5,6 +5,10 @@
   "private": true,
   "description": "Read out the current web-page article with one click, using text to speech (TTS).",
   "license": "MIT",
+  "author": {
+    "name": "Amir Grozki",
+    "url": "https://github.com/GeReV"
+  },
   "engines": {
     "node": ">=18.12.0"
   },
