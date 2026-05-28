@@ -18,3 +18,5 @@ node_modules
 
 **/en_extra
 .worktrees/
+*.tgz
+TODO

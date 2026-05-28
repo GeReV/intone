@@ -4,6 +4,7 @@
   "version": "0.3.2",
   "private": true,
   "description": "Read out the current web-page article with one click, using text to speech (TTS).",
+  "license": "MIT",
   "engines": {
     "node": ">=18.12.0"
   },
@@ -26,7 +27,7 @@
     "pack:xpi": "cross-env WEB_EXT_ARTIFACTS_DIR=./ web-ext build --source-dir ./extension --filename read-out.xpi --overwrite-dest",
     "start:chromium": "web-ext run --source-dir ./extension --target=chromium",
     "start:firefox": "web-ext run --source-dir ./extension --firefox=deved",
-    "start:server": "docker compose --project-directory src/piper-tts up --build -d",
+    "start:server": "docker compose --project-directory src/server up --build -d",
     "clear": "rimraf --glob extension/dist extension/manifest.json extension.*",
     "lint": "oxlint --config oxlint.json .",
     "test": "vitest test",

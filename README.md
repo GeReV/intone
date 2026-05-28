@@ -1,73 +1,81 @@
 # Read Out
 
-A browser extension for reading web pages out loud using _locally run_ Text to Speech models.
+A browser extension for reading web pages out loud using _locally run_ Text to Speech models. No cloud, no account — everything runs on your machine.
+
+## Requirements
+
+- Docker with CUDA support (for the TTS server)
+- Node.js 18+ and Yarn (for development)
+- Chrome/Chromium or Firefox Developer Edition
 
 ## Usage
 
-**Note that the following requires a working Docker installation with CUDA capabilities.**
-
-First, start the TTS server using the following command:
+**1. Start the TTS server**
 
 ```bash
 yarn start:server
 ```
 
-TODO
+This launches the Piper TTS server via Docker Compose. A CUDA-capable NVIDIA GPU is required.
+
+**2. Install the extension**
+
+Load the `extension/` folder as an unpacked extension in your browser:
+
+- **Chrome/Chromium**: go to `chrome://extensions`, enable Developer Mode, click "Load unpacked", and select the `extension/` folder.
+- **Firefox**: go to `about:debugging`, click "This Firefox", then "Load Temporary Add-on" and select any file inside `extension/`.
+
+**3. Use it**
+
+Navigate to any article or web page, then click the Read Out icon in your browser toolbar. The page content will be read aloud.
 
 ### Folders
 
-- `src` - main source.
-    - `extension` - source code for the browser extension
-        - `contentScript` - scripts and components to be injected as `content_script`
-        - `background` - scripts for background.
-        - `options` - scripts for options.
-        - `popup` - scripts for background.
-        - `player` - scripts for background.
-        - `assets` - assets used in Vue components
-        - `manifest.ts` - manifest for the extension.
-    - `piper-tts` - files for [Piper TTS server](https://github.com/rhasspy/piper)
-    - `coqui-tts` - files for [Coqui AI TTS server](https://github.com/coqui-ai/TTS) (unused)
-    - `xtts-webui` - files for [XTTS Webui](https://github.com/daswer123/xtts-webui) (unused)
-- `extension` - extension package root.
-    - `assets` - static assets (mainly for `manifest.json`).
-    - `dist` - built files, also serve stub entry for Vite on development.
-- `scripts` - development and bundling helper scripts.
+- `src/extension/` — browser extension source code
+  - `background/` — background service worker (receives play commands, coordinates state)
+  - `content/` — content script injected into every page (DOM extraction, TTS playback, UI)
+  - `options/` — options/settings page
+  - `manifest.ts` — extension manifest (generates `extension/manifest.json` at build time)
+- `src/server/` — Piper TTS HTTP server (Python, Docker)
+- `extension/` — the unpacked extension root; load this folder in your browser
+  - `assets/` — static assets (icons, etc.)
+  - `dist/` — built JS/CSS output
+- `scripts/` — build helper scripts
 
 ### Development
 
-TODO
+**Prerequisites**: Node.js 18+, Yarn, and the TTS server running (see above).
 
 ```bash
+yarn install
 yarn dev
 ```
 
-Then **load extension in browser with the `extension/` folder**.
+Then load the `extension/` folder in your browser as an unpacked extension (see step 2 above). The build will watch for changes and rebuild automatically.
 
-For Firefox developers, you can run the following command instead:
+For Firefox:
 
 ```bash
-yarn start:firefox
+yarn dev-firefox
 ```
 
-`web-ext` auto reload the extension when `extension/` files changed.
+`web-ext` can auto-reload the extension when files change:
 
-> While Vite handles HMR automatically in the most of the
-> case, [Extensions Reloader](https://chrome.google.com/webstore/detail/fimgfedafeadlieiabdeeaodndnlbhid) is still
-> recommanded for cleaner hard reloading.
+```bash
+yarn start:firefox   # Firefox Developer Edition
+yarn start:chromium  # Chromium
+```
 
 ### Build
 
-To build the extension, run
-
 ```bash
-yarn build
+yarn build           # Chrome/Chromium
+yarn build:firefox   # Firefox
 ```
 
-And then pack files under `extension`, you can upload `extension.crx` or `extension.xpi` to appropriate extension store.
+Then run `yarn pack` to produce `read-out.zip`, `read-out.crx`, and `read-out.xpi` for distribution.
 
 ## Credits
 
 - Heavily based on [Read Aloud](https://github.com/ken107/read-aloud) by [Hai Phan](https://github.com/ken107)
-- [WebExtension Vite Starter Template](https://github.com/antfu/vitesse-webext)
-  by [Anthony Fu](https://github.com/antfu)
-
+- [WebExtension Vite Starter Template](https://github.com/antfu/vitesse-webext) by [Anthony Fu](https://github.com/antfu)
