@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process'
 import { watch } from 'node:fs'
 import { isDev, r } from '../vite.config'
 
-function writeManifest() {
+function writeManifest(): void {
   execSync('yarn tsx ./scripts/manifest.ts', { stdio: 'inherit' })
 }
 
@@ -13,7 +13,7 @@ if (isDev) {
   // Re-run on manifest or package.json changes using Node's built-in fs.watch.
   // Debounce because fs.watch fires multiple events per save on many systems.
   let debounceTimer: ReturnType<typeof setTimeout> | undefined
-  const debouncedWrite = () => {
+  const debouncedWrite = (): void => {
     clearTimeout(debounceTimer)
     debounceTimer = setTimeout(writeManifest, 100)
   }

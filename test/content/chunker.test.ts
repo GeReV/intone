@@ -24,9 +24,7 @@ describe("chunkIntoGroups — grouping behaviour", () => {
 
   it("assigns contiguous flat indices across merged chunks", () => {
     // 6 × 4-char sentences → 3 merged chunks, indices 0-2
-    const input = [
-      `${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR}`,
-    ];
+    const input = [`${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR} ${FOUR_CHAR}`];
     const result = chunkIntoGroups(input);
 
     const [group] = result;
@@ -61,7 +59,7 @@ describe("chunkIntoGroups — grouping behaviour", () => {
 
   it("a single long sentence becomes its own chunk", () => {
     // One very long sentence that is already above threshold on its own
-    const longSentence = "a".repeat(200) + ".";
+    const longSentence = `${"a".repeat(200)}.`;
     const result = chunkIntoGroups([longSentence]);
 
     expect(result).toHaveLength(1);
