@@ -4,6 +4,7 @@ import re
 abbreviations_en = [
     (re.compile("\\b%s\\." % x[0], re.IGNORECASE), x[1])
     for x in [
+        ("adv", "advocate"),
         ("capt", "captain"),
         ("co", "company"),
         ("col", "colonel"),
