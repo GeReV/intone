@@ -9,6 +9,9 @@
     "name": "Amir Grozki",
     "url": "https://github.com/GeReV"
   },
+  "repository": {
+    "url": "https://github.com/GeReV/intone"
+  },
   "engines": {
     "node": ">=18.12.0"
   },
