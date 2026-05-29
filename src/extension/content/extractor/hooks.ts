@@ -8,11 +8,13 @@ export const HOOKS: ExtractorHook[] = [
     // splitting on those, the chunker batches sentences across logical
     // paragraph breaks inside the tweet.
     matches: (url) => /^https?:\/\/(www\.)?(x\.com|twitter\.com)\//u.test(url),
-    transform: (result) => ({
-      ...result,
-      paragraphs: result.paragraphs.flatMap((p) =>
-        p.split(/\n{2,}/u).map((s) => s.trim()).filter(Boolean)
-      ),
-    }),
+    transform: (result) => {
+      const UI_HEADINGS = new Set(["Post", "Conversation"]);
+      const paragraphs = result.paragraphs
+        .filter((p, i) => !(i === 0 && p === result.title))
+        .filter((p) => !UI_HEADINGS.has(p))
+        .flatMap((p) => p.split(/\n{2,}/u).map((s) => s.trim()).filter(Boolean));
+      return { ...result, paragraphs };
+    },
   },
 ]

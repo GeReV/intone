@@ -1,7 +1,7 @@
 {
   "name": "intone",
   "displayName": "Intone",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "description": "Browser extension that reads web pages aloud using locally run TTS.",
   "license": "MIT",
