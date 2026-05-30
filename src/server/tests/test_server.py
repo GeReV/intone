@@ -92,7 +92,9 @@ def test_synthesis_error_returns_500(mock_engine, monkeypatch):
         raise RuntimeError("model exploded")
 
     monkeypatch.setattr(mock_engine, "synthesize", boom)
-    app = create_app(EngineRef(name="mock", engine=mock_engine, device="cpu"))
+    ref = EngineRef(name="mock", device="cpu")
+    ref.current = mock_engine
+    app = create_app(ref)
     app.config["TESTING"] = True
     with app.test_client() as c:
         response = c.get("/synthesize?text=hello")
@@ -104,7 +106,9 @@ def test_voices_error_returns_500(mock_engine, monkeypatch):
         raise RuntimeError("engine dead")
 
     monkeypatch.setattr(mock_engine, "voices", boom)
-    app = create_app(EngineRef(name="mock", engine=mock_engine, device="cpu"))
+    ref = EngineRef(name="mock", device="cpu")
+    ref.current = mock_engine
+    app = create_app(ref)
     app.config["TESTING"] = True
     with app.test_client() as c:
         response = c.get("/voices")
@@ -114,7 +118,9 @@ def test_voices_error_returns_500(mock_engine, monkeypatch):
 def test_synthesize_unknown_default_voice_returns_400(mock_engine, monkeypatch):
     import server as server_module
     monkeypatch.setattr(server_module, "DEFAULT_VOICE", "nonexistent")
-    app = create_app(EngineRef(name="mock", engine=mock_engine, device="cpu"))
+    ref = EngineRef(name="mock", device="cpu")
+    ref.current = mock_engine
+    app = create_app(ref)
     app.config["TESTING"] = True
     with app.test_client() as c:
         response = c.get("/synthesize?text=hello")

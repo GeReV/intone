@@ -17,4 +17,6 @@ def mock_engine() -> MockEngine:
 
 @pytest.fixture
 def engine_ref(mock_engine) -> EngineRef:
-    return EngineRef(name="mock", engine=mock_engine, device="cpu")
+    ref = EngineRef(name="mock", device="cpu")
+    ref.current = mock_engine
+    return ref
