@@ -13,7 +13,7 @@ from engine import TTSEngine
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_VOICE = os.environ.get("SERVER_VOICE", "af")
-KNOWN_ENGINES: list[str] = ["kokoro", "kokoro1"]
+KNOWN_ENGINES: list[str] = ["kokoro", "kokoro1", "hebrew", "auto"]
 
 
 class EngineRef:
@@ -123,6 +123,12 @@ def _build_engine(name: str, device: str) -> TTSEngine:
     if name == "kokoro1":
         from engines.kokoro1 import Kokoro1Engine
         return Kokoro1Engine(device=device)
+    if name == "hebrew":
+        from engines.hebrew import HebrewEngine
+        return HebrewEngine(device=device)
+    if name == "auto":
+        from engines.auto import AutoEngine
+        return AutoEngine(device=device)
     raise ValueError(f"Unknown engine: {name!r}. Available: {', '.join(KNOWN_ENGINES)}")
 
 
