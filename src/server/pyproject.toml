@@ -1,7 +1,7 @@
 [project]
 name = "intone-server"
 version = "0.1.6"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.12,<3.13"
 dependencies = [
   "flask>=3.1",
   "flask-cors>=5.0",
@@ -17,6 +17,8 @@ dependencies = [
   "transformers>=4.40,<5.0",
   "kokoro>=0.9.2",
   "gunicorn>=23.0",
+  "renikud-onnx>=0.1",
+  "style-onnx @ git+https://github.com/thewh1teagle/style-onnx.git@756abfe2597266f8435974a6aaab53a7f47192c6",
 ]
 
 [dependency-groups]
