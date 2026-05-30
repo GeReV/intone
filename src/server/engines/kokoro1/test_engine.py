@@ -99,6 +99,21 @@ def test_synthesize_passes_voice_and_speed(engine):
     engine._pipeline.assert_called_once_with("hello", voice="af_heart", speed=1.5)
 
 
+def test_synthesize_collapses_internal_whitespace(engine):
+    # KPipeline's default split_pattern=r'\n+' starts a new forward pass at every
+    # newline, producing an audible pause at each one. Extracted text retains
+    # interior \n / \n\n (see content/extractor/hooks.ts), so collapse all
+    # whitespace runs to single spaces before synthesis to keep one utterance.
+    engine._pipeline.return_value = [("g", "p", np.zeros(10, dtype=np.float32))]
+
+    with patch("engines.kokoro1.engine.sf.write", side_effect=lambda buf, d, **kw: buf.write(b"x")):
+        engine.synthesize("The quick brown\nfox jumps\n\nover the  lazy dog", "af_heart", 1.0)
+
+    engine._pipeline.assert_called_once_with(
+        "The quick brown fox jumps over the lazy dog", voice="af_heart", speed=1.0
+    )
+
+
 def test_synthesize_ogg_samplerate(engine):
     engine._pipeline.return_value = [("g", "p", np.zeros(10, dtype=np.float32))]
 

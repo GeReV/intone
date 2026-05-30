@@ -1,5 +1,6 @@
 import io
 import logging
+import re
 import threading
 from pathlib import Path
 
@@ -63,6 +64,12 @@ class Kokoro1Engine:
     def synthesize(self, text: str, voice: str, rate: float) -> bytes:
         if voice not in VOICES:
             raise ValueError(f"Unknown voice: {voice!r}")
+        # KPipeline's default split_pattern=r'\n+' starts a new forward pass at
+        # every newline, and concatenating those passes produces an audible
+        # pause at each one. Extracted text retains interior \n / \n\n (see
+        # content/extractor/hooks.ts), so collapse all whitespace runs to single
+        # spaces to keep the chunk a single continuous utterance.
+        text = re.sub(r"\s+", " ", text).strip()
         with self._lock:
             # Lock covers only pipeline generation; concatenation and OGG encoding are lock-free.
             chunks = [audio for _, _, audio in self._pipeline(text, voice=voice, speed=rate)]
