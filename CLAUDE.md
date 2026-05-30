@@ -21,6 +21,30 @@ yarn start:chromium   # Launch extension in Chromium with web-ext
 yarn start:firefox    # Launch extension in Firefox Developer Edition with web-ext
 ```
 
+## Python server (`src/server/`)
+
+The TTS server is a Python 3.12 project managed with **uv**.
+
+```bash
+# Run server tests
+cd src/server && uv run python -m pytest                  # all tests
+cd src/server && uv run python -m pytest engines/auto/    # specific module
+cd src/server && uv run python -m pytest tests/ engines/ -v
+
+# Do NOT use: uv run pytest
+# The .venv/bin/pytest shebang is stale (points to a previous project path).
+# Always invoke via: uv run python -m pytest
+
+# Type-check
+cd src/server && uv run python -m pyright  # if pyright is installed
+
+# Add/update dependencies
+cd src/server && uv add <package>
+cd src/server && uv sync --extra-index-url https://download.pytorch.org/whl/cu118
+```
+
+Python version: **3.12** (required by `renikud-onnx`). uv manages its own Python 3.12 installation — the system `python3` (3.10 on Ubuntu 22.04) is not used by the server venv.
+
 After `yarn dev`, load the **`extension/`** folder directly in the browser as an unpacked extension.
 
 ## Architecture
