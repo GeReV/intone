@@ -5,7 +5,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
   "flask>=3.1",
   "flask-cors>=5.0",
-  "torch>=2.0,<2.4",
+  "torch>=2.5,<2.6",
   "soundfile>=0.13",
   "phonemizer>=3.3",
   "nltk>=3.9",
@@ -19,10 +19,30 @@ dependencies = [
   "gunicorn>=23.0",
   "renikud-onnx>=0.1",
   "style-onnx @ git+https://github.com/thewh1teagle/style-onnx.git@756abfe2597266f8435974a6aaab53a7f47192c6",
+  "onnxruntime-gpu==1.26.0",
 ]
 
 [dependency-groups]
 dev = ["pytest>=8.3"]
+
+[tool.uv]
+# CUDA GPU server: the torch cu124 and onnxruntime-gpu wheels are Linux-only, so
+# resolve a Linux-only lock (the server only ever runs in the CUDA Docker image).
+environments = ["sys_platform == 'linux'"]
+# renikud-onnx and style-onnx depend on the CPU-only `onnxruntime`, which shares the
+# `onnxruntime` import namespace with `onnxruntime-gpu` (installing both clobbers).
+# Drop the transitive CPU package via an always-false marker so onnxruntime-gpu
+# (CUDA 12 / cuDNN 9, numpy-2 compatible) provides the onnxruntime module.
+override-dependencies = ["onnxruntime; sys_platform == 'never'"]
+
+# torch must be the CUDA 12.4 build to match the onnxruntime-gpu 1.26 CUDA runtime.
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

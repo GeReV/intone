@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1
 
 ARG UV_VERSION=0.11.16
-ARG BASE=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+# CUDA 12.4 + cuDNN 9: required by onnxruntime-gpu 1.26 (CUDA 12 / cuDNN 9 build)
+# and matched by the torch cu124 wheels (see pyproject [tool.uv] pytorch-cu124 index).
+ARG BASE=nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
 
@@ -42,8 +44,7 @@ RUN --mount=type=cache,target=/root/.cache/stanford-ner \
 COPY pyproject.toml uv.lock ./
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-  uv sync --frozen --no-dev \
-  --extra-index-url https://download.pytorch.org/whl/cu118
+  uv sync --frozen --no-dev
 
 RUN --mount=type=cache,target=/root/nltk_data \
   uv run python -m nltk.downloader popular
