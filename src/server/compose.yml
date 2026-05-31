@@ -4,8 +4,8 @@ services:
     build:
       context: .
     environment:
-      - SERVER_ENGINE=kokoro
-      - SERVER_VOICE=af
+      - SERVER_ENGINE=auto
+      - SERVER_VOICE=am_adam
       - SERVER_CUDA=1
     ports:
       - 5000:5000
