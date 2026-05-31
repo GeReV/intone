@@ -111,6 +111,12 @@ const CSS = `
   width: 100%;
   box-sizing: border-box;
 }
+/* The native option popup renders against a default white background and would
+   inherit the select's white text (white-on-white). Force solid dark options. */
+.setting-label select option {
+  background: #1a1a1a;
+  color: #fff;
+}
 .range-row {
   display: flex;
   align-items: center;
