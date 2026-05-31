@@ -71,6 +71,46 @@ def test_synthesize_falls_back_on_unknown_voice(engine):
     assert call_kwargs["style"] == STYLE_KEYS[0]
 
 
+def test_providers_maps_device():
+    from engines.hebrew import engine as he
+    assert he._providers("cuda") == ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    assert he._providers("cpu") == ["CPUExecutionProvider"]
+    assert he._providers("unknown") == ["CPUExecutionProvider"]
+
+
+def test_build_g2p_injects_providers_into_session(monkeypatch):
+    """renikud_onnx.G2P builds its own session with no providers hook; _build_g2p
+    must inject the requested providers into that construction."""
+    import types
+
+    import onnxruntime as ort
+    from engines.hebrew import engine as he
+
+    seen = {}
+
+    class FakeSession:
+        def __init__(self, path, *args, **kwargs):
+            seen["providers"] = kwargs.get("providers")
+
+        def get_providers(self):
+            return seen.get("providers") or []
+
+    monkeypatch.setattr(ort, "InferenceSession", FakeSession)
+
+    fake_renikud = types.ModuleType("renikud_onnx")
+
+    class FakeG2P:
+        def __init__(self, model_path):
+            ort.InferenceSession(model_path)  # no providers, as the real G2P does
+
+    fake_renikud.G2P = FakeG2P
+    monkeypatch.setitem(sys.modules, "renikud_onnx", fake_renikud)
+
+    he._build_g2p("dummy.onnx", ["CUDAExecutionProvider", "CPUExecutionProvider"])
+
+    assert seen["providers"] == ["CUDAExecutionProvider", "CPUExecutionProvider"]
+
+
 def test_synthesize_encodes_ogg_at_24000hz(engine):
     captured = {}
 

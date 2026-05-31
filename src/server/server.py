@@ -100,8 +100,12 @@ def create_app(engine_ref: EngineRef) -> Flask:
         if not name:
             return "name parameter is required", 400
         with engine_ref.swap_lock:
+            # Fully build AND validate the engine (including any lazy model loading
+            # triggered by voices()) BEFORE mutating engine_ref, so a failed swap
+            # can never leave the server pointing at a broken, half-initialized engine.
             try:
                 new_engine = _build_engine(name, engine_ref.device)
+                confirmed_voices = new_engine.voices()
             except ValueError as e:
                 return str(e), 400
             except Exception:
@@ -109,8 +113,7 @@ def create_app(engine_ref: EngineRef) -> Flask:
                 return f"Failed to initialize engine {name!r}", 500
             engine_ref.name = name
             engine_ref.current = new_engine
-            confirmed_name = engine_ref.name
-            confirmed_voices = new_engine.voices()
+            confirmed_name = name
         return jsonify({"engine": confirmed_name, "voices": confirmed_voices})
 
     return app

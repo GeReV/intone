@@ -21,7 +21,7 @@ Implements the `TTSEngine` protocol (`synthesize(text, voice, rate) -> bytes`, `
 
 **Voice naming:** Style files are discovered from a configured model directory. File stem is prefixed with `he_` to avoid collisions with English voices (e.g. `636_female_style.npy` → `he_636_female`; if the creator provides named checkpoints, `shaul.npy` → `he_shaul`).
 
-**GPU support:** `style_onnx.StyleTTS2` uses ONNX Runtime. When `device="cuda"` is passed, the engine requests `CUDAExecutionProvider` then falls back to `CPUExecutionProvider`. `renikud_onnx.G2P` runs on CPU (its 20 MB model makes GPU transfer overhead not worthwhile).
+**GPU support:** Both ONNX Runtime sessions honor `device`. When `device="cuda"`, the engine requests `["CUDAExecutionProvider", "CPUExecutionProvider"]` (CUDA with CPU fallback) for the StyleTTS2 acoustic model *and* for `renikud_onnx.G2P`. Because `G2P` builds its own `InferenceSession` with no providers argument, the engine pins providers by briefly intercepting `InferenceSession` construction (`_build_g2p`). This requires the CUDA build of ONNX Runtime: the server depends on `onnxruntime-gpu` (CUDA 12 / cuDNN 9) and the Docker image uses a `nvidia/cuda:12.x-cudnn-devel` base.
 
 **Thread safety:** A single `threading.Lock` guards synthesis calls, same pattern as `Kokoro1Engine`.
 
@@ -60,15 +60,17 @@ hebrew_count / total_alphabetic_count >= threshold
 
 ## Model management
 
-Models are downloaded from Hugging Face on first `HebrewEngine` initialization using `huggingface_hub.hf_hub_download` (`huggingface_hub` is already available transitively via `transformers`). Downloaded files land in the existing `hf_cache` Docker named volume — no new volume mounts needed.
+Models are downloaded on first `HebrewEngine` initialization. The G2P model comes from the Hugging Face Hub via `huggingface_hub.hf_hub_download`; the StyleTTS2 acoustic model and style vectors are **GitHub release assets** (not on HF) and are fetched via `urllib`. Files land in the HF cache / `SERVER_HEBREW_MODEL_DIR` — no new volume mounts needed.
 
-| File | HF repo | Purpose |
+| File | Source | Purpose |
 |---|---|---|
-| `renikud.onnx` | `thewh1teagle/renikud` | G2P model |
-| `libritts_hebrew.onnx` | `thewh1teagle/phonikud-tts-checkpoints` | Acoustic model |
-| `*.npy` | `thewh1teagle/phonikud-tts-checkpoints` | Voice style files |
+| `model.onnx` | HF `thewh1teagle/renikud` | renikud G2P model |
+| `libritts_hebrew.onnx` | GitHub release `thewh1teagle/style-onnx@model-files-v1.0` | StyleTTS2 acoustic model |
+| `636_female_style.npy`, `707_male_style.npy`, `style_female1.npy`, `style_male1.npy` | GitHub release `thewh1teagle/style-onnx@model-files-v1.0` | Voice style vectors |
 
-The model directory path is configurable via `SERVER_HEBREW_MODEL_DIR` environment variable, defaulting to a subdirectory of the HF cache.
+The model directory for the GitHub-release files is configurable via `SERVER_HEBREW_MODEL_DIR`, defaulting to `intone_hebrew/` under the HF cache (`HF_HOME`).
+
+> **Note:** the original draft of this table assumed `renikud.onnx` and that the StyleTTS2 model + `.npy` styles lived on HF `phonikud-tts-checkpoints@model-files-v1.0`. None of those existed — the renikud file is `model.onnx`, and the StyleTTS2 assets are published as GitHub releases of `style-onnx`. The table above reflects the verified, working sources.
 
 ## Dependencies
 
