@@ -33,6 +33,9 @@ from kokoro import KPipeline
 
 SAMPLE_RATE = 24000
 
+# Pass repo_id explicitly so KPipeline/KModel don't warn about defaulting it.
+REPO_ID = "hexgrad/Kokoro-82M"
+
 VOICES: list[str] = [
     "af_heart", "af_alloy", "af_aoede", "af_bella", "af_jessica", "af_kore",
     "af_nicole", "af_nova", "af_river", "af_sarah", "af_sky",
@@ -43,7 +46,7 @@ VOICES: list[str] = [
 
 class Kokoro1Engine:
     def __init__(self, device: str = "cpu") -> None:
-        self._pipeline = KPipeline(lang_code="a", device=device)
+        self._pipeline = KPipeline(lang_code="a", repo_id=REPO_ID, device=device)
         self._inject_custom_phonemes()
         self._lock = threading.Lock()
 
