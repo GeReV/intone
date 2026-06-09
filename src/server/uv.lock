@@ -490,6 +490,53 @@ requires-dist = [
 dev = [{ name = "pytest", specifier = ">=8.3" }]
 
 [[package]]
+name = "intone-server"
+version = "0.1.6"
+source = { virtual = "." }
+dependencies = [
+    { name = "flask" },
+    { name = "flask-cors" },
+    { name = "gunicorn" },
+    { name = "inflect" },
+    { name = "kokoro" },
+    { name = "librosa" },
+    { name = "munch" },
+    { name = "nltk" },
+    { name = "num2words" },
+    { name = "numpy" },
+    { name = "phonemizer" },
+    { name = "soundfile" },
+    { name = "torch" },
+    { name = "transformers" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "flask", specifier = ">=3.1" },
+    { name = "flask-cors", specifier = ">=5.0" },
+    { name = "gunicorn", specifier = ">=23.0" },
+    { name = "inflect", specifier = ">=7.3" },
+    { name = "kokoro", specifier = ">=0.9.2" },
+    { name = "librosa", specifier = ">=0.10" },
+    { name = "munch", specifier = ">=4.0" },
+    { name = "nltk", specifier = ">=3.9" },
+    { name = "num2words", specifier = ">=0.5" },
+    { name = "numpy", specifier = ">=2.1" },
+    { name = "phonemizer", specifier = ">=3.3" },
+    { name = "soundfile", specifier = ">=0.13" },
+    { name = "torch", specifier = ">=2.0,<2.4" },
+    { name = "transformers", specifier = ">=4.40,<5.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.3" }]
+
+[[package]]
 name = "isodate"
 version = "0.7.2"
 source = { registry = "https://pypi.org/simple" }
