@@ -68,6 +68,7 @@ class Kokoro1Engine:
                         path = line.strip().split("=> ")[-1]
                         EspeakWrapper.set_library(path)
                         EspeakWrapper.set_data_path("")
+                        break
 
             fallback = EspeakFallback(british=False)
         except Exception as e:
