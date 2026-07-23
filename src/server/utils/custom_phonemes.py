@@ -1,17 +1,8 @@
 import logging
 import types
 
-from phonemizer.backend.espeak.wrapper import EspeakWrapper
+from misaki.espeak import EspeakFallback
 
-# misaki.espeak calls set_data_path() at import time, which doesn't exist in
-# phonemizer — apply the same no-op patch used in engines/kokoro1/engine.py.
-if not hasattr(EspeakWrapper, "set_data_path"):
-    EspeakWrapper.set_data_path = classmethod(lambda cls, path: None)
-
-try:
-    from misaki.espeak import EspeakFallback
-except Exception:
-    EspeakFallback = None  # type: ignore[assignment,misc]
 
 logger = logging.getLogger(__name__)
 
@@ -35,18 +26,9 @@ def parse_en_extra(path: str) -> list[tuple[str, list[str]]]:
     return entries
 
 
-def build_ipa_dict(entries: list[tuple[str, list[str]]]) -> dict[str, str]:
-    """Convert en_extra entries to misaki-format IPA using EspeakFallback."""
-    if EspeakFallback is None:
-        logger.warning("EspeakFallback unavailable; skipping custom phoneme injection")
-        return {}
-    try:
-        fallback = EspeakFallback(british=False)
-    except Exception as e:
-        logger.warning("Could not initialize EspeakFallback for custom phonemes: %s", e)
-        return {}
-
+def build_ipa_dict(espeak: EspeakFallback, entries: list[tuple[str, list[str]]]) -> dict[str, str]:
     result: dict[str, str] = {}
+
     for word, flags in entries:
         if "$capital" in flags:
             espeak_word = word.capitalize()
@@ -59,7 +41,7 @@ def build_ipa_dict(entries: list[tuple[str, list[str]]]) -> dict[str, str]:
             dict_key = word.lower()
 
         try:
-            ipa, _ = fallback(types.SimpleNamespace(text=espeak_word))
+            ipa, _ = espeak(types.SimpleNamespace(text=espeak_word))
             if ipa:
                 result[dict_key] = ipa
         except Exception as e:

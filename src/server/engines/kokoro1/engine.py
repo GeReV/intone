@@ -25,10 +25,7 @@ _EN_EXTRA = Path(__file__).parent.parent.parent / "dictsource" / "en_extra"
 # is an instance read-only property populated from the library's info() call
 # after load — there is no class-level override mechanism to delegate to.
 from phonemizer.backend.espeak.wrapper import EspeakWrapper
-EspeakWrapper.set_library = classmethod(lambda cls, path: None)
-if not hasattr(EspeakWrapper, "set_data_path"):
-    EspeakWrapper.set_data_path = classmethod(lambda cls, path: None)
-
+from misaki.espeak import EspeakFallback
 from kokoro import KPipeline
 
 SAMPLE_RATE = 24000
@@ -43,7 +40,6 @@ VOICES: list[str] = [
     "am_michael", "am_onyx", "am_puck", "am_santa",
 ]
 
-
 class Kokoro1Engine:
     def __init__(self, device: str = "cpu") -> None:
         self._pipeline = KPipeline(lang_code="a", repo_id=REPO_ID, device=device)
@@ -55,8 +51,31 @@ class Kokoro1Engine:
         if not _EN_EXTRA.exists():
             logger.warning("en_extra not found at %s; skipping custom phoneme injection", _EN_EXTRA)
             return
+
+        """Convert en_extra entries to misaki-format IPA using EspeakFallback."""
+        if EspeakFallback is None:
+            logger.warning("EspeakFallback unavailable; skipping custom phoneme injection")
+            return
+
+        try:
+            import ctypes.util
+            import subprocess
+            lib_name = ctypes.util.find_library("espeak-ng")
+            if lib_name:
+                result = subprocess.run(["ldconfig", "-p"], capture_output=True, text=True)
+                for line in result.stdout.splitlines():
+                    if lib_name in line:
+                        path = line.strip().split("=> ")[-1]
+                        EspeakWrapper.set_library(path)
+                        EspeakWrapper.set_data_path("")
+
+            fallback = EspeakFallback(british=False)
+        except Exception as e:
+            logger.warning("Could not initialize EspeakFallback for custom phonemes: %s", e)
+            return
+
         entries = parse_en_extra(str(_EN_EXTRA))
-        ipa_dict = build_ipa_dict(entries)
+        ipa_dict = build_ipa_dict(fallback, entries)
         if ipa_dict:
             self._pipeline.g2p.lexicon.golds.update(ipa_dict)
             logger.info("Injected %d custom phoneme(s) into Kokoro1 G2P lexicon", len(ipa_dict))

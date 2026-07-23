@@ -1,6 +1,6 @@
 [project]
 name = "intone-server"
-version = "0.2.0"
+version = "0.2.1"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "flask>=3.1",
@@ -20,6 +20,7 @@ dependencies = [
   "renikud-onnx>=0.1",
   "style-onnx @ git+https://github.com/thewh1teagle/style-onnx.git@756abfe2597266f8435974a6aaab53a7f47192c6",
   "onnxruntime-gpu==1.26.0",
+  "pip>=26.1.2",
 ]
 
 [dependency-groups]
