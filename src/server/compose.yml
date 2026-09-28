@@ -4,7 +4,7 @@ services:
     build:
       context: .
     environment:
-      - SERVER_ENGINE=auto
+#      - SERVER_ENGINE=auto
       - SERVER_VOICE=am_adam
       - SERVER_CUDA=1
     ports:
